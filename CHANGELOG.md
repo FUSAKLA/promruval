@@ -6,11 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v0.1.2] - 2020-11-15
+## [v0.1.3] - 2020-11-16
+### Fixed
+ - Fixed docker build using goreleaser in CI.
+
+## [v0.1.2] - 2020-11-16
 ### Fixed
  - Fixed docker release in CI.
 
-## [v0.1.1] - 2020-11-15
+## [v0.1.1] - 2020-11-16
 First public release.
 
 ## [v0.1.0] - 2020-11-15

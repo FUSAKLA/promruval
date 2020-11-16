@@ -31,7 +31,7 @@ test:
 build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(PROMRUVAL_BIN) cmd/promruval.go
 
-docker:
+docker: build
 	docker build -t fusakla/promruval .
 
 .PHONY: release

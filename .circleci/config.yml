@@ -37,9 +37,12 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: 17.07.0-ce
+      - attach_workspace:
+          at: .
       - run: |
           echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_LOGIN}" --password-stdin
           make release
+
 workflows:
   version: 2
   promruval:
