@@ -38,7 +38,7 @@ jobs:
       - setup_remote_docker:
           version: 17.07.0-ce
       - run: |
-          echo "${DOCKERHUB_PASSWORD}" | docker login -u="${DOCKERHUB_USER}" --password-stdin
+          echo "${DOCKER_PASSWORD}" | docker login -u="${DOCKER_LOGIN}" --password-stdin
           make release
 workflows:
   version: 2

@@ -1,5 +1,8 @@
 # Promruval
+![CircleCI](https://img.shields.io/circleci/build/github/FUSAKLA/promruval/master)
+
 _Prometheus Rule Validator_
+
 
 Tool for validation of Prometheus rules metadata.
 
