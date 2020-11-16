@@ -1,5 +1,9 @@
 # Promruval
-![CircleCI](https://img.shields.io/circleci/build/github/FUSAKLA/promruval/master)
+![CircleCI build status](https://img.shields.io/circleci/build/github/FUSAKLA/promruval/master)
+[![Docker Pulls](https://img.shields.io/docker/pulls/fusakla/promruval)](https://hub.docker.com/r/fusakla/promruval)
+[![GitHub binaries download](https://img.shields.io/github/downloads/fusakla/promruval/total?label=Prebuilt%20binaries%20downloads)](https://github.com/FUSAKLA/promruval/releases/latest)
+
+![](./promruval.png)
 
 _Prometheus Rule Validator_
 
@@ -12,8 +16,6 @@ Promruval aims to validate the rules' metadata.
 This is useful for making sure the labels, you use for routing alerts in Alertmanager,
 has the allowed values you expect in the routing. 
 Same for severities or avoiding typos.
-
-![](./promruval.png)
 
 ### Supported validations
 
@@ -39,12 +41,12 @@ Promruval uses yaml configuration file to define the validation rules.
 See the [`examples/validation.yaml`](examples/validation.yaml) for example.
 
 ### How to use it
-If you downloaded the prebuilt binary or built it on your own:
+If you downloaded the [prebuilt binary](https://github.com/FUSAKLA/promruval/releases/latest) or built it on your own:
 ```bash
 promruval validate --config-file=examples/validation.yaml examples/rules.yaml
 ```
 
-Or using Docker
+Or using [Docker image](https://hub.docker.com/r/fusakla/promruval)
 ```bash
 docker run -it -v $PWD:/rules fusakla/promruval --config-file=/rules/examples/validation.yaml /rules/examples/rules.yaml
 ```
