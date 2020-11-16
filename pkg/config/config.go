@@ -14,6 +14,7 @@ const (
 var ValidationScopes = []ValidationScope{AlertScope, RecordingRuleScope, AllRulesScope}
 
 type Config struct {
+	CustomExcludeAnnotation string `yaml:"customExcludeAnnotation"`
 	ValidationRules []ValidationRule `yaml:"validationRules"`
 }
 

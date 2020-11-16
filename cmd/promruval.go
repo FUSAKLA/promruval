@@ -92,7 +92,11 @@ rulesIteration:
 		}
 		fmt.Println(output.Text())
 	case validateCmd.FullCommand():
-		validationReport := validate.Files(filesToBeValidated, validationRules)
+		excludeAnnotation := "disabled_validation_rules"
+		if validationConfig.CustomExcludeAnnotation != "" {
+			excludeAnnotation = validationConfig.CustomExcludeAnnotation
+		}
+		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation)
 		switch *validationOutputFormat {
 		case "text":
 			fmt.Println(validationReport.AsText(2, *color))

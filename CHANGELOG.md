@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+ - Added support for special rule annotation containing names of validation rules
+   that should be skipped for the rule. Default annotation name is `disabled_validation_rules`.
+ 
 ### Fixed
  - Fixed issue when unmarshalling errors of rule files were not printed.
 

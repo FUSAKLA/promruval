@@ -5,6 +5,7 @@ import (
 	"github.com/fusakla/promruval/pkg/report"
 	"github.com/fusakla/promruval/pkg/validator"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"strings"
 	"time"
 )
 
@@ -38,7 +39,7 @@ func (r *ValidationRule) ValidationTexts() []string {
 	return validationTexts
 }
 
-func Files(fileNames []string, validationRules []*ValidationRule) *report.ValidationReport {
+func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotationName string) *report.ValidationReport {
 	validationReport := report.NewValidationReport()
 	for _, r := range validationRules {
 		validationReport.ValidationRules = append(validationReport.ValidationRules, r)
@@ -73,9 +74,20 @@ func Files(fileNames []string, validationRules []*ValidationRule) *report.Valida
 				} else {
 					ruleReport = groupReport.NewRuleReport(rule.Record, config.RecordingRuleScope)
 				}
+				var excludedRules []string
+				excludedRulesText, ok := rule.Annotations[excludeAnnotationName]
+				if ok {
+					excludedRules = strings.Split(excludedRulesText, ",")
+				}
+			validationRulesIteration:
 				for _, validationRule := range validationRules {
 					if (validationRule.scope != ruleReport.RuleType) && (validationRule.scope != config.AllRulesScope) {
 						continue
+					}
+					for _, excludedRuleName := range excludedRules {
+						if excludedRuleName == validationRule.Name() {
+							continue validationRulesIteration
+						}
 					}
 					for _, v := range validationRule.validators {
 						for _, err := range v.Validate(rule) {

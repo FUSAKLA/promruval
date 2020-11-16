@@ -1,3 +1,6 @@
+
+# customExcludeAnnotation: my_disable_annotation
+
 validationRules:
   - name: check-severity-label
     scope: Alert

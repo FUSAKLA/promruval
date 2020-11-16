@@ -58,11 +58,22 @@ docker run -it -v $PWD:/rules fusakla/promruval validate --config-file=/rules/ex
 ```
 
 ### Disabling rules
-If you want to temporarily disable any of the rules, you can use the `--disable-rule` flag
+If you want to temporarily disable any of the rules for all the tested rules, you can use the `--disable-rule` flag
 with value corresponding to the `name` of the rule you want to disable. You can pass it multiple times.
 ```bash
 promruval validate --config-file examples/validation.yaml --disable-rule check-team-label examples/rules.yaml
 ```
+
+If you want to disable permanently for some rule, you can use the special annotation
+`disabled_validation_rules`(can be changed in the config) that represents comma separated list of
+rule names to be skipped for the particular rule. Example: 
+```yaml
+- alert: ...
+  expr: ...
+  annotations:
+    disabled_validation_rules: team-label-check,title-annotation-check
+```
+
  
 ### Readable validation docs
 If you want more readable validation summary (for a documentation for example or generating readable pages)
