@@ -50,6 +50,7 @@ func Files(fileNames []string, validationRules []*ValidationRule) *report.Valida
 		rgs, errs := rulefmt.ParseFile(fileName)
 		if len(errs) > 0 {
 			validationReport.Failed = true
+			fileReport.Valid = false
 			fileReport.Errors = errs
 			continue
 		}

@@ -2,7 +2,7 @@ groups:
   - name: group1
     rules:
       - record: recorded_metrics
-        exp: 1
+        expr: 1
         labels:
           foo: bar
 
