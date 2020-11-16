@@ -1,0 +1,42 @@
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - main: ./cmd/promruval.go
+    binary: promruval
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - 386
+
+source:
+  enabled: true
+
+dockers:
+  - goos: linux
+    goarch: amd64
+    image_templates:
+      - fusakla/promruval:{{ .Tag }}
+      - fusakla/promruval:v{{ .Major }}.{{ .Minor }}
+      - fusakla/promruval:v{{ .Major }}
+      - fusakla/promruval:latest
+    build_flag_templates:
+      - --pull
+      # Labels according to opencontainers label schema https://github.com/opencontainers/image-spec/blob/master/annotations.md
+      - --label=org.opencontainers.image.created={{.Date}}
+      - --label=org.opencontainers.image.revision={{.FullCommit}}
+      - --label=org.opencontainers.image.version={{.Version}}
+
+      - --label=org.opencontainers.image.title={{.ProjectName}}
+      - --label=org.opencontainers.image.description=Tool to validate Prometheus rules.
+      - --label=org.opencontainers.image.authors=promruval@fusakla.cz
+      - --label=org.opencontainers.image.url={{.GitURL}}
+      - --label=org.opencontainers.image.documentation={{.GitURL}}
+      - --label=org.opencontainers.image.source={{replace .GitURL ".git" "" }}
+

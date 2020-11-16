@@ -1,0 +1,18 @@
+groups:
+  - name: group1
+    rules:
+      - record: recorded_metrics
+        exp: 1
+        labels:
+          foo: bar
+
+  - name: testGroup
+    rules:
+      - alert: test
+        expr: avg_over_time(max_over_time(up{cluster="bar"}[10h] offset 5m)[10m:10m])
+        labels:
+          severity: critical
+          team: sre@mail.com
+        annotations:
+          title: test alert
+          playbook: http://foo.bar/nonexisting/playbook

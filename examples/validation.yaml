@@ -1,0 +1,51 @@
+validationRules:
+  - name: check-severity-label
+    scope: Alert
+    validations:
+      - type: hasLabels
+        params:
+          labels: [ "severity" ]
+      - type: labelHasAllowedValue
+        params:
+          label: "severity"
+          allowedValues: [ "info", "warning", "critical" ]
+
+  - name: check-team-label
+    scope: Alert
+    validations:
+      - type: hasLabels
+        params:
+          labels: [ "team" ]
+      - type: labelHasAllowedValue
+        params:
+          label: "team"
+          allowedValues:
+            - "sre@company.com"
+
+  - name: check-playbook-annotation
+    scope: Alert
+    validations:
+      - type: hasAnyOfAnnotations
+        params:
+          annotations: [ "playbook", "link" ]
+      - type: annotationIsValidURL
+        params:
+          annotation: "link"
+          resolveUrl: true
+
+  - name: check-alert-title
+    scope: Alert
+    validations:
+      - type: hasAnnotations
+        params:
+          annotations: [ "title" ]
+
+  - name: check-prometheus-limitations
+    scope: AllRules
+    validations:
+      - type: expressionDoesNotUseOlderDataThan
+        params:
+          limit: "6h"
+      - type: expressionDoesNotUseLabels
+        params:
+          labels: [ "cluster", "locality", "prometheus-type", "replica" ]
