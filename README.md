@@ -8,23 +8,30 @@
 _Prometheus Rule Validator_
 
 Promtool allows user to verify syntactic correctness and test PromQL expressions.
-Promruval aims to validate the rules' metadata and 
+Promruval aims to validate the rules' metadata and expression properties
+to match requirements and constrains of the particular Prometheus cluster setup.
+User defines his validation rules in simple yaml configuration and passes them to
+the promruval which validates specified files with Prometheus rules same way promtool does.
+Usually it would be used in CI pipeline.
 
 ### Examples of usage
- - Make sure the playbook linked by an alert is valid URL and really exist.
- - Avoid querying more data than the retention of used Prometheus by checking `expr`
-   does not use older data than specified. 
- - Prevent `expr` to use any of specified labels. Useful with Thanos to forbid
+ - Make sure the playbook, linked by an alert, is a valid URL and really exists.
+ - Ensure the range selectors in the `expr` are not lower than three
+   times your Prometheus scrape interval.
+ - Avoid querying more data than is retention of used Prometheus by inspecting
+   if the `expr` does not use older data than specified. 
+ - Make sure `expr` does not use any of specified labels. Useful when using Thanos, to forbid
    usage of external labels when alerting on Prometheus to avoid confusion.
- - Ensure alerts has required labels for routing in Alertmanager possibly with allowed values.
+ - Ensure alerts has the required labels expected by routing in Alertmanager
+   possibly with allowed values.
  - Make sure Alerts has the expected annotations for rendering the alert template.
  - Forbid usage of some labels or annotations if it got deprecated. 
  - and many more...
  
 Validations are quite variable, so you can use them as you fit.
 Full list of supported validations can be found [here](docs/validations.md).
-In case of any missing, please create a feature request,
-and I'd be happy to add it if reasonable.
+
+In case of any missing, please create a feature request!
  
  
 ### Installation
@@ -96,7 +103,7 @@ validationRules:
       ...
 ```
 
-For full list of supported validations see the [docs/validations.md](docs/validations.md).
+For complete list of supported validations see the [docs/validations.md](docs/validations.md).
 
 If you want to see example configuration see the  [`examples/validation.yaml`](examples/validation.yaml).
 
@@ -122,7 +129,9 @@ promruval validate --config-file examples/validation.yaml --disable-rule check-t
 
 If you want to disable permanently for some Prometheus rule, you can use the special annotation
 `disabled_validation_rules`(can be changed in the [config](#configuration)) that represents comma separated list of
-rule names to be skipped for the particular rule. Example: 
+rule names to be skipped for the particular rule. 
+
+Example Prometheus rule: 
 ```yaml
 groups:
   - name: ...
