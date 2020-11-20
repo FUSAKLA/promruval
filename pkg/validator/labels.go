@@ -10,7 +10,8 @@ import (
 
 func newHasLabels(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Labels []string `yam:"labels"`
+		Labels       []string `yam:"labels"`
+		SearchInExpr bool `yaml:"searchInExpr"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -18,11 +19,12 @@ func newHasLabels(paramsConfig yaml.Node) (Validator, error) {
 	if len(params.Labels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	return &hasLabels{labels: params.Labels}, nil
+	return &hasLabels{labels: params.Labels, searchInExpr: params.SearchInExpr}, nil
 }
 
 type hasLabels struct {
-	labels []string
+	labels       []string
+	searchInExpr bool
 }
 
 func (h hasLabels) String() string {
@@ -30,9 +32,29 @@ func (h hasLabels) String() string {
 }
 
 func (h hasLabels) Validate(rule rulefmt.Rule) []error {
-	var errs []error
+	var (
+		errs       []error
+		err        error
+		exprLabels []string
+	)
+
+	if h.searchInExpr {
+		exprLabels, err = getExpressionUsedLabels(rule.Expr)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
 	for _, label := range h.labels {
 		if _, ok := rule.Labels[label]; !ok {
+			foundInExpr := false
+			for _, exprLabel := range exprLabels {
+				if label == exprLabel {
+					foundInExpr = true
+				}
+			}
+			if foundInExpr {
+				continue
+			}
 			errs = append(errs, fmt.Errorf("missing label `%s`", label))
 		}
 	}
@@ -41,7 +63,8 @@ func (h hasLabels) Validate(rule rulefmt.Rule) []error {
 
 func newDoesNotHaveLabels(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Labels []string `yam:"labels"`
+		Labels       []string `yam:"labels"`
+		searchInExpr bool     `yaml:"searchInExpr"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -49,11 +72,12 @@ func newDoesNotHaveLabels(paramsConfig yaml.Node) (Validator, error) {
 	if len(params.Labels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	return &doesNotHaveLabels{labels: params.Labels}, nil
+	return &doesNotHaveLabels{labels: params.Labels, searchInExpr: params.searchInExpr}, nil
 }
 
 type doesNotHaveLabels struct {
-	labels []string
+	labels       []string
+	searchInExpr bool
 }
 
 func (h doesNotHaveLabels) String() string {
@@ -65,6 +89,19 @@ func (h doesNotHaveLabels) Validate(rule rulefmt.Rule) []error {
 	for _, label := range h.labels {
 		if _, ok := rule.Labels[label]; ok {
 			errs = append(errs, fmt.Errorf("has forbidden label `%s`", label))
+		}
+	}
+	if h.searchInExpr {
+		usedLabels, err := getExpressionUsedLabels(rule.Expr)
+		if err != nil {
+			return []error{err}
+		}
+		for _, l := range usedLabels {
+			for _, n := range h.labels {
+				if l == n {
+					errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression", l))
+				}
+			}
 		}
 	}
 	return errs
@@ -102,7 +139,7 @@ func (h hasAnyOfLabels) Validate(rule rulefmt.Rule) []error {
 
 func newLabelHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Label         string `yaml:"label"`
+		Label         string   `yaml:"label"`
 		AllowedValues []string `yaml:"allowedValues"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
@@ -141,7 +178,7 @@ func (h labelHasAllowedValue) Validate(rule rulefmt.Rule) []error {
 
 func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Label  string `yam:"label"`
+		Label  string         `yam:"label"`
 		Regexp *regexp.Regexp `yam:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {

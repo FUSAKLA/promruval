@@ -1,11 +1,13 @@
 # Supported validations
 
 ### `hasLabels`
-Fails if rule does not have all the specified labels.
+Fails if rule does not have all the specified labels. Is `searchInExpr` is set, the labels
+are also looked for in the rules `expr`. 
 > Make sure every alert has all the labels required for it to be correctly routed by the Alertmanager. 
 ```yaml
 params:
   labels: ["foo", "bar"]
+  searchInExpr: true
 ```
 
 ### `hasAnnotations`
@@ -18,12 +20,14 @@ params:
 ```
 
 ### `doesNotHaveLabels`
-Fails if rule has any of specified labels.
+Fails if rule has any of specified labels. Is `searchInExpr` is set, the labels
+are also looked for in the rules `expr`. 
 > In case of deprecating some old well-known labels used formerly for routing for example,
 >  you can make sure no one will use them by mistake again.
 ```yaml
 params:
   labels: ["foo", "bar"]
+  searchInExpr: true
 ```
 
 ### `doesNotHaveAnnotations`

@@ -78,14 +78,13 @@ func (h expressionDoesNotUseLabels) String() string {
 	return fmt.Sprintf("does not use any of the `%s` labels is in its expression", strings.Join(h.labels, "`,`"))
 }
 
-func (h expressionDoesNotUseLabels) Validate(rule rulefmt.Rule) []error {
-	expr, err := promql.ParseExpr(rule.Expr)
+func getExpressionUsedLabels(expr string) ([]string, error) {
+	promQl, err := promql.ParseExpr(expr)
 	if err != nil {
-		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+		return []string{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
 	}
 	var usedLabels []string
-	var errs []error
-	promql.Inspect(expr, func(n promql.Node, ns []promql.Node) error {
+	promql.Inspect(promQl, func(n promql.Node, ns []promql.Node) error {
 		switch v := n.(type) {
 		case *promql.MatrixSelector:
 			for _, m := range v.LabelMatchers {
@@ -111,6 +110,15 @@ func (h expressionDoesNotUseLabels) Validate(rule rulefmt.Rule) []error {
 		}
 		return nil
 	})
+	return usedLabels, nil
+}
+
+func (h expressionDoesNotUseLabels) Validate(rule rulefmt.Rule) []error {
+	usedLabels, err := getExpressionUsedLabels(rule.Expr)
+	if err != nil {
+		return []error{err}
+	}
+	var errs []error
 	for _, l := range usedLabels {
 		for _, n := range h.labels {
 			if l == n {
