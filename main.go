@@ -87,7 +87,7 @@ func main() {
 
 	switch currentCommand {
 	case versionCmd.FullCommand():
-		fmt.Printf("Version: %s\nBuild date: %s\nBuild commit: %s\nBuilt by: %s", version, date, commit, builtBy)
+		fmt.Printf("Version: %s\nBuild date: %s\nBuild commit: %s\nBuilt by: %s\n", version, date, commit, builtBy)
 	case docsCmd.FullCommand():
 		validationConfig, err := loadConfigFile(*docsConfigFile)
 		if err != nil {
