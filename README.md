@@ -59,17 +59,18 @@ Commands:
   validate --config-file=CONFIG-FILE [<flags>] <path>...
     Validate Prometheus rule files using validation rules from config file.
 
-    --config-file=CONFIG-FILE  Path to validation config file.
-    --disable-rule=DISABLE-RULE ...  
-                               Allows to disable any validation rules by it's name. Can be passed multiple times.
-    --output=[text,json,yaml]  Format of the output.
-    --color                    Use color output.
+    -c, --config-file=CONFIG-FILE  Path to validation config file.
+    -d, --disable-rule=DISABLE-RULE ...  
+                                   Allows to disable any validation rules by it's name. Can be passed multiple times.
+    -o, --output=[text,json,yaml]  Format of the output.
+        --color                    Use color output.
 
   validation-docs --config-file=CONFIG-FILE [<flags>]
     Print human readable form of the validation rules from config file.
 
-    --config-file=CONFIG-FILE      Path to validation config file.
-    --output=[text,markdown,html]  Format of the output.
+    -c, --config-file=CONFIG-FILE  Path to validation config file.
+    -o, --output=[text,markdown,html]  
+                                   Format of the output.
 ```
 
 

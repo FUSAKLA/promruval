@@ -25,15 +25,15 @@ var (
 	versionCmd = app.Command("version", "Print version and build information.")
 
 	validateCmd            = app.Command("validate", "Validate Prometheus rule files using validation rules from config file.")
-	validateConfigFile     = validateCmd.Flag("config-file", "Path to validation config file.").Required().ExistingFile()
+	validateConfigFile     = validateCmd.Flag("config-file", "Path to validation config file.").Short('c').Required().ExistingFile()
 	filePaths              = validateCmd.Arg("path", "File paths to be validated, can be passed as a glob.").Required().Strings()
-	disabledRules          = validateCmd.Flag("disable-rule", "Allows to disable any validation rules by it's name. Can be passed multiple times.").Strings()
-	validationOutputFormat = validateCmd.Flag("output", "Format of the output.").PlaceHolder("[text,json,yaml]").Default("text").Enum("text", "json", "yaml")
+	disabledRules          = validateCmd.Flag("disable-rule", "Allows to disable any validation rules by it's name. Can be passed multiple times.").Short('d').Strings()
+	validationOutputFormat = validateCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,json,yaml]").Default("text").Enum("text", "json", "yaml")
 	color                  = validateCmd.Flag("color", "Use color output.").Bool()
 
 	docsCmd          = app.Command("validation-docs", "Print human readable form of the validation rules from config file.")
-	docsConfigFile   = docsCmd.Flag("config-file", "Path to validation config file.").Required().ExistingFile()
-	docsOutputFormat = docsCmd.Flag("output", "Format of the output.").PlaceHolder("[text,markdown,html]").Default("text").Enum("text", "markdown", "html")
+	docsConfigFile   = docsCmd.Flag("config-file", "Path to validation config file.").Short('c').Required().ExistingFile()
+	docsOutputFormat = docsCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,markdown,html]").Default("text").Enum("text", "markdown", "html")
 )
 
 func loadConfigFile(configFilePath string) (*config.Config, error) {

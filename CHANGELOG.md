@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added new `version` command that prints out version and build metadata.
  - Added new validator [`expressionDoesNotUseRangeShorterThan`](docs/validations.md#expressiondoesnotuserangeshorterthan).
  - Support searching in `expr` in label presence validators.
+ - Added short flags.
  
 ### Fixed
  - Fixed issue when unmarshalling errors of rule files were not printed.
