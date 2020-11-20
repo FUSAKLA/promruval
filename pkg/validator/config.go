@@ -13,19 +13,20 @@ type Config struct {
 type validatorCreator func(params yaml.Node) (Validator, error)
 
 var registeredValidators = map[string]validatorCreator{
-	"hasLabels":                         newHasLabels,
-	"hasAnnotations":                    newHasAnnotations,
-	"doesNotHaveLabels":                 newDoesNotHaveLabels,
-	"doesNotHaveAnnotations":            newDoesNotHaveAnnotations,
-	"hasAnyOfLabels":                    newHasAnyOfLabels,
-	"hasAnyOfAnnotations":               newHasAnyOfAnnotations,
-	"labelMatchesRegexp":                newLabelMatchesRegexp,
-	"annotationMatchesRegexp":           newAnnotationMatchesRegexp,
-	"labelHasAllowedValue":              newLabelHasAllowedValue,
-	"annotationHasAllowedValue":         newAnnotationHasAllowedValue,
-	"annotationIsValidURL":              newAnnotationIsValidURL,
-	"expressionDoesNotUseLabels":        newExpressionDoesNotUseLabels,
-	"expressionDoesNotUseOlderDataThan": newExpressionDoesNotUseOlderDataThan,
+	"hasLabels":                            newHasLabels,
+	"hasAnnotations":                       newHasAnnotations,
+	"doesNotHaveLabels":                    newDoesNotHaveLabels,
+	"doesNotHaveAnnotations":               newDoesNotHaveAnnotations,
+	"hasAnyOfLabels":                       newHasAnyOfLabels,
+	"hasAnyOfAnnotations":                  newHasAnyOfAnnotations,
+	"labelMatchesRegexp":                   newLabelMatchesRegexp,
+	"annotationMatchesRegexp":              newAnnotationMatchesRegexp,
+	"labelHasAllowedValue":                 newLabelHasAllowedValue,
+	"annotationHasAllowedValue":            newAnnotationHasAllowedValue,
+	"annotationIsValidURL":                 newAnnotationIsValidURL,
+	"expressionDoesNotUseLabels":           newExpressionDoesNotUseLabels,
+	"expressionDoesNotUseOlderDataThan":    newExpressionDoesNotUseOlderDataThan,
+	"expressionDoesNotUseRangeShorterThan": newExpressionDoesNotUseRangeShorterThan,
 }
 
 func NewFromConfig(config Config) (Validator, error) {

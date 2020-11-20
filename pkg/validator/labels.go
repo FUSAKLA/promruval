@@ -26,7 +26,7 @@ type hasLabels struct {
 }
 
 func (h hasLabels) String() string {
-	return fmt.Sprintf("Has labels: `%s`", strings.Join(h.labels, "`,`"))
+	return fmt.Sprintf("has labels: `%s`", strings.Join(h.labels, "`,`"))
 }
 
 func (h hasLabels) Validate(rule rulefmt.Rule) []error {
@@ -57,7 +57,7 @@ type doesNotHaveLabels struct {
 }
 
 func (h doesNotHaveLabels) String() string {
-	return fmt.Sprintf("Does not have labels: `%s`", strings.Join(h.labels, "`,`"))
+	return fmt.Sprintf("does not have labels: `%s`", strings.Join(h.labels, "`,`"))
 }
 
 func (h doesNotHaveLabels) Validate(rule rulefmt.Rule) []error {
@@ -88,7 +88,7 @@ type hasAnyOfLabels struct {
 }
 
 func (h hasAnyOfLabels) String() string {
-	return fmt.Sprintf("Has any of these labels: `%s`", strings.Join(h.labels, "`,`"))
+	return fmt.Sprintf("has any of these labels: `%s`", strings.Join(h.labels, "`,`"))
 }
 
 func (h hasAnyOfLabels) Validate(rule rulefmt.Rule) []error {
@@ -123,7 +123,7 @@ type labelHasAllowedValue struct {
 }
 
 func (h labelHasAllowedValue) String() string {
-	return fmt.Sprintf("Label `%s` has one of the allowed values: `%s`", h.label, strings.Join(h.allowedValues, "`,`"))
+	return fmt.Sprintf("label `%s` has one of the allowed values: `%s`", h.label, strings.Join(h.allowedValues, "`,`"))
 }
 
 func (h labelHasAllowedValue) Validate(rule rulefmt.Rule) []error {
@@ -159,7 +159,7 @@ type labelMatchesRegexp struct {
 }
 
 func (h labelMatchesRegexp) String() string {
-	return fmt.Sprintf("Label `%s` matches Regexp `%s`", h.label, h.regexp)
+	return fmt.Sprintf("label `%s` matches Regexp `%s`", h.label, h.regexp)
 }
 
 func (h labelMatchesRegexp) Validate(rule rulefmt.Rule) []error {

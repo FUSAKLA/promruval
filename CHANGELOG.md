@@ -5,9 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v1.0.0] - 2020-11-20
+### Changed
+ - **Breaking:** The `scope` configuration values has changed:
+     - `AllRules` -> `All rules`
+     - `RecordingRules` -> `Recording rules`
+     
 ### Added
  - Added support for special rule annotation containing names of validation rules
    that should be skipped for the rule. Default annotation name is `disabled_validation_rules`.
+ - Added new command [`validation-docs`](README.md#readable-validation-description) to print out human readable description of the validation config.
+ - Added docs for all supported validations in [docs/validations.md](docs/validations.md).
+ - Added new `version` command that prints out version and build metadata.
+ - Added new validator [`expressionDoesNotUseRangeShorterThan`](docs/validations.md#expressiondoesnotuserangeshorterthan).
  
 ### Fixed
  - Fixed issue when unmarshalling errors of rule files were not printed.

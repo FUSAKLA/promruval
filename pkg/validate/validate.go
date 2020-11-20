@@ -31,6 +31,10 @@ func (r *ValidationRule) Name() string {
 	return r.name
 }
 
+func (r *ValidationRule) Scope() string {
+	return string(r.scope)
+}
+
 func (r *ValidationRule) ValidationTexts() []string {
 	var validationTexts []string
 	for _, v := range r.validators {

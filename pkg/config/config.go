@@ -7,8 +7,8 @@ import (
 
 const (
 	AlertScope         ValidationScope = "Alert"
-	RecordingRuleScope ValidationScope = "RecordingRule"
-	AllRulesScope      ValidationScope = "AllRules"
+	RecordingRuleScope ValidationScope = "Recording rule"
+	AllRulesScope      ValidationScope = "All rules"
 )
 
 var ValidationScopes = []ValidationScope{AlertScope, RecordingRuleScope, AllRulesScope}

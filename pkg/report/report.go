@@ -11,6 +11,7 @@ import (
 
 type ValidationRule interface {
 	Name() string
+	Scope() string
 	ValidationTexts() []string
 }
 

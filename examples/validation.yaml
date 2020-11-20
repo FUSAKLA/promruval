@@ -44,7 +44,7 @@ validationRules:
           annotations: [ "title" ]
 
   - name: check-prometheus-limitations
-    scope: AllRules
+    scope: All rules
     validations:
       - type: expressionDoesNotUseOlderDataThan
         params:

@@ -28,7 +28,7 @@ type hasAnnotations struct {
 }
 
 func (h hasAnnotations) String() string {
-	return fmt.Sprintf("Has all of these annotations: `%s`", strings.Join(h.annotations, "`,`"))
+	return fmt.Sprintf("has all of these annotations: `%s`", strings.Join(h.annotations, "`,`"))
 }
 
 func (h hasAnnotations) Validate(rule rulefmt.Rule) []error {
@@ -90,7 +90,7 @@ type hasAnyOfAnnotations struct {
 }
 
 func (h hasAnyOfAnnotations) String() string {
-	return fmt.Sprintf("Has any of these annotations: `%s`", strings.Join(h.annotations, "`,`"))
+	return fmt.Sprintf("has any of these annotations: `%s`", strings.Join(h.annotations, "`,`"))
 }
 
 func (h hasAnyOfAnnotations) Validate(rule rulefmt.Rule) []error {
@@ -122,7 +122,7 @@ type annotationMatchesRegexp struct {
 }
 
 func (h annotationMatchesRegexp) String() string {
-	return fmt.Sprintf("Annotation `%s` matches regexp `%s`", h.annotation, h.regexp)
+	return fmt.Sprintf("annotation `%s` matches regexp `%s`", h.annotation, h.regexp)
 }
 
 func (h annotationMatchesRegexp) Validate(rule rulefmt.Rule) []error {
@@ -159,7 +159,7 @@ type annotationHasAllowedValue struct {
 }
 
 func (h annotationHasAllowedValue) String() string {
-	return fmt.Sprintf("Annotation `%s` has one of the allowed values: `%s`", h.annotation, strings.Join(h.allowedValues, "`,`"))
+	return fmt.Sprintf("annotation `%s` has one of the allowed values: `%s`", h.annotation, strings.Join(h.allowedValues, "`,`"))
 }
 
 func (h annotationHasAllowedValue) Validate(rule rulefmt.Rule) []error {
@@ -197,7 +197,7 @@ type annotationIsValidURL struct {
 func (h annotationIsValidURL) String() string {
 	text := fmt.Sprintf("Annotation `%s` is a valid URL", h.annotation)
 	if h.resolveURL {
-		text += " and it is resolvable"
+		text += " and does not return HTTP status 404"
 	}
 	return text
 }
