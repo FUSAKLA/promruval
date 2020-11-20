@@ -11,7 +11,7 @@ import (
 func newHasLabels(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Labels       []string `yam:"labels"`
-		SearchInExpr bool `yaml:"searchInExpr"`
+		SearchInExpr bool     `yaml:"searchInExpr"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
