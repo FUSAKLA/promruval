@@ -7,12 +7,12 @@
 
 _Prometheus Rule Validator_
 
-Promtool allows user to verify syntactic correctness and test PromQL expressions.
+Promtool allows users to verify syntactic correctness and test PromQL expressions.
 Promruval aims to validate the rules' metadata and expression properties
-to match requirements and constrains of the particular Prometheus cluster setup.
+to match requirements and constraints of the particular Prometheus cluster setup.
 User defines his validation rules in simple yaml configuration and passes them to
 the promruval which validates specified files with Prometheus rules same way promtool does.
-Usually it would be used in CI pipeline.
+Usually it would be used in the CI pipeline.
 
 ### Examples of usage
  - Make sure the playbook, linked by an alert, is a valid URL and really exists.
@@ -20,7 +20,7 @@ Usually it would be used in CI pipeline.
    times your Prometheus scrape interval.
  - Avoid querying more data than is retention of used Prometheus by inspecting
    if the `expr` does not use older data than specified. 
- - Make sure `expr` does not use any of specified labels. Useful when using Thanos, to forbid
+ - Make sure `expr` does not use any of the specified labels. Useful when using Thanos, to forbid
    usage of external labels when alerting on Prometheus to avoid confusion.
  - Ensure alerts has the required labels expected by routing in Alertmanager
    possibly with allowed values.
@@ -82,7 +82,7 @@ Commands:
 
 
 ### Configuration
-Promruval uses yaml configuration file to define the validation rules.
+Promruval uses a yaml configuration file to define the validation rules.
 Basic structure is:
 ```yaml
 # OPTIONAL Overrides the annotation used for disabling rules.
@@ -103,7 +103,7 @@ validationRules:
       ...
 ```
 
-For complete list of supported validations see the [docs/validations.md](docs/validations.md).
+For a complete list of supported validations see the [docs/validations.md](docs/validations.md).
 
 If you want to see example configuration see the  [`examples/validation.yaml`](examples/validation.yaml).
 
