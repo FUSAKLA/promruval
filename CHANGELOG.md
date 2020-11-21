@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.1.0] - 2020-11-20
+### Changed
+ - Switched to the [Prometheus Duration format](https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations) allowing usage ot `d`, `w` and `y`.
+
 ## [v1.0.0] - 2020-11-20
 ### Changed
  - **Breaking:** The `scope` configuration values has changed:

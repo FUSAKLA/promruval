@@ -3,6 +3,7 @@ package validator
 import (
 	"fmt"
 	"github.com/influxdata/promql/v2"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -11,19 +12,19 @@ import (
 
 func newExpressionDoesNotUseOlderDataThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Limit time.Duration `yaml:"limit"`
+		Limit model.Duration `yaml:"limit"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Limit == time.Duration(0) {
+	if params.Limit == model.Duration(0) {
 		return nil, fmt.Errorf("missing limit")
 	}
 	return &expressionDoesNotUseOlderDataThan{limit: params.Limit}, nil
 }
 
 type expressionDoesNotUseOlderDataThan struct {
-	limit time.Duration
+	limit model.Duration
 }
 
 func (h expressionDoesNotUseOlderDataThan) String() string {
@@ -40,16 +41,16 @@ func (h expressionDoesNotUseOlderDataThan) Validate(rule rulefmt.Rule) []error {
 		// TODO(FUSAKLA) Having range query in subquery should have the time added.
 		switch v := n.(type) {
 		case *promql.MatrixSelector:
-			if v.Range+v.Offset > h.limit {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data which is more than limit `%s`", v.Range+v.Offset, h.limit))
+			if v.Range+v.Offset > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in matrix selector which is more than limit `%s`", model.Duration(v.Range+v.Offset), h.limit))
 			}
 		case *promql.VectorSelector:
-			if v.Offset > h.limit {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data which is more than limit `%s`", v.Offset, h.limit))
+			if v.Offset > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(v.Offset), h.limit))
 			}
 		case *promql.SubqueryExpr:
-			if v.Range+v.Offset > h.limit {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data which is more than limit `%s`", v.Range+v.Offset, h.limit))
+			if v.Range+v.Offset > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in subquery which is more than limit `%s`", model.Duration(v.Range+v.Offset), h.limit))
 			}
 		}
 		return nil
@@ -131,19 +132,19 @@ func (h expressionDoesNotUseLabels) Validate(rule rulefmt.Rule) []error {
 
 func newExpressionDoesNotUseRangeShorterThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Limit time.Duration `yaml:"limit"`
+		Limit model.Duration `yaml:"limit"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Limit == time.Duration(0) {
+	if params.Limit == model.Duration(0) {
 		return nil, fmt.Errorf("missing limit")
 	}
 	return &expressionDoesNotUseRangeShorterThan{limit: params.Limit}, nil
 }
 
 type expressionDoesNotUseRangeShorterThan struct {
-	limit time.Duration
+	limit model.Duration
 }
 
 func (h expressionDoesNotUseRangeShorterThan) String() string {
@@ -159,12 +160,12 @@ func (h expressionDoesNotUseRangeShorterThan) Validate(rule rulefmt.Rule) []erro
 	promql.Inspect(expr, func(n promql.Node, ns []promql.Node) error {
 		switch v := n.(type) {
 		case *promql.MatrixSelector:
-			if v.Range < h.limit {
-				errs = append(errs, fmt.Errorf("query using range `%s` smaller than limit `%s`", v.Range, h.limit))
+			if v.Range < time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("query using range `%s` smaller than limit `%s`", model.Duration(v.Range), h.limit))
 			}
 		case *promql.SubqueryExpr:
-			if v.Range < h.limit {
-				errs = append(errs, fmt.Errorf("subquery using range `%s` smaller than limit `%s`", v.Range, h.limit))
+			if v.Range < time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("subquery using range `%s` smaller than limit `%s`", model.Duration(v.Range), h.limit))
 			}
 		}
 		return nil

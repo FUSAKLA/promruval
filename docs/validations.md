@@ -111,7 +111,7 @@ params:
 ```
 
 ### `expressionDoesNotUseOlderDataThan`
-Fails if the rule `expr` uses older data than specified limit in Go duration syntax.
+Fails if the rule `expr` uses older data than specified limit in Prometheus duration syntax.
 Checks even in subqueries and offsets.
 > Useful to avoid writing queries which expects longer data retention than the Prometheus actually has.
 ```yaml
@@ -120,7 +120,7 @@ params:
 ```
 
 ### `expressionDoesNotUseRangeShorterThan`
-Fails if the rule `expr` uses shorter range than specified limit.
+Fails if the rule `expr` uses shorter range than specified limit in the Prometheus duration format.
 >Useful to avoid using shorter range than twice of the scrape interval. 
 ```yaml
 params:
