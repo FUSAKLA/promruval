@@ -72,13 +72,15 @@ params:
 
 
 ### `labelHasAllowedValue`
-Fails if rule label value is not one of the allowed values.
+Fails if rule label value is not one of the allowed values. If the `commaSeparatedValue` is set to true, the label value
+to true, the label vaue is split by a comma, and the distinct values are check if valid.
 > It's quite common to have well known severities for alerts which can be important even in the
 > Alertmanager routing tree. Ths is how you can make sure only the well-known severities are used.
 ```yaml
 params:
   label: "foo"
   allowedValues: ["foo", "bar"]
+  commaSeparatedValue: true
 ```
 
 ### `annotationHasAllowedValue`

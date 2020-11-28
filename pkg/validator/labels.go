@@ -139,8 +139,9 @@ func (h hasAnyOfLabels) Validate(rule rulefmt.Rule) []error {
 
 func newLabelHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Label         string   `yaml:"label"`
-		AllowedValues []string `yaml:"allowedValues"`
+		Label               string   `yaml:"label"`
+		AllowedValues       []string `yaml:"allowedValues"`
+		CommaSeparatedValue bool     `yaml:"commaSeparatedValue"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -151,16 +152,21 @@ func newLabelHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
 	if len(params.AllowedValues) == 0 {
 		return nil, fmt.Errorf("missing allowedValues")
 	}
-	return &labelHasAllowedValue{label: params.Label, allowedValues: params.AllowedValues}, nil
+	return &labelHasAllowedValue{label: params.Label, allowedValues: params.AllowedValues, commaSeparatedValue: params.CommaSeparatedValue}, nil
 }
 
 type labelHasAllowedValue struct {
-	label         string
-	allowedValues []string
+	label               string
+	allowedValues       []string
+	commaSeparatedValue bool
 }
 
 func (h labelHasAllowedValue) String() string {
-	return fmt.Sprintf("label `%s` has one of the allowed values: `%s`", h.label, strings.Join(h.allowedValues, "`,`"))
+	text := fmt.Sprintf("has one of the allowed values: `%s`", strings.Join(h.allowedValues, "`,`"))
+	if h.commaSeparatedValue {
+		text = "split by comma " + text
+	}
+	return fmt.Sprintf("label `%s` %s", h.label, text)
 }
 
 func (h labelHasAllowedValue) Validate(rule rulefmt.Rule) []error {
@@ -168,9 +174,15 @@ func (h labelHasAllowedValue) Validate(rule rulefmt.Rule) []error {
 	if !ok {
 		return []error{}
 	}
-	for _, value := range h.allowedValues {
-		if value == ruleValue {
-			return []error{}
+	valuesToCheck := []string{ruleValue}
+	if h.commaSeparatedValue {
+		valuesToCheck = strings.Split(ruleValue, ",")
+	}
+	for _, labelValue := range valuesToCheck {
+		for _, allowedValue := range h.allowedValues {
+			if allowedValue == labelValue {
+				return []error{}
+			}
 		}
 	}
 	return []error{fmt.Errorf("label `%s` value `%s` is not one of the allowed values: `%s`", h.label, ruleValue, strings.Join(h.allowedValues, "`,`"))}
