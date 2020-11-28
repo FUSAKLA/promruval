@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - New parameter `commaSeparatedValue` for the `labelHasAllowedValue` validator supporting labels with a comma separated values.
+ - Added new validation check [`annotationIsValidPromQL`](docs/validations.md#annotationisvalidpromql)
+   to verify if rule annotation contains valid PromQL expression. 
 
 ## [v1.1.0] - 2020-11-20
 ### Changed

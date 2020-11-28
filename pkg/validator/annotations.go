@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"github.com/influxdata/promql/v2"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
 	"net/http"
@@ -216,6 +217,39 @@ func (h annotationIsValidURL) Validate(rule rulefmt.Rule) []error {
 	}
 	if resp.StatusCode == http.StatusNotFound {
 		return []error{fmt.Errorf("URL `%s` in the `%s` Annotation returns HTTP status code 404 NotFound", value, h.annotation)}
+	}
+	return []error{}
+}
+
+func newAnnotationIsValidPromQL(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Annotation string `yaml:"annotation"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if params.Annotation == "" {
+		return nil, fmt.Errorf("missing annotation name")
+	}
+	return &annotationIsValidPromQL{annotation: params.Annotation}, nil
+}
+
+type annotationIsValidPromQL struct {
+	annotation string
+	resolveURL bool
+}
+
+func (h annotationIsValidPromQL) String() string {
+	return fmt.Sprintf("Annotation `%s` is a valid PromQL expression", h.annotation)
+}
+
+func (h annotationIsValidPromQL) Validate(rule rulefmt.Rule) []error {
+	value, ok := rule.Annotations[h.annotation]
+	if !ok {
+		return []error{}
+	}
+	if _, err := promql.ParseExpr(value); err != nil {
+		return []error{fmt.Errorf("annotation `%s` is not valid PromQL: %s", h.annotation, err)}
 	}
 	return []error{}
 }
