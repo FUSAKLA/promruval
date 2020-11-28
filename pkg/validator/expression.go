@@ -2,9 +2,9 @@ package validator
 
 import (
 	"fmt"
-	"github.com/influxdata/promql/v2"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/promql/parser"
 	"gopkg.in/yaml.v3"
 	"strings"
 	"time"
@@ -32,23 +32,23 @@ func (h expressionDoesNotUseOlderDataThan) String() string {
 }
 
 func (h expressionDoesNotUseOlderDataThan) Validate(rule rulefmt.Rule) []error {
-	expr, err := promql.ParseExpr(rule.Expr)
+	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
 	}
 	var errs []error
-	promql.Inspect(expr, func(n promql.Node, ns []promql.Node) error {
+	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
 		// TODO(FUSAKLA) Having range query in subquery should have the time added.
 		switch v := n.(type) {
-		case *promql.MatrixSelector:
-			if v.Range+v.Offset > time.Duration(h.limit) {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data in matrix selector which is more than limit `%s`", model.Duration(v.Range+v.Offset), h.limit))
+		case *parser.MatrixSelector:
+			if v.Range > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in matrix selector which is more than limit `%s`", model.Duration(v.Range), h.limit))
 			}
-		case *promql.VectorSelector:
+		case *parser.VectorSelector:
 			if v.Offset > time.Duration(h.limit) {
 				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(v.Offset), h.limit))
 			}
-		case *promql.SubqueryExpr:
+		case *parser.SubqueryExpr:
 			if v.Range+v.Offset > time.Duration(h.limit) {
 				errs = append(errs, fmt.Errorf("expr uses `%s` old data in subquery which is more than limit `%s`", model.Duration(v.Range+v.Offset), h.limit))
 			}
@@ -80,26 +80,22 @@ func (h expressionDoesNotUseLabels) String() string {
 }
 
 func getExpressionUsedLabels(expr string) ([]string, error) {
-	promQl, err := promql.ParseExpr(expr)
+	promQl, err := parser.ParseExpr(expr)
 	if err != nil {
 		return []string{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
 	}
 	var usedLabels []string
-	promql.Inspect(promQl, func(n promql.Node, ns []promql.Node) error {
+	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
-		case *promql.MatrixSelector:
-			for _, m := range v.LabelMatchers {
-				usedLabels = append(usedLabels, m.Name)
-			}
-		case *promql.AggregateExpr:
+		case *parser.AggregateExpr:
 			for _, m := range v.Grouping {
 				usedLabels = append(usedLabels, m)
 			}
-		case *promql.VectorSelector:
+		case *parser.VectorSelector:
 			for _, m := range v.LabelMatchers {
 				usedLabels = append(usedLabels, m.Name)
 			}
-		case *promql.BinaryExpr:
+		case *parser.BinaryExpr:
 			if v.VectorMatching != nil {
 				for _, m := range v.VectorMatching.Include {
 					usedLabels = append(usedLabels, m)
@@ -152,18 +148,18 @@ func (h expressionDoesNotUseRangeShorterThan) String() string {
 }
 
 func (h expressionDoesNotUseRangeShorterThan) Validate(rule rulefmt.Rule) []error {
-	expr, err := promql.ParseExpr(rule.Expr)
+	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
 	}
 	var errs []error
-	promql.Inspect(expr, func(n promql.Node, ns []promql.Node) error {
+	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
-		case *promql.MatrixSelector:
+		case *parser.MatrixSelector:
 			if v.Range < time.Duration(h.limit) {
 				errs = append(errs, fmt.Errorf("query using range `%s` smaller than limit `%s`", model.Duration(v.Range), h.limit))
 			}
-		case *promql.SubqueryExpr:
+		case *parser.SubqueryExpr:
 			if v.Range < time.Duration(h.limit) {
 				errs = append(errs, fmt.Errorf("subquery using range `%s` smaller than limit `%s`", model.Duration(v.Range), h.limit))
 			}

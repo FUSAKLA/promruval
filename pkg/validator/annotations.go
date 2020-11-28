@@ -2,8 +2,8 @@ package validator
 
 import (
 	"fmt"
-	"github.com/influxdata/promql/v2"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/promql/parser"
 	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
@@ -248,7 +248,7 @@ func (h annotationIsValidPromQL) Validate(rule rulefmt.Rule) []error {
 	if !ok {
 		return []error{}
 	}
-	if _, err := promql.ParseExpr(value); err != nil {
+	if _, err := parser.ParseExpr(value); err != nil {
 		return []error{fmt.Errorf("annotation `%s` is not valid PromQL: %s", h.annotation, err)}
 	}
 	return []error{}

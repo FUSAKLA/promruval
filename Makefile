@@ -42,3 +42,7 @@ release: $(RELEASE_NOTES) $(GORELEASER)
 .PHONY: clean
 clean:
 	rm -rf dist $(TMP_DIR) $(PROMRUVAL_BIN)
+
+.PHONY: deps
+deps:
+	go mod tidy && go mod download && go mod verify

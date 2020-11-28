@@ -79,7 +79,7 @@ var testCases = []struct {
 
 	// expressionDoesNotUseOlderDataThan
 	{name: "ruleExprDoesNotUseOlderData", validator: expressionDoesNotUseOlderDataThan{limit: model.Duration(time.Hour)}, rule: rulefmt.Rule{Expr: "up{xxx='yyy'}"}, expectedErrors: 0},
-	{name: "ruleExprUsesOldDataInRangeSelector", validator: expressionDoesNotUseOlderDataThan{limit: model.Duration(time.Hour)}, rule: rulefmt.Rule{Expr: "up{xxx='yyy'}[2h]"}, expectedErrors: 1},
+	{name: "ruleExprUsesOldDataInRangeSelector", validator: expressionDoesNotUseOlderDataThan{limit: model.Duration(time.Hour)}, rule: rulefmt.Rule{Expr: "avg_over_time(up{xxx='yyy'}[2h])"}, expectedErrors: 1},
 	{name: "ruleExprUsesOldDataInRangeOffset", validator: expressionDoesNotUseOlderDataThan{limit: model.Duration(time.Hour)}, rule: rulefmt.Rule{Expr: "up{xxx='yyy'} offset 2h"}, expectedErrors: 1},
 	{name: "ruleExprUsesOldDataInRangeOffset", validator: expressionDoesNotUseOlderDataThan{limit: model.Duration(time.Hour)}, rule: rulefmt.Rule{Expr: "increase(delta(up{xxx='yyy'}[1m])[2h:1m])"}, expectedErrors: 1},
 
