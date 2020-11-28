@@ -128,3 +128,10 @@ Fails if the rule `expr` uses shorter range than specified limit in the Promethe
 params:
   limit: "1m"
 ```
+
+### `annotationIsValidPromQL`
+Fails if the rule specified annotations does not contain valid PromQL if present. 
+```yaml
+params:
+  annotation: "foo"
+```
