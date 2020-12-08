@@ -89,6 +89,7 @@ Fails if rule annotation value is not one of the allowed values.
 params:
   annotation: "foo"
   allowedValues: ["foo", "bar"]
+  commaSeparatedValue: true
 ```
 
 ### `annotationIsValidURL`
