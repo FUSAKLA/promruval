@@ -134,7 +134,7 @@ func (h hasAnyOfLabels) Validate(rule rulefmt.Rule) []error {
 			return []error{}
 		}
 	}
-	return []error{fmt.Errorf("missing any of these annotations `%s`", strings.Join(h.labels, "`,`"))}
+	return []error{fmt.Errorf("missing any of these labels `%s`", strings.Join(h.labels, "`,`"))}
 }
 
 func newLabelHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
