@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.3.1] - 2020-12-08
+### Fixed
+ - [#7](https://github.com/FUSAKLA/promruval/pull/7) Fixed typos in label and annotations checks `hasAnyOfAnnotations` and `hasAnyOfLabels`.
+
 ## [v1.3.0] - 2020-12-08
 ### Added
  - New parameter `commaSeparatedValue` for the `annotationHasAllowedValue` validator supporting annotations with a comma separated values.
