@@ -2,15 +2,16 @@ package validator
 
 import (
 	"fmt"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
-	"gopkg.in/yaml.v3"
 	"regexp"
 	"strings"
+
+	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"gopkg.in/yaml.v3"
 )
 
 func newHasLabels(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Labels       []string `yam:"labels"`
+		Labels       []string `yaml:"labels"`
 		SearchInExpr bool     `yaml:"searchInExpr"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
@@ -63,7 +64,7 @@ func (h hasLabels) Validate(rule rulefmt.Rule) []error {
 
 func newDoesNotHaveLabels(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Labels       []string `yam:"labels"`
+		Labels       []string `yaml:"labels"`
 		searchInExpr bool     `yaml:"searchInExpr"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
@@ -109,7 +110,7 @@ func (h doesNotHaveLabels) Validate(rule rulefmt.Rule) []error {
 
 func newHasAnyOfLabels(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Labels []string `yam:"labels"`
+		Labels []string `yaml:"labels"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -190,8 +191,8 @@ func (h labelHasAllowedValue) Validate(rule rulefmt.Rule) []error {
 
 func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Label  string         `yam:"label"`
-		Regexp *regexp.Regexp `yam:"regexp"`
+		Label  string `yaml:"label"`
+		Regexp string `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -199,7 +200,11 @@ func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Label == "" {
 		return nil, fmt.Errorf("missing lanel name")
 	}
-	return &labelMatchesRegexp{label: params.Label, regexp: params.Regexp}, nil
+	expr, err := regexp.Compile(params.Regexp)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regexp %s", params.Regexp)
+	}
+	return &labelMatchesRegexp{label: params.Label, regexp: expr}, nil
 }
 
 type labelMatchesRegexp struct {

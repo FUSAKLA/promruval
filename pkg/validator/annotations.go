@@ -2,18 +2,19 @@ package validator
 
 import (
 	"fmt"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
-	"github.com/prometheus/prometheus/promql/parser"
-	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/promql/parser"
+	"gopkg.in/yaml.v3"
 )
 
 func newHasAnnotations(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Annotations []string `yam:"annotations"`
+		Annotations []string `yaml:"annotations"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -44,7 +45,7 @@ func (h hasAnnotations) Validate(rule rulefmt.Rule) []error {
 
 func newDoesNotHaveAnnotations(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Annotations []string `yam:"annotations"`
+		Annotations []string `yaml:"annotations"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -105,8 +106,8 @@ func (h hasAnyOfAnnotations) Validate(rule rulefmt.Rule) []error {
 
 func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Annotation string         `yaml:"annotation"`
-		Regexp     *regexp.Regexp `yaml:"regexp"`
+		Annotation string `yaml:"annotation"`
+		Regexp     string `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -114,7 +115,12 @@ func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Annotation == "" {
 		return nil, fmt.Errorf("missing annotation")
 	}
-	return &annotationMatchesRegexp{annotation: params.Annotation, regexp: params.Regexp}, nil
+	expr, err := regexp.Compile(params.Regexp)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regexp %s", params.Regexp)
+	}
+
+	return &annotationMatchesRegexp{annotation: params.Annotation, regexp: expr}, nil
 }
 
 type annotationMatchesRegexp struct {
