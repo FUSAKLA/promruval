@@ -139,8 +139,9 @@ func (h annotationMatchesRegexp) Validate(rule rulefmt.Rule) []error {
 
 func newAnnotationHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Annotation    string   `yaml:"annotation"`
-		AllowedValues []string `yaml:"allowedValues"`
+		Annotation          string   `yaml:"annotation"`
+		AllowedValues       []string `yaml:"allowedValues"`
+		CommaSeparatedValue bool     `yaml:"commaSeparatedValue"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -151,16 +152,21 @@ func newAnnotationHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
 	if len(params.AllowedValues) == 0 {
 		return nil, fmt.Errorf("missing allowed values")
 	}
-	return &annotationHasAllowedValue{annotation: params.Annotation, allowedValues: params.AllowedValues}, nil
+	return &annotationHasAllowedValue{annotation: params.Annotation, allowedValues: params.AllowedValues, commaSeparatedValue: params.CommaSeparatedValue}, nil
 }
 
 type annotationHasAllowedValue struct {
-	annotation    string
-	allowedValues []string
+	annotation          string
+	allowedValues       []string
+	commaSeparatedValue bool
 }
 
 func (h annotationHasAllowedValue) String() string {
-	return fmt.Sprintf("annotation `%s` has one of the allowed values: `%s`", h.annotation, strings.Join(h.allowedValues, "`,`"))
+	text := fmt.Sprintf("has one of the allowed values: `%s`", strings.Join(h.allowedValues, "`,`"))
+	if h.commaSeparatedValue {
+		text = "split by comma " + text
+	}
+	return fmt.Sprintf("annotation `%s` %s", h.annotation, text)
 }
 
 func (h annotationHasAllowedValue) Validate(rule rulefmt.Rule) []error {
@@ -168,9 +174,15 @@ func (h annotationHasAllowedValue) Validate(rule rulefmt.Rule) []error {
 	if !ok {
 		return []error{}
 	}
-	for _, value := range h.allowedValues {
-		if value == ruleValue {
-			return []error{}
+	valuesToCheck := []string{ruleValue}
+	if h.commaSeparatedValue {
+		valuesToCheck = strings.Split(ruleValue, ",")
+	}
+	for _, annotationValue := range valuesToCheck {
+		for _, allowedValue := range h.allowedValues {
+			if allowedValue == annotationValue {
+				return []error{}
+			}
 		}
 	}
 	return []error{fmt.Errorf("annotation `%s` value `%s` is not one of the allowed values: `%s`", h.annotation, ruleValue, strings.Join(h.allowedValues, "`,`"))}
