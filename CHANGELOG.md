@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.3.2] - 2020-12-09
+### Fixed
+ - [#8](https://github.com/FUSAKLA/promruval/pull/8) Fixed severe bugs in loading some of validator configurations.
+
 ## [v1.3.1] - 2020-12-08
 ### Fixed
  - [#7](https://github.com/FUSAKLA/promruval/pull/7) Fixed typos in label and annotations checks `hasAnyOfAnnotations` and `hasAnyOfLabels`.
