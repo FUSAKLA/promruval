@@ -13,7 +13,7 @@ to match requirements and constraints of the particular Prometheus cluster setup
 User defines his validation rules in simple yaml configuration and passes them to
 the promruval which validates specified files with Prometheus rules same way promtool does.
 Usually it would be used in the CI pipeline.
-You can read a blog post about the motivation and usage [here](https://fusakla.medium.com/promruval-validating-prometheus-rules-9a29f5dc24d2).
+You can read a blog post about the motivation and usage [here](https://fusakla.medium.com/promruval-validating-prometheus-rules-9a29f5dc24d2) or [watch a lightning talk about it from PromCon](https://www.youtube.com/watch?v=YYSJ--KhlIo&list=PLj6h78yzYM2PZb0QuIkm6ZY-xTuNA5zRO&index=16).
 
 ### Examples of usage
  - Make sure the playbook, linked by an alert, is a valid URL and really exists.
