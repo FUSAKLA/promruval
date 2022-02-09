@@ -1,5 +1,5 @@
 # Promruval
-![CircleCI build status](https://img.shields.io/circleci/build/github/FUSAKLA/promruval/master)
+![GitHub actions CI](https://img.shields.io/github/workflow/status/fusakla/promruval/Go/master)
 [![Docker Pulls](https://img.shields.io/docker/pulls/fusakla/promruval)](https://hub.docker.com/r/fusakla/promruval)
 [![GitHub binaries download](https://img.shields.io/github/downloads/fusakla/promruval/total?label=Prebuilt%20binaries%20downloads)](https://github.com/FUSAKLA/promruval/releases/latest)
 
