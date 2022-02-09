@@ -1,14 +1,19 @@
 package validator
 
 import (
+	"context"
 	"fmt"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/promql"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
+	"github.com/prometheus/prometheus/template"
 	"gopkg.in/yaml.v3"
 )
 
@@ -269,4 +274,37 @@ func (h annotationIsValidPromQL) Validate(rule rulefmt.Rule) []error {
 		return []error{fmt.Errorf("annotation `%s` is not valid PromQL: %s", h.annotation, err)}
 	}
 	return []error{}
+}
+
+func newValidateAnnotationTemplates(paramsConfig yaml.Node) (Validator, error) {
+	params := struct{}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &validateAnnotationTemplates{}, nil
+}
+
+type validateAnnotationTemplates struct{}
+
+func (h validateAnnotationTemplates) String() string {
+	return "Annotations are valid templates"
+}
+
+func (h validateAnnotationTemplates) Validate(rule rulefmt.Rule) []error {
+	var errs []error
+	data := template.AlertTemplateData(map[string]string{}, map[string]string{}, 0)
+	defs := []string{
+		"{{$labels := .Labels}}",
+		"{{$externalLabels := .ExternalLabels}}",
+		"{{$externalURL := .ExternalURL}}",
+		"{{$value := .Value}}",
+	}
+	url, _ := url.Parse("https://foo.bar")
+	for k, v := range rule.Annotations {
+		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(ctx context.Context, s string, time time.Time) (promql.Vector, error) { return nil, nil }, url)
+		if _, err := t.Expand(); err != nil && !strings.Contains(err.Error(), "error executing template") {
+			errs = append(errs, fmt.Errorf("invalid template of annotation %s: %w", k, err))
+		}
+	}
+	return errs
 }

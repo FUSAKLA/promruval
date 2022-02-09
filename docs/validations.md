@@ -136,3 +136,6 @@ Fails if the rule specified annotations does not contain valid PromQL if present
 params:
   annotation: "foo"
 ```
+
+### `validateAnnotationTemplates`
+Fails if the annotation contains invalid Go template.

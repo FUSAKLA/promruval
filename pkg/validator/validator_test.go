@@ -94,6 +94,11 @@ var testCases = []struct {
 	// annotationIsValidPromQL
 	{name: "ruleHasAnnotationWithValidPromQLAnnotation", validator: annotationIsValidPromQL{annotation: "foo"}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "avg_over_time(up{foo='bar'}[2m])"}}, expectedErrors: 0},
 	{name: "ruleHasAnnotationWithInvalidPromQLAnnotation", validator: annotationIsValidPromQL{annotation: "foo"}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "avg_over_time(up{foo='bar'})"}}, expectedErrors: 1},
+
+	// validateAnnotationTemplates
+	{name: "ruleHasAnnotationWithValidTemplate", validator: validateAnnotationTemplates{}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "foo {{ $value | humanizeDuration }} bar"}}, expectedErrors: 0},
+	{name: "ruleHasAnnotationWithValidTemplateAndUnknownVariable", validator: validateAnnotationTemplates{}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "foo {{ .xxx }}"}}, expectedErrors: 0},
+	{name: "ruleHasAnnotationWithInvalidTemplate", validator: validateAnnotationTemplates{}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "foo {{ $value | fooBar }} bar"}}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

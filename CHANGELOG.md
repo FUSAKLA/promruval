@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
  - [#9](https://github.com/FUSAKLA/promruval/pull/9) Upgraded to Go 1.17
 
+### Added
+ - [#10](https://github.com/FUSAKLA/promruval/pull/9) New validator `validateAnnotationTemplates` for more info see [the docs](docs/validations.md#validateannotationtemplates)
+
 ## [v1.3.2] - 2020-12-09
 ### Fixed
  - [#8](https://github.com/FUSAKLA/promruval/pull/8) Fixed severe bugs in loading some of validator configurations.

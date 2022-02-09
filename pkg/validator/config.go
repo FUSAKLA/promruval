@@ -28,6 +28,7 @@ var registeredValidators = map[string]validatorCreator{
 	"expressionDoesNotUseOlderDataThan":    newExpressionDoesNotUseOlderDataThan,
 	"expressionDoesNotUseRangeShorterThan": newExpressionDoesNotUseRangeShorterThan,
 	"annotationIsValidPromQL":              newAnnotationIsValidPromQL,
+	"validateAnnotationTemplates":          newValidateAnnotationTemplates,
 }
 
 func NewFromConfig(config Config) (Validator, error) {
