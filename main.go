@@ -113,9 +113,7 @@ func main() {
 			if err != nil {
 				exitWithError(err)
 			}
-			for _, p := range paths {
-				filesToBeValidated = append(filesToBeValidated, p)
-			}
+			filesToBeValidated = append(filesToBeValidated, paths...)
 		}
 
 		validationConfig, err := loadConfigFile(*validateConfigFile)

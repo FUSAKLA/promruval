@@ -18,6 +18,9 @@ $(RELEASE_NOTES): $(TMP_DIR)
 	@mv $(TMP_DIR)/release-notes-part1 $(RELEASE_NOTES)
 	@rm $(TMP_DIR)/release-notes-part*
 
+lint:
+	golangci-lint run
+
 test:
 	go test -race ./...
 

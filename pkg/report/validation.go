@@ -60,7 +60,7 @@ func ValidationDocs(validationRules []ValidationRule, format string) (string, er
 		})
 	}
 
-	templateToUse := textTemplate
+	var templateToUse string
 	switch format {
 	case "text":
 		templateToUse = textTemplate

@@ -254,7 +254,6 @@ func newAnnotationIsValidPromQL(paramsConfig yaml.Node) (Validator, error) {
 
 type annotationIsValidPromQL struct {
 	annotation string
-	resolveURL bool
 }
 
 func (h annotationIsValidPromQL) String() string {

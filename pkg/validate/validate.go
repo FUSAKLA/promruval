@@ -94,9 +94,7 @@ func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotat
 						}
 					}
 					for _, v := range validationRule.validators {
-						for _, err := range v.Validate(rule) {
-							ruleReport.Errors = append(ruleReport.Errors, err)
-						}
+						ruleReport.Errors = append(ruleReport.Errors, v.Validate(rule)...)
 					}
 					if len(ruleReport.Errors) > 0 {
 						validationReport.Failed = true

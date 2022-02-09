@@ -88,21 +88,15 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.AggregateExpr:
-			for _, m := range v.Grouping {
-				usedLabels = append(usedLabels, m)
-			}
+			usedLabels = append(usedLabels, v.Grouping...)
 		case *parser.VectorSelector:
 			for _, m := range v.LabelMatchers {
 				usedLabels = append(usedLabels, m.Name)
 			}
 		case *parser.BinaryExpr:
 			if v.VectorMatching != nil {
-				for _, m := range v.VectorMatching.Include {
-					usedLabels = append(usedLabels, m)
-				}
-				for _, m := range v.VectorMatching.MatchingLabels {
-					usedLabels = append(usedLabels, m)
-				}
+				usedLabels = append(usedLabels, v.VectorMatching.Include...)
+				usedLabels = append(usedLabels, v.VectorMatching.MatchingLabels...)
 			}
 		}
 		return nil
