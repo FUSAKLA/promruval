@@ -162,3 +162,33 @@ func (h expressionDoesNotUseRangeShorterThan) Validate(rule rulefmt.Rule) []erro
 	})
 	return errs
 }
+
+func newExpressionDoesNotUseIrate(_ yaml.Node) (Validator, error) {
+	return &expressionDoesNotUseIrate{}, nil
+}
+
+type expressionDoesNotUseIrate struct {
+	limit model.Duration
+}
+
+func (h expressionDoesNotUseIrate) String() string {
+	return fmt.Sprintf("expr does not use range selctor shorter than `%s`", h.limit)
+}
+
+func (h expressionDoesNotUseIrate) Validate(rule rulefmt.Rule) []error {
+	expr, err := parser.ParseExpr(rule.Expr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+	}
+	var errs []error
+	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+		switch v := n.(type) {
+		case *parser.Call:
+			if v != nil && v.Func != nil && v.Func.Name == "irate" {
+				errs = []error{fmt.Errorf("you should not use the `irate` function in rules, for more info see https://prometheus.io/docs/prometheus/latest/querying/functions/#irate")}
+			}
+		}
+		return nil
+	})
+	return errs
+}

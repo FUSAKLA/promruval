@@ -68,8 +68,8 @@ var testCases = []struct {
 	{name: "ruleHasCsvAnnotationWithoutAllowedValue", validator: annotationHasAllowedValue{annotation: "foo", allowedValues: []string{"bar"}, commaSeparatedValue: true}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "xxx,yyy"}}, expectedErrors: 1},
 
 	// annotationIsValidURL
-	{name: "ruleHasAnnotationWithValidURLAnnotation", validator: annotationIsValidURL{annotation: "foo"}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "https://fusakla.cz"}}, expectedErrors: 0},
-	{name: "ruleHasAnnotationWithInvalidURLAnnotation", validator: annotationIsValidURL{annotation: "foo"}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 1},
+	{name: "ruleHasAnnotationWithValidURLAnnotation", validator: annotationIsValidURL{annotation: "foo", resolveURL: false}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "https://fusakla.cz"}}, expectedErrors: 0},
+	{name: "ruleHasAnnotationWithInvalidURLAnnotation", validator: annotationIsValidURL{annotation: "foo", resolveURL: false}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "htttpsss:////foo.bbbbar"}}, expectedErrors: 1},
 
 	// expressionDoesNotUseLabels
 	{name: "ruleExprDoesNotUseLabels", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up{xxx='yyy'}"}, expectedErrors: 0},
@@ -104,6 +104,10 @@ var testCases = []struct {
 	{name: "alertHasNoFor", validator: forIsNotLongerThan{limit: model.Duration(time.Minute)}, rule: rulefmt.Rule{}, expectedErrors: 0},
 	{name: "alertHasShorterFor", validator: forIsNotLongerThan{limit: model.Duration(time.Minute)}, rule: rulefmt.Rule{For: model.Duration(time.Second)}, expectedErrors: 0},
 	{name: "alertHasLongerFor", validator: forIsNotLongerThan{limit: model.Duration(time.Minute)}, rule: rulefmt.Rule{For: model.Duration(time.Hour)}, expectedErrors: 1},
+
+	// expressionDoesNotUseIrate
+	{name: "expressionDoesNotUseIrate", validator: expressionDoesNotUseIrate{}, rule: rulefmt.Rule{Expr: "rate(foo_bar[1m])"}, expectedErrors: 0},
+	{name: "expressionUsesIrate", validator: expressionDoesNotUseIrate{}, rule: rulefmt.Rule{Expr: "irate(foo_bar[1m])"}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

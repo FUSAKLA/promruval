@@ -30,6 +30,7 @@ var registeredValidators = map[string]validatorCreator{
 	"annotationIsValidPromQL":              newAnnotationIsValidPromQL,
 	"validateAnnotationTemplates":          newValidateAnnotationTemplates,
 	"forIsNotLongerThan":                   newForIsNotLongerThan,
+	"expressionDoesNotUseIrate":            newExpressionDoesNotUseIrate,
 }
 
 func NewFromConfig(config Config) (Validator, error) {
