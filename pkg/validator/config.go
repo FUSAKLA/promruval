@@ -32,6 +32,7 @@ var registeredValidators = map[string]validatorCreator{
 	"forIsNotLongerThan":                   newForIsNotLongerThan,
 	"expressionDoesNotUseIrate":            newExpressionDoesNotUseIrate,
 	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
+	"rateBeforeAggregation":                newRateBeforeAggregation,
 }
 
 func NewFromConfig(config Config) (Validator, error) {

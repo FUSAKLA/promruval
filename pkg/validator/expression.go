@@ -228,3 +228,41 @@ func (h validFunctionsOnCounters) Validate(rule rulefmt.Rule) []error {
 	})
 	return errs
 }
+
+func newRateBeforeAggregation(_ yaml.Node) (Validator, error) {
+	return &rateBeforeAggregation{}, nil
+}
+
+type rateBeforeAggregation struct{}
+
+func (h rateBeforeAggregation) String() string {
+	return "never use aggregation functions before the `rate` or `increase` functions, see https://www.robustperception.io/rate-then-sum-never-sum-then-rate"
+}
+
+func (h rateBeforeAggregation) Validate(rule rulefmt.Rule) []error {
+	expr, err := parser.ParseExpr(rule.Expr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+	}
+	var (
+		errs     []error
+		funcCall string
+	)
+	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+		switch v := n.(type) {
+		case *parser.Call:
+			if v != nil && v.Func != nil && (v.Func.Name == "rate" || v.Func.Name == "increase") {
+				funcCall = v.String()
+				return nil
+			}
+		case *parser.AggregateExpr:
+			if funcCall != "" && v != nil {
+				errs = append(errs, fmt.Errorf("never use aggregation functions before calling the `rate` or `increase` functions as in: %s", funcCall))
+				funcCall = ""
+				return nil
+			}
+		}
+		return nil
+	})
+	return errs
+}

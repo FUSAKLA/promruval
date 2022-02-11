@@ -187,6 +187,10 @@ in https://prometheus.io/docs/prometheus/latest/querying/functions/#irate.
 
 Fails if the expression uses a `rate` or `increase` function on a metric that does not end with the `_total` suffix.
 
+### `rateBeforeAggregation`
+
+Fails if aggregation function is used before the the `rate` or `increase` functions.
+
 ## Alert
 
 ### `forIsNotLongerThan`
