@@ -31,6 +31,7 @@ var registeredValidators = map[string]validatorCreator{
 	"validateAnnotationTemplates":          newValidateAnnotationTemplates,
 	"forIsNotLongerThan":                   newForIsNotLongerThan,
 	"expressionDoesNotUseIrate":            newExpressionDoesNotUseIrate,
+	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
 }
 
 func NewFromConfig(config Config) (Validator, error) {
