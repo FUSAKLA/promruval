@@ -3,6 +3,7 @@ package validator
 import (
 	"context"
 	"fmt"
+	"github.com/asaskevich/govalidator"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/promql"
 	"net/http"
@@ -231,8 +232,11 @@ func (h annotationIsValidURL) Validate(rule rulefmt.Rule) []error {
 	if !ok {
 		return []error{}
 	}
-	if _, err := url.Parse(value); err != nil {
+	if !govalidator.IsURL(value) {
 		return []error{fmt.Errorf("annotation `%s` is not valid URL", h.annotation)}
+	}
+	if !h.resolveURL {
+		return []error{}
 	}
 	resp, err := http.Get(value)
 	if err != nil {
@@ -299,9 +303,8 @@ func (h validateAnnotationTemplates) Validate(rule rulefmt.Rule) []error {
 		"{{$externalURL := .ExternalURL}}",
 		"{{$value := .Value}}",
 	}
-	url, _ := url.Parse("https://foo.bar")
 	for k, v := range rule.Annotations {
-		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(ctx context.Context, s string, time time.Time) (promql.Vector, error) { return nil, nil }, url)
+		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(ctx context.Context, s string, time time.Time) (promql.Vector, error) { return nil, nil }, &url.URL{})
 		if _, err := t.Expand(); err != nil && !strings.Contains(err.Error(), "error executing template") {
 			errs = append(errs, fmt.Errorf("invalid template of annotation %s: %w", k, err))
 		}

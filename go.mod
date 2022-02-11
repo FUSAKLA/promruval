@@ -3,6 +3,7 @@ module github.com/fusakla/promruval
 go 1.17
 
 require (
+	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 	github.com/prometheus/common v0.15.0
 	github.com/prometheus/prometheus v1.8.2-0.20201105135750-00f16d1ac3a4
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6

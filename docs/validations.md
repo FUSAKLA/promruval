@@ -1,4 +1,5 @@
 # Supported validations
+
 - [Labels](#labels)
 - [Annotations](#annotations)
 - [PromQL expression](#promql-expression)
@@ -130,6 +131,15 @@ params:
   resolveUrl: true
 ```
 
+### `annotationIsValidPromQL`
+
+Fails if the rule specified annotations does not contain valid PromQL if present.
+
+```yaml
+params:
+  annotation: "foo"
+```
+
 ### `validateAnnotationTemplates`
 
 Fails if the annotation contains invalid Go template.
@@ -168,14 +178,10 @@ params:
   limit: "1m"
 ```
 
-### `annotationIsValidPromQL`
+### `expressionDoesNotUseIrate`
 
-Fails if the rule specified annotations does not contain valid PromQL if present.
-
-```yaml
-params:
-  annotation: "foo"
-```
+Fails if the rule `expr` uses the `irate` function as disouraged
+in https://prometheus.io/docs/prometheus/latest/querying/functions/#irate.
 
 ## Alert
 

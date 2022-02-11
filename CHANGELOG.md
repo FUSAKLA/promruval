@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - [#10](https://github.com/FUSAKLA/promruval/pull/10) New validator `validateAnnotationTemplates` for more info see [the docs](docs/validations.md#validateannotationtemplates)
  - [#11](https://github.com/FUSAKLA/promruval/pull/11) New validator `forIsNotLongerThan` for more info see [the docs](docs/validations.md#forisnotlongerthan)
+ - [#12](https://github.com/FUSAKLA/promruval/pull/12) New validator `expressionDoesNotUseIrate` for more info see [the docs](docs/validations.md#expressiondoesnotuseirate)
 
+### Fixed
+ - [#12](https://github.com/FUSAKLA/promruval/pull/12) Fixed the `annotationIsValidURL` to be more strict in parsing URL and to actually use the `resolve_url` configuration.
 
 ## [v1.3.2] - 2020-12-09
 ### Fixed
