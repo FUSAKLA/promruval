@@ -192,3 +192,39 @@ func (h expressionDoesNotUseIrate) Validate(rule rulefmt.Rule) []error {
 	})
 	return errs
 }
+
+func newValidFunctionsOnCounters(_ yaml.Node) (Validator, error) {
+	return &validFunctionsOnCounters{}, nil
+}
+
+type validFunctionsOnCounters struct{}
+
+func (h validFunctionsOnCounters) String() string {
+	return "functions `rate` and `increase` used only on metrics with the `_total` suffix"
+}
+
+func (h validFunctionsOnCounters) Validate(rule rulefmt.Rule) []error {
+	expr, err := parser.ParseExpr(rule.Expr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+	}
+	var errs []error
+	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+		switch v := n.(type) {
+		case *parser.Call:
+			if v == nil || v.Func == nil || (v.Func.Name != "rate" && v.Func.Name != "increase") {
+				return nil
+			}
+			for _, ch := range parser.Children(n) {
+				switch m := ch.(type) {
+				case *parser.MatrixSelector:
+					if !strings.HasSuffix(m.VectorSelector.String(), "_total") {
+						errs = append(errs, fmt.Errorf("`%s` function should be used only on counters and those should end with the `_total` suffix, which is not this case `%s`", v.Func.Name, n.String()))
+					}
+				}
+			}
+		}
+		return nil
+	})
+	return errs
+}

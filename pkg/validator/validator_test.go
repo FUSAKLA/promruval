@@ -108,6 +108,11 @@ var testCases = []struct {
 	// expressionDoesNotUseIrate
 	{name: "expressionDoesNotUseIrate", validator: expressionDoesNotUseIrate{}, rule: rulefmt.Rule{Expr: "rate(foo_bar[1m])"}, expectedErrors: 0},
 	{name: "expressionUsesIrate", validator: expressionDoesNotUseIrate{}, rule: rulefmt.Rule{Expr: "irate(foo_bar[1m])"}, expectedErrors: 1},
+
+	// validFunctionsOnCounters
+	{name: "rateOnCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: "rate(foo_bar_total[1m])"}, expectedErrors: 0},
+	{name: "rateOnNonCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: "rate(foo_bar[1m])"}, expectedErrors: 1},
+	{name: "increaseOnNonCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: "increase ( foo_bar [1m] )"}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

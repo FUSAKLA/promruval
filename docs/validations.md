@@ -183,6 +183,10 @@ params:
 Fails if the rule `expr` uses the `irate` function as disouraged
 in https://prometheus.io/docs/prometheus/latest/querying/functions/#irate.
 
+### `validFunctionsOnCounters`
+
+Fails if the expression uses a `rate` or `increase` function on a metric that does not end with the `_total` suffix.
+
 ## Alert
 
 ### `forIsNotLongerThan`
