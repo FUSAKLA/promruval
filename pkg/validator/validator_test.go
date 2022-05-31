@@ -118,6 +118,20 @@ var testCases = []struct {
 	{name: "SumAfterRate", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "sum(rate(foo_bar_total[1m]))"}, expectedErrors: 0},
 	{name: "SumBeforeRate", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "rate(sum(foo_bar_total)[5m:])"}, expectedErrors: 1},
 	{name: "minBeforeIncrease", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "increase(min(foo_bar_total)[5m:])"}, expectedErrors: 1},
+
+	// nonEmptyLabels
+	{name: "NonEmptyLabel", validator: nonEmptyLabels{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
+	{name: "EmptyLabel", validator: nonEmptyLabels{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": ""}}, expectedErrors: 1},
+	{name: "OneEmptyOneNoneEmpty", validator: nonEmptyLabels{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": ""}}, expectedErrors: 1},
+	{name: "BothEmpty", validator: nonEmptyLabels{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "", "bar": ""}}, expectedErrors: 2},
+
+	// newExclusiveLabels
+	{name: "MissingLabel1", validator: exclusiveLabels{label1: "foo", label2: "bar"}, rule: rulefmt.Rule{Labels: map[string]string{"bar": "yyy"}}, expectedErrors: 0},
+	{name: "label1PresentDifferentValue", validator: exclusiveLabels{label1: "foo", label1Value: "ooo", label2: "bar"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 0},
+	{name: "label1PresentLabel2Present", validator: exclusiveLabels{label1: "foo", label2: "bar"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 1},
+	{name: "label1PresentMatchingValueLabel2Present", validator: exclusiveLabels{label1: "foo", label1Value: "xxx", label2: "bar"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 1},
+	{name: "label1PresentMatchingValueLabel2PresentDifferentValue", validator: exclusiveLabels{label1: "foo", label1Value: "xxx", label2: "bar", label2Value: "ooo"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 0},
+	{name: "label1PresentMatchingValueLabel2PresentMatchingValue", validator: exclusiveLabels{label1: "foo", label1Value: "xxx", label2: "bar", label2Value: "yyy"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

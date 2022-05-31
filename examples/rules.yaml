@@ -13,6 +13,7 @@ groups:
         labels:
           severity: critical
           team: sre@mail.com
+          page: true
         annotations:
           title: test alert
           playbook: http://foo.bar/nonexisting/playbook

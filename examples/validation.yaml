@@ -11,6 +11,11 @@ validationRules:
         params:
           label: "severity"
           allowedValues: [ "info", "warning", "critical" ]
+      - type: exclusiveLabels
+        params:
+          firstLabel: severity
+          firstLabelValue: info
+          secondLabel: page
 
   - name: check-team-label
     scope: Alert

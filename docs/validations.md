@@ -66,6 +66,25 @@ params:
   commaSeparatedValue: true
 ```
 
+### `nonEmptyLabels`
+
+Fails if any label has empty value. It has no effect and is dropped by Prometheus.
+
+### `exclusiveLabels`
+
+Fails if the rule has the first label and also the second one.
+You can also optionally specify event the value of those labels.
+
+Example: If alert has label `severity` with value `critical` cannot have label `page` with value `true`
+
+```yaml
+params:
+  firstLabel: "severity"
+  firstLabelValue: "critical" # Optional, if not set, only presence of the label excludes the second label
+  secondLabel: "page"
+  secondLabelValue: "true" # Optional, if set, fails only if also the second label value matches 
+```
+
 ## Annotations
 
 ### `hasAnnotations`
