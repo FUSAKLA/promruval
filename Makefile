@@ -3,7 +3,10 @@ SRC_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 TMP_DIR ?= $(SRC_DIR)/tmp
 TMP_BIN_DIR ?= $(TMP_DIR)/bin
 
-PROMRUVAL_BIN := promruval
+PROMRUVAL_BIN := ./promruval
+
+E2E_TESTS_VALIDATIONS_FILE := examples/validation.yaml
+E2E_TESTS_RULES_FILE := examples/rules.yaml
 
 $(TMP_DIR):
 	mkdir -p $(TMP_DIR)
@@ -26,6 +29,10 @@ test:
 
 build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(PROMRUVAL_BIN)
+
+e2e-test: build
+	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) $(E2E_TESTS_RULES_FILE)
+	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE)
 
 docker: build
 	docker build -t fusakla/promruval .

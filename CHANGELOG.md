@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - [#13](https://github.com/FUSAKLA/promruval/pull/13) New validator `validFunctionsOnCounters` for more info see [the docs](docs/validations.md#validfunctionsoncounters)
  - [#14](https://github.com/FUSAKLA/promruval/pull/14) New validator `rateBeforeAggregation` for more info see [the docs](docs/validations.md#ratebeforeaggregation)
  - [#17](https://github.com/FUSAKLA/promruval/pull/17) New validators: [`nonEmptyLabels`](docs/validations.md#nonemptylabels), [`exclusiveLabels`](docs/validations.md#exclusivelabels)
+ - [#18](https://github.com/FUSAKLA/promruval/pull/18) Added e2e tests
 
 ### Fixed
  - [#12](https://github.com/FUSAKLA/promruval/pull/12) Fixed the `annotationIsValidURL` to be more strict in parsing URL and to actually use the `resolve_url` configuration.
