@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+ - [#16](https://github.com/FUSAKLA/promruval/pull/16) Upgraded yaml.v3 library to mitigate CVE-2022-28948
  - [#15](https://github.com/FUSAKLA/promruval/pull/15) Upgraded to Go 1.18
  - [#9](https://github.com/FUSAKLA/promruval/pull/9) Upgraded to Go 1.17
 
