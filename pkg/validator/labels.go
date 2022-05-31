@@ -235,10 +235,7 @@ func newNonEmptyLabels(paramsConfig yaml.Node) (Validator, error) {
 	return &nonEmptyLabels{}, nil
 }
 
-type nonEmptyLabels struct {
-	label  string
-	regexp *regexp.Regexp
-}
+type nonEmptyLabels struct{}
 
 func (h nonEmptyLabels) String() string {
 	return "labels does not have empty values"
