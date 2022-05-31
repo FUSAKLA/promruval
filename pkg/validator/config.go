@@ -33,6 +33,8 @@ var registeredValidators = map[string]validatorCreator{
 	"expressionDoesNotUseIrate":            newExpressionDoesNotUseIrate,
 	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
 	"rateBeforeAggregation":                newRateBeforeAggregation,
+	"nonEmptyLabels":                       newNonEmptyLabels,
+	"exclusiveLabels":                      newExclusiveLabels,
 }
 
 func NewFromConfig(config Config) (Validator, error) {

@@ -226,3 +226,92 @@ func (h labelMatchesRegexp) Validate(rule rulefmt.Rule) []error {
 	}
 	return []error{}
 }
+
+func newNonEmptyLabels(paramsConfig yaml.Node) (Validator, error) {
+	params := struct{}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &nonEmptyLabels{}, nil
+}
+
+type nonEmptyLabels struct {
+	label  string
+	regexp *regexp.Regexp
+}
+
+func (h nonEmptyLabels) String() string {
+	return "labels does not have empty values"
+}
+
+func (h nonEmptyLabels) Validate(rule rulefmt.Rule) []error {
+	var errs []error
+	for k, v := range rule.Labels {
+		if v == "" {
+			errs = append(errs, fmt.Errorf("label `%s` has empty value, has no effect", k))
+		}
+	}
+	return errs
+}
+
+func newExclusiveLabels(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Label1      string `yaml:"firstLabel"`
+		Label1Value string `yaml:"firstLabelValue"`
+		Label2      string `yaml:"secondLabel"`
+		Label2Value string `yaml:"secondLabelValue"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if params.Label1 == "" {
+		return nil, fmt.Errorf("missing label1 name")
+	}
+	if params.Label2 == "" {
+		return nil, fmt.Errorf("missing label2 name")
+	}
+	return &exclusiveLabels{label1: params.Label1, label1Value: params.Label1Value, label2: params.Label2, label2Value: params.Label2Value}, nil
+}
+
+type exclusiveLabels struct {
+	label1      string
+	label1Value string
+	label2      string
+	label2Value string
+}
+
+func (h exclusiveLabels) String() string {
+	text := fmt.Sprintf("if rule has label `%s` ", h.label1)
+	if h.label1Value != "" {
+		text += fmt.Sprintf("with value `%s` ", h.label1Value)
+	}
+	text += fmt.Sprintf(", it cannot has a label `%s`", h.label2)
+	if h.label2Value != "" {
+		text += fmt.Sprintf("with value `%s` ", h.label2Value)
+	}
+	return text
+}
+
+func (h exclusiveLabels) Validate(rule rulefmt.Rule) []error {
+	label1Value, hasLabel1 := rule.Labels[h.label1]
+	label2Value, hasLabel2 := rule.Labels[h.label2]
+	if !hasLabel1 || (h.label1Value != "" && h.label1Value != label1Value) {
+		return []error{}
+	}
+	errMsg := fmt.Sprintf("if the rule has label `%s`", h.label1)
+	if h.label1Value != "" {
+		errMsg += fmt.Sprintf(" with value `%s`", h.label1Value)
+	}
+	if !hasLabel2 {
+		return []error{}
+	}
+	errMsg += fmt.Sprintf(", it cannot has label `%s`", h.label2)
+	if h.label2Value == "" {
+		return []error{fmt.Errorf(errMsg)}
+	}
+	if h.label2Value != "" && h.label2Value == label2Value {
+		errMsg += fmt.Sprintf(" with value `%s`", h.label2Value)
+		return []error{fmt.Errorf(errMsg)}
+	}
+	return []error{}
+}
