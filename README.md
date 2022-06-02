@@ -49,7 +49,7 @@ make build
 
 ### Usage
 ```bash
-$ promruval --help-long
+$ ./promruval --help-long
 usage: promruval [<flags>] <command> [<args> ...]
 
 Prometheus rules validation tool.
@@ -61,15 +61,20 @@ Commands:
   help [<command>...]
     Show help.
 
+
   version
     Print version and build information.
+
 
   validate --config-file=CONFIG-FILE [<flags>] <path>...
     Validate Prometheus rule files using validation rules from config file.
 
     -c, --config-file=CONFIG-FILE  Path to validation config file.
+        --debug                    Enable debug logging.
     -d, --disable-rule=DISABLE-RULE ...  
                                    Allows to disable any validation rules by it's name. Can be passed multiple times.
+    -e, --enable-rule=ENABLE-RULE ...  
+                                   Only enable these validation rules. Can be passed multiple times.
     -o, --output=[text,json,yaml]  Format of the output.
         --color                    Use color output.
 
@@ -88,6 +93,18 @@ Basic structure is:
 ```yaml
 # OPTIONAL Overrides the annotation used for disabling rules.
 customExcludeAnnotation: my_disable_annotation
+
+prometheus:
+  # URL of the running prometheus instance to be used
+  url: https://foo.bar/
+  # OPTIONAL Skip TLS verification 
+  insecureSkipTlsVerify: false
+  # OPTIONAL Timeout for any request on the Prometheus instance
+  timeout: 30s
+  # OPTIONAL: name of the file to save cache of the Prometheus calls for speedup
+  cacheFile: .promruval_cache.json
+  # OPTIONAL: maximum age how old the cache can be to be used
+  maxCacheAge: 1h
 
 validationRules:
     # Name of the validation rule.
@@ -119,6 +136,12 @@ Or using [Docker image](https://hub.docker.com/r/fusakla/promruval)
 docker run -it -v $PWD:/rules fusakla/promruval validate --config-file=/rules/examples/validation.yaml /rules/examples/rules.yaml
 ```
 
+#### Validation using live Prometheus instance
+Event though these validations are useful, they may be flaky and dangerous for the Prometheus instance.
+If you have large number of rules and run the check often the number of queries can be huge or the instance might go down and your validation
+would be flaky.
+
+Therefore, it's recommended to use these check as a warning and do not fail if it does not succeed.
 
 ### Disabling rules
 If you want to temporarily disable any of the rules for all the tested rules,

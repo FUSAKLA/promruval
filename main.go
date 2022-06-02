@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/fusakla/promruval/pkg/config"
-	"github.com/fusakla/promruval/pkg/report"
-	"github.com/fusakla/promruval/pkg/validate"
-	"github.com/fusakla/promruval/pkg/validator"
-	"gopkg.in/alecthomas/kingpin.v2"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/fusakla/promruval/pkg/config"
+	"github.com/fusakla/promruval/pkg/prometheus"
+	"github.com/fusakla/promruval/pkg/report"
+	"github.com/fusakla/promruval/pkg/validate"
+	"github.com/fusakla/promruval/pkg/validator"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/alecthomas/kingpin.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -26,8 +29,10 @@ var (
 
 	validateCmd            = app.Command("validate", "Validate Prometheus rule files using validation rules from config file.")
 	validateConfigFile     = validateCmd.Flag("config-file", "Path to validation config file.").Short('c').Required().ExistingFile()
+	debug                  = validateCmd.Flag("debug", "Enable debug logging.").Bool()
 	filePaths              = validateCmd.Arg("path", "File paths to be validated, can be passed as a glob.").Required().Strings()
 	disabledRules          = validateCmd.Flag("disable-rule", "Allows to disable any validation rules by it's name. Can be passed multiple times.").Short('d').Strings()
+	enabledRules           = validateCmd.Flag("enable-rule", "Only enable these validation rules. Can be passed multiple times.").Short('e').Strings()
 	validationOutputFormat = validateCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,json,yaml]").Default("text").Enum("text", "json", "yaml")
 	color                  = validateCmd.Flag("color", "Use color output.").Bool()
 
@@ -60,6 +65,11 @@ rulesIteration:
 				continue rulesIteration
 			}
 		}
+		for _, enabledRule := range *enabledRules {
+			if enabledRule != rule.Name {
+				continue rulesIteration
+			}
+		}
 		newRule := validate.NewValidationRule(rule.Name, rule.Scope)
 		for _, validatorConfig := range rule.Validations {
 			newValidator, err := validator.NewFromConfig(validatorConfig)
@@ -77,7 +87,7 @@ rulesIteration:
 }
 
 func exitWithError(err error) {
-	fmt.Printf("Error: %v\n", err)
+	log.Error(err)
 	os.Exit(1)
 }
 
@@ -107,6 +117,12 @@ func main() {
 		}
 		fmt.Println(output)
 	case validateCmd.FullCommand():
+		if *debug {
+			log.SetLevel(log.DebugLevel)
+		} else {
+			log.SetLevel(log.InfoLevel)
+		}
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true})
 		var filesToBeValidated []string
 		for _, path := range *filePaths {
 			paths, err := filepath.Glob(path)
@@ -116,6 +132,7 @@ func main() {
 			filesToBeValidated = append(filesToBeValidated, paths...)
 		}
 
+		start := time.Now()
 		validationConfig, err := loadConfigFile(*validateConfigFile)
 		if err != nil {
 			exitWithError(err)
@@ -125,11 +142,25 @@ func main() {
 			exitWithError(err)
 		}
 
+		var prometheusClient *prometheus.Client
+		if validationConfig.Prometheus.Url != "" {
+			prometheusClient, err = prometheus.NewClient(validationConfig.Prometheus)
+			if err != nil {
+				exitWithError(fmt.Errorf("failed to initialize prometheus client: %w", err))
+			}
+		}
+		log.Debugf("configuration loaded in %s", time.Since(start))
+
 		excludeAnnotation := "disabled_validation_rules"
 		if validationConfig.CustomExcludeAnnotation != "" {
 			excludeAnnotation = validationConfig.CustomExcludeAnnotation
 		}
-		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation)
+		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation, prometheusClient)
+
+		if validationConfig.Prometheus.Url != "" {
+			prometheusClient.DumpCache()
+		}
+
 		switch *validationOutputFormat {
 		case "text":
 			fmt.Println(validationReport.AsText(2, *color))

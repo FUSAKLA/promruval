@@ -2,13 +2,9 @@ package validator
 
 import (
 	"fmt"
+	"github.com/fusakla/promruval/pkg/config"
 	"gopkg.in/yaml.v3"
 )
-
-type Config struct {
-	ValidatorType string    `yaml:"type"`
-	Params        yaml.Node `yaml:"params"`
-}
 
 type validatorCreator func(params yaml.Node) (Validator, error)
 
@@ -35,9 +31,12 @@ var registeredValidators = map[string]validatorCreator{
 	"rateBeforeAggregation":                newRateBeforeAggregation,
 	"nonEmptyLabels":                       newNonEmptyLabels,
 	"exclusiveLabels":                      newExclusiveLabels,
+	"expressionCanBeEvaluated":             newExpressionCanBeEvaluated,
+	"expressionUsesExistingLabels":         newExpressionUsesExistingLabels,
+	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
 }
 
-func NewFromConfig(config Config) (Validator, error) {
+func NewFromConfig(config config.ValidatorConfig) (Validator, error) {
 	validatorFactory, ok := registeredValidators[config.ValidatorType]
 	if !ok {
 		return nil, fmt.Errorf("unknown validator type `%s`", config.ValidatorType)

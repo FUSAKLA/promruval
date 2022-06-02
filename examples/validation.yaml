@@ -1,5 +1,9 @@
 # customExcludeAnnotation: my_disable_annotation
 
+
+prometheus:
+  url: http://demo.robustperception.io:9090
+
 validationRules:
   - name: check-severity-label
     scope: Alert
@@ -16,13 +20,19 @@ validationRules:
           firstLabel: severity
           firstLabelValue: info
           secondLabel: page
+      - type: expressionCanBeEvaluated
+        params:
+          timeSeriesLimit: 20
+          evaluationDurationLimit: 10s
+      - type: expressionUsesExistingLabels
+      - type: expressionSelectorsMatchesAnything
 
   - name: check-team-label
     scope: Alert
     validations:
       - type: hasLabels
         params:
-          labels: [ "team" ]
+          labels: [ "xxx" ]
       - type: labelHasAllowedValue
         params:
           label: "team"
