@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"github.com/fusakla/promruval/pkg/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gotest.tools/assert"
@@ -15,6 +16,7 @@ var testCases = []struct {
 	name           string
 	validator      Validator
 	rule           rulefmt.Rule
+	promClient     *prometheus.Client
 	expectedErrors int
 }{
 	// hasLabels
@@ -132,12 +134,28 @@ var testCases = []struct {
 	{name: "label1PresentMatchingValueLabel2Present", validator: exclusiveLabels{label1: "foo", label1Value: "xxx", label2: "bar"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 1},
 	{name: "label1PresentMatchingValueLabel2PresentDifferentValue", validator: exclusiveLabels{label1: "foo", label1Value: "xxx", label2: "bar", label2Value: "ooo"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 0},
 	{name: "label1PresentMatchingValueLabel2PresentMatchingValue", validator: exclusiveLabels{label1: "foo", label1Value: "xxx", label2: "bar", label2Value: "yyy"}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "xxx", "bar": "yyy"}}, expectedErrors: 1},
+
+	// expressionCanBeEvaluated
+	{name: "evaluationOk", validator: expressionCanBeEvaluated{evaluationDurationLimit: time.Second, timeSeriesLimit: 10}, promClient: prometheus.NewClientMock(prometheus.NewQueryVectorResponseMock(2), 0, false, false), rule: rulefmt.Rule{Expr: "1"}, expectedErrors: 0},
+	{name: "evaluationWithWarning", validator: expressionCanBeEvaluated{}, promClient: prometheus.NewClientMock(prometheus.NewQueryVectorResponseMock(2), 0, true, false), rule: rulefmt.Rule{Expr: "1"}, expectedErrors: 0},
+	{name: "evaluationWithError", validator: expressionCanBeEvaluated{}, promClient: prometheus.NewClientMock(prometheus.NewQueryVectorResponseMock(2), 0, false, true), rule: rulefmt.Rule{Expr: "1"}, expectedErrors: 1},
+	{name: "evaluationTooSlow", validator: expressionCanBeEvaluated{evaluationDurationLimit: time.Second}, promClient: prometheus.NewClientMock(prometheus.NewQueryVectorResponseMock(2), time.Second*2, false, false), rule: rulefmt.Rule{Expr: "1"}, expectedErrors: 1},
+	{name: "evaluationTooManySeries", validator: expressionCanBeEvaluated{timeSeriesLimit: 1}, promClient: prometheus.NewClientMock(prometheus.NewQueryVectorResponseMock(2), 0, false, false), rule: rulefmt.Rule{Expr: "1"}, expectedErrors: 1},
+
+	// expressionSelectorsMatchesAnything
+	{name: "matches", validator: expressionSelectorsMatchesAnything{}, promClient: prometheus.NewClientMock(prometheus.NewSeriesResponseMock(2), 0, false, false), rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
+	{name: "noMatches", validator: expressionSelectorsMatchesAnything{}, promClient: prometheus.NewClientMock(prometheus.NewSeriesResponseMock(0), 0, false, false), rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 1},
+	{name: "queryError", validator: expressionSelectorsMatchesAnything{}, promClient: prometheus.NewClientMock(prometheus.NewSeriesResponseMock(2), 0, false, true), rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 1},
+
+	// expressionUsesExistingLabels
+	{name: "labelsExists", validator: expressionUsesExistingLabels{}, promClient: prometheus.NewClientMock([]string{"__name__", "foo"}, 0, false, false), rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
+	{name: "labelsDoesNotExist", validator: expressionUsesExistingLabels{}, promClient: prometheus.NewClientMock([]string{"__name__"}, 0, false, false), rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s:%s", reflect.TypeOf(tc.validator), tc.name), func(t *testing.T) {
-			errs := tc.validator.Validate(tc.rule)
+			errs := tc.validator.Validate(tc.rule, tc.promClient)
 			assert.Equal(t, len(errs), tc.expectedErrors, "unexpected number of errors, expected %d but got: %s", tc.expectedErrors, errs)
 		})
 	}

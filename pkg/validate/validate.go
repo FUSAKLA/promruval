@@ -2,9 +2,11 @@ package validate
 
 import (
 	"github.com/fusakla/promruval/pkg/config"
+	"github.com/fusakla/promruval/pkg/prometheus"
 	"github.com/fusakla/promruval/pkg/report"
 	"github.com/fusakla/promruval/pkg/validator"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
+	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
@@ -43,7 +45,7 @@ func (r *ValidationRule) ValidationTexts() []string {
 	return validationTexts
 }
 
-func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotationName string) *report.ValidationReport {
+func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotationName string, prometheusClient *prometheus.Client) *report.ValidationReport {
 	validationReport := report.NewValidationReport()
 	for _, r := range validationRules {
 		validationReport.ValidationRules = append(validationReport.ValidationRules, r)
@@ -94,7 +96,9 @@ func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotat
 						}
 					}
 					for _, v := range validationRule.validators {
-						ruleReport.Errors = append(ruleReport.Errors, v.Validate(rule)...)
+						start := time.Now()
+						ruleReport.Errors = append(ruleReport.Errors, v.Validate(rule, prometheusClient)...)
+						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, v, time.Since(start))
 					}
 					if len(ruleReport.Errors) > 0 {
 						validationReport.Failed = true

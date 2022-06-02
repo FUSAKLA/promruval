@@ -199,7 +199,7 @@ params:
 
 ### `expressionDoesNotUseIrate`
 
-Fails if the rule `expr` uses the `irate` function as disouraged
+Fails if the rule `expr` uses the `irate` function as discouraged
 in https://prometheus.io/docs/prometheus/latest/querying/functions/#irate.
 
 ### `validFunctionsOnCounters`
@@ -208,7 +208,33 @@ Fails if the expression uses a `rate` or `increase` function on a metric that do
 
 ### `rateBeforeAggregation`
 
-Fails if aggregation function is used before the the `rate` or `increase` functions.
+Fails if aggregation function is used before the `rate` or `increase` functions.
+
+### `expressionCanBeEvaluated`
+
+> Queries live prometheus instance, requires the `prometheus` config to be set.
+
+This validation runs the expression against the actual Prometheus instance and checks if it ends with error.
+Possibly you can set maximum allowed query execution time and maximum number of resulting timeseries.
+
+```yaml
+params:
+  timeSeriesLimit: 100
+  evaluationDurationLimit: 1m
+```
+
+### `expressionUsesExistingLabels`
+
+> Queries live prometheus instance, requires the `prometheus` config to be set.
+
+Fails if any used label is not present in the configured Prometheus instance.
+
+### `expressionSelectorsMatchesAnything`
+
+> Queries live prometheus instance, requires the `prometheus` config to be set.
+
+Verifies if any of the selectors in the expression (eg `up{foo="bar"}`) matches actual data in the configured Prometheus
+instance.
 
 ## Alert
 

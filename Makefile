@@ -2,11 +2,14 @@
 SRC_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 TMP_DIR ?= $(SRC_DIR)/tmp
 TMP_BIN_DIR ?= $(TMP_DIR)/bin
+CACHE_FILE := .promruval_cache.json
 
 PROMRUVAL_BIN := ./promruval
 
 E2E_TESTS_VALIDATIONS_FILE := examples/validation.yaml
 E2E_TESTS_RULES_FILE := examples/rules.yaml
+
+all: deps lint build test e2e-test
 
 $(TMP_DIR):
 	mkdir -p $(TMP_DIR)
@@ -39,7 +42,7 @@ docker: build
 
 .PHONY: clean
 clean:
-	rm -rf dist $(TMP_DIR) $(PROMRUVAL_BIN)
+	rm -rf dist $(TMP_DIR) $(PROMRUVAL_BIN) $(CACHE_FILE)
 
 .PHONY: deps
 deps:

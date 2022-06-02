@@ -2,7 +2,10 @@ package config
 
 import (
 	"fmt"
-	"github.com/fusakla/promruval/pkg/validator"
+	"gopkg.in/yaml.v3"
+	"time"
+
+	"github.com/creasty/defaults"
 )
 
 const (
@@ -16,12 +19,40 @@ var ValidationScopes = []ValidationScope{AlertScope, RecordingRuleScope, AllRule
 type Config struct {
 	CustomExcludeAnnotation string           `yaml:"customExcludeAnnotation"`
 	ValidationRules         []ValidationRule `yaml:"validationRules"`
+	Prometheus              PrometheusConfig `yaml:"prometheus"`
+}
+
+type PrometheusConfig struct {
+	Url                   string        `yaml:"url"`
+	Timeout               time.Duration `yaml:"timeout" default:"30s"`
+	InsecureSkipTlsVerify bool          `yaml:"insecureSkipTlsVerify"`
+	CacheFile             string        `yaml:"cacheFile,omitempty" default:".promruval_cache.json"`
+	MaxCacheAge           time.Duration `yaml:"maxCacheAge,omitempty" default:"1h"`
+}
+
+func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	err := defaults.Set(c)
+	if err != nil {
+		return err
+	}
+
+	type plain PrometheusConfig
+	err = unmarshal((*plain)(c))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type ValidationRule struct {
-	Name        string             `yaml:"name"`
-	Scope       ValidationScope    `yaml:"scope"`
-	Validations []validator.Config `yaml:"validations"`
+	Name        string            `yaml:"name"`
+	Scope       ValidationScope   `yaml:"scope"`
+	Validations []ValidatorConfig `yaml:"validations"`
+}
+
+type ValidatorConfig struct {
+	ValidatorType string    `yaml:"type"`
+	Params        yaml.Node `yaml:"params"`
 }
 
 type ValidationScope string

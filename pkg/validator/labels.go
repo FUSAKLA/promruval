@@ -5,8 +5,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/prometheus/prometheus/pkg/rulefmt"
 	"gopkg.in/yaml.v3"
+
+	"github.com/fusakla/promruval/pkg/prometheus"
+	"github.com/prometheus/prometheus/pkg/rulefmt"
 )
 
 func newHasLabels(paramsConfig yaml.Node) (Validator, error) {
@@ -32,7 +34,7 @@ func (h hasLabels) String() string {
 	return fmt.Sprintf("has labels: `%s`", strings.Join(h.labels, "`,`"))
 }
 
-func (h hasLabels) Validate(rule rulefmt.Rule) []error {
+func (h hasLabels) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var (
 		errs       []error
 		err        error
@@ -85,7 +87,7 @@ func (h doesNotHaveLabels) String() string {
 	return fmt.Sprintf("does not have labels: `%s`", strings.Join(h.labels, "`,`"))
 }
 
-func (h doesNotHaveLabels) Validate(rule rulefmt.Rule) []error {
+func (h doesNotHaveLabels) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	for _, label := range h.labels {
 		if _, ok := rule.Labels[label]; ok {
@@ -129,7 +131,7 @@ func (h hasAnyOfLabels) String() string {
 	return fmt.Sprintf("has any of these labels: `%s`", strings.Join(h.labels, "`,`"))
 }
 
-func (h hasAnyOfLabels) Validate(rule rulefmt.Rule) []error {
+func (h hasAnyOfLabels) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	for _, label := range h.labels {
 		if _, ok := rule.Labels[label]; ok {
 			return []error{}
@@ -170,7 +172,7 @@ func (h labelHasAllowedValue) String() string {
 	return fmt.Sprintf("label `%s` %s", h.label, text)
 }
 
-func (h labelHasAllowedValue) Validate(rule rulefmt.Rule) []error {
+func (h labelHasAllowedValue) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	ruleValue, ok := rule.Labels[h.label]
 	if !ok {
 		return []error{}
@@ -216,7 +218,7 @@ func (h labelMatchesRegexp) String() string {
 	return fmt.Sprintf("label `%s` matches Regexp `%s`", h.label, h.regexp)
 }
 
-func (h labelMatchesRegexp) Validate(rule rulefmt.Rule) []error {
+func (h labelMatchesRegexp) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	value, ok := rule.Labels[h.label]
 	if !ok {
 		return []error{}
@@ -241,7 +243,7 @@ func (h nonEmptyLabels) String() string {
 	return "labels does not have empty values"
 }
 
-func (h nonEmptyLabels) Validate(rule rulefmt.Rule) []error {
+func (h nonEmptyLabels) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	for k, v := range rule.Labels {
 		if v == "" {
@@ -289,7 +291,7 @@ func (h exclusiveLabels) String() string {
 	return text
 }
 
-func (h exclusiveLabels) Validate(rule rulefmt.Rule) []error {
+func (h exclusiveLabels) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	label1Value, hasLabel1 := rule.Labels[h.label1]
 	label2Value, hasLabel2 := rule.Labels[h.label2]
 	if !hasLabel1 || (h.label1Value != "" && h.label1Value != label1Value) {
