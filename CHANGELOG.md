@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.0.0] - 2022-06-03
+
+No actual breaking changes, but a lot of new features and configuration options so why not a major release :)
+
 ### Changed
 
 - [#16](https://github.com/FUSAKLA/promruval/pull/16) Upgraded yaml.v3 library to mitigate CVE-2022-28948
@@ -39,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       live prometheus instance.
     - Added caching of Prometheus data is used. Default cache file is `./.promruval_cache.json`.
     - Added new flag `--enabled-rule` to enable only named validation rules.
+- [#20](https://github.com/FUSAKLA/promruval/pull/20)
+    - Flag `--config-file` can be now [passed multiple times](./README.md#configuration-composition) allowing config
+      composition.
+    - Accept `partial_response_strategy` field in rule group to be able to validate thanos rules.
 
 ### Fixed
 
