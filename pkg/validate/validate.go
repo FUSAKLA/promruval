@@ -1,12 +1,16 @@
 package validate
 
 import (
+	"fmt"
 	"github.com/fusakla/promruval/pkg/config"
 	"github.com/fusakla/promruval/pkg/prometheus"
 	"github.com/fusakla/promruval/pkg/report"
 	"github.com/fusakla/promruval/pkg/validator"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/pkg/rulefmt"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
+	"os"
 	"strings"
 	"time"
 )
@@ -45,6 +49,17 @@ func (r *ValidationRule) ValidationTexts() []string {
 	return validationTexts
 }
 
+type rulesFile struct {
+	Groups []ruleGroup `yaml:"groups"`
+}
+
+type ruleGroup struct {
+	Name                    string             `yaml:"name"`
+	Interval                model.Duration     `yaml:"interval,omitempty"`
+	PartialResponseStrategy string             `yaml:"partial_response_strategy,omitempty"`
+	Rules                   []rulefmt.RuleNode `yaml:"rules"`
+}
+
 func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotationName string, prometheusClient *prometheus.Client) *report.ValidationReport {
 	validationReport := report.NewValidationReport()
 	for _, r := range validationRules {
@@ -54,14 +69,22 @@ func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotat
 	for _, fileName := range fileNames {
 		validationReport.FilesCount++
 		fileReport := validationReport.NewFileReport(fileName)
-		rgs, errs := rulefmt.ParseFile(fileName)
-		if len(errs) > 0 {
+		f, err := os.Open(fileName)
+		if err != nil {
 			validationReport.Failed = true
-			fileReport.Valid = false
-			fileReport.Errors = errs
+			fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %s", fileName, err)}
 			continue
 		}
-		for _, group := range rgs.Groups {
+		var rf rulesFile
+		decoder := yaml.NewDecoder(f)
+		decoder.KnownFields(true)
+		err = decoder.Decode(&rf)
+		if err != nil {
+			validationReport.Failed = true
+			fileReport.Errors = []error{fmt.Errorf("invalid file %s: %s", fileName, err)}
+			continue
+		}
+		for _, group := range rf.Groups {
 			validationReport.GroupsCount++
 			groupReport := fileReport.NewGroupReport(group.Name)
 			for _, ruleNode := range group.Rules {

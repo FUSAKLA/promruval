@@ -1,5 +1,6 @@
 groups:
   - name: group1
+    partial_response_strategy: abort
     rules:
       - record: recorded_metrics
         expr: 1

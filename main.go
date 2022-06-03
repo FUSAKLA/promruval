@@ -23,13 +23,13 @@ var (
 	date    = time.Now().Format("2006-01-02")
 	builtBy = os.Getenv("USER")
 
-	app = kingpin.New("promruval", "Prometheus rules validation tool.")
+	app                 = kingpin.New("promruval", "Prometheus rules validation tool.")
+	validateConfigFiles = app.Flag("config-file", "Path to validation config file. Can be passed multiple times, only validationRules will be reflected from the additional configs.").Short('c').Required().ExistingFiles()
+	debug               = app.Flag("debug", "Enable debug logging.").Bool()
 
 	versionCmd = app.Command("version", "Print version and build information.")
 
 	validateCmd            = app.Command("validate", "Validate Prometheus rule files using validation rules from config file.")
-	validateConfigFile     = validateCmd.Flag("config-file", "Path to validation config file.").Short('c').Required().ExistingFile()
-	debug                  = validateCmd.Flag("debug", "Enable debug logging.").Bool()
 	filePaths              = validateCmd.Arg("path", "File paths to be validated, can be passed as a glob.").Required().Strings()
 	disabledRules          = validateCmd.Flag("disable-rule", "Allows to disable any validation rules by it's name. Can be passed multiple times.").Short('d').Strings()
 	enabledRules           = validateCmd.Flag("enable-rule", "Only enable these validation rules. Can be passed multiple times.").Short('e').Strings()
@@ -37,7 +37,6 @@ var (
 	color                  = validateCmd.Flag("color", "Use color output.").Bool()
 
 	docsCmd          = app.Command("validation-docs", "Print human readable form of the validation rules from config file.")
-	docsConfigFile   = docsCmd.Flag("config-file", "Path to validation config file.").Short('c').Required().ExistingFile()
 	docsOutputFormat = docsCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,markdown,html]").Default("text").Enum("text", "markdown", "html")
 )
 
@@ -95,18 +94,32 @@ func main() {
 
 	currentCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
+	mainValidationConfig, err := loadConfigFile((*validateConfigFiles)[0])
+	if err != nil {
+		exitWithError(err)
+	}
+	for _, cf := range (*validateConfigFiles)[1:] {
+		validationConfig, err := loadConfigFile(cf)
+		if err != nil {
+			exitWithError(err)
+		}
+		if validationConfig.Prometheus.Url != "" {
+			mainValidationConfig.Prometheus = validationConfig.Prometheus
+		}
+		if validationConfig.CustomExcludeAnnotation != "" {
+			mainValidationConfig.CustomExcludeAnnotation = validationConfig.CustomExcludeAnnotation
+		}
+		mainValidationConfig.ValidationRules = append(mainValidationConfig.ValidationRules, validationConfig.ValidationRules...)
+	}
+	validationRules, err := validationRulesFromConfig(mainValidationConfig)
+	if err != nil {
+		exitWithError(err)
+	}
+
 	switch currentCommand {
 	case versionCmd.FullCommand():
 		fmt.Printf("Version: %s\nBuild date: %s\nBuild commit: %s\nBuilt by: %s\n", version, date, commit, builtBy)
 	case docsCmd.FullCommand():
-		validationConfig, err := loadConfigFile(*docsConfigFile)
-		if err != nil {
-			exitWithError(err)
-		}
-		validationRules, err := validationRulesFromConfig(validationConfig)
-		if err != nil {
-			exitWithError(err)
-		}
 		var reportRules []report.ValidationRule
 		for _, r := range validationRules {
 			reportRules = append(reportRules, r)
@@ -132,32 +145,21 @@ func main() {
 			filesToBeValidated = append(filesToBeValidated, paths...)
 		}
 
-		start := time.Now()
-		validationConfig, err := loadConfigFile(*validateConfigFile)
-		if err != nil {
-			exitWithError(err)
-		}
-		validationRules, err := validationRulesFromConfig(validationConfig)
-		if err != nil {
-			exitWithError(err)
-		}
-
 		var prometheusClient *prometheus.Client
-		if validationConfig.Prometheus.Url != "" {
-			prometheusClient, err = prometheus.NewClient(validationConfig.Prometheus)
+		if mainValidationConfig.Prometheus.Url != "" {
+			prometheusClient, err = prometheus.NewClient(mainValidationConfig.Prometheus)
 			if err != nil {
 				exitWithError(fmt.Errorf("failed to initialize prometheus client: %w", err))
 			}
 		}
-		log.Debugf("configuration loaded in %s", time.Since(start))
 
 		excludeAnnotation := "disabled_validation_rules"
-		if validationConfig.CustomExcludeAnnotation != "" {
-			excludeAnnotation = validationConfig.CustomExcludeAnnotation
+		if mainValidationConfig.CustomExcludeAnnotation != "" {
+			excludeAnnotation = mainValidationConfig.CustomExcludeAnnotation
 		}
 		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation, prometheusClient)
 
-		if validationConfig.Prometheus.Url != "" {
+		if mainValidationConfig.Prometheus.Url != "" {
 			prometheusClient.DumpCache()
 		}
 
