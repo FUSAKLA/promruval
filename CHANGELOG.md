@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.0.1] - 2022-06-06
+
+- [#21](https://github.com/FUSAKLA/promruval/pull/21) Fix `validFunctionsOnCounters` and `rateBeforeAggregation` validators
+
 ## [v2.0.0] - 2022-06-03
 
 No actual breaking changes, but a lot of new features and configuration options so why not a major release :)

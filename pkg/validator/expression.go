@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -41,18 +42,18 @@ func (h expressionDoesNotUseOlderDataThan) Validate(rule rulefmt.Rule, _ *promet
 	var errs []error
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
 		// TODO(FUSAKLA) Having range query in subquery should have the time added.
-		switch v := n.(type) {
+		switch n := n.(type) {
 		case *parser.MatrixSelector:
-			if v.Range > time.Duration(h.limit) {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data in matrix selector which is more than limit `%s`", model.Duration(v.Range), h.limit))
+			if n.Range > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in matrix selector which is more than limit `%s`", model.Duration(n.Range), h.limit))
 			}
 		case *parser.VectorSelector:
-			if v.Offset > time.Duration(h.limit) {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(v.Offset), h.limit))
+			if n.Offset > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(n.Offset), h.limit))
 			}
 		case *parser.SubqueryExpr:
-			if v.Range+v.Offset > time.Duration(h.limit) {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data in subquery which is more than limit `%s`", model.Duration(v.Range+v.Offset), h.limit))
+			if n.Range+n.Offset > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in subquery which is more than limit `%s`", model.Duration(n.Range+n.Offset), h.limit))
 			}
 		}
 		return nil
@@ -144,12 +145,10 @@ func newExpressionDoesNotUseIrate(_ yaml.Node) (Validator, error) {
 	return &expressionDoesNotUseIrate{}, nil
 }
 
-type expressionDoesNotUseIrate struct {
-	limit model.Duration
-}
+type expressionDoesNotUseIrate struct{}
 
 func (h expressionDoesNotUseIrate) String() string {
-	return fmt.Sprintf("expr does not use range selctor shorter than `%s`", h.limit)
+	return "expr does not use irate"
 }
 
 func (h expressionDoesNotUseIrate) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -170,14 +169,27 @@ func (h expressionDoesNotUseIrate) Validate(rule rulefmt.Rule, _ *prometheus.Cli
 	return errs
 }
 
-func newValidFunctionsOnCounters(_ yaml.Node) (Validator, error) {
-	return &validFunctionsOnCounters{}, nil
+func newValidFunctionsOnCounters(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		AllowHistograms bool `yaml:"allowHistograms"`
+	}{}
+	params.AllowHistograms = true
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &validFunctionsOnCounters{allowHistograms: params.AllowHistograms}, nil
 }
 
-type validFunctionsOnCounters struct{}
+type validFunctionsOnCounters struct {
+	allowHistograms bool `yaml:"allowHistograms"`
+}
 
 func (h validFunctionsOnCounters) String() string {
-	return "functions `rate` and `increase` used only on metrics with the `_total` suffix"
+	msg := "functions `rate` and `increase` used only on metrics with the `_total` suffix"
+	if h.allowHistograms {
+		msg += " (metrics ending with _count are exceptions since those are used by histograms)"
+	}
+	return msg
 }
 
 func (h validFunctionsOnCounters) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -186,6 +198,10 @@ func (h validFunctionsOnCounters) Validate(rule rulefmt.Rule, _ *prometheus.Clie
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
 	}
 	var errs []error
+	match := regexp.MustCompile(`_total$`)
+	if h.allowHistograms {
+		match = regexp.MustCompile(`(_total|_count|_bucket|_sum)$`)
+	}
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.Call:
@@ -195,7 +211,7 @@ func (h validFunctionsOnCounters) Validate(rule rulefmt.Rule, _ *prometheus.Clie
 			for _, ch := range parser.Children(n) {
 				switch m := ch.(type) {
 				case *parser.MatrixSelector:
-					if !strings.HasSuffix(m.VectorSelector.String(), "_total") {
+					if !match.MatchString(m.VectorSelector.(*parser.VectorSelector).Name) {
 						errs = append(errs, fmt.Errorf("`%s` function should be used only on counters and those should end with the `_total` suffix, which is not this case `%s`", v.Func.Name, n.String()))
 					}
 				}
@@ -217,26 +233,26 @@ func (h rateBeforeAggregation) String() string {
 }
 
 func (h rateBeforeAggregation) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+	var errs []error
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
 	}
-	var (
-		errs     []error
-		funcCall string
-	)
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
-		switch v := n.(type) {
-		case *parser.Call:
-			if v != nil && v.Func != nil && (v.Func.Name == "rate" || v.Func.Name == "increase") {
-				funcCall = v.String()
+		switch n := n.(type) {
+		case *parser.AggregateExpr:
+			agg := n.Op
+			if !agg.IsAggregator() {
 				return nil
 			}
-		case *parser.AggregateExpr:
-			if funcCall != "" && v != nil {
-				errs = append(errs, fmt.Errorf("never use aggregation functions before calling the `rate` or `increase` functions as in: %s", funcCall))
-				funcCall = ""
-				return nil
+			for _, p := range ns {
+				switch p := p.(type) {
+				case *parser.Call:
+					funcName := p.Func.Name
+					if funcName == "increase" || funcName == "rate" {
+						errs = append(errs, fmt.Errorf("you should not use aggregation functions before calling the `rate` or `increase` functions as in: %s", funcName))
+					}
+				}
 			}
 		}
 		return nil

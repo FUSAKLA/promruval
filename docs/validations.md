@@ -1,9 +1,37 @@
 # Supported validations
 
 - [Labels](#labels)
+    - [hasLabels](./validations.md#haslabels)
+    - [hasAnyOfLabels](./validations.md#hasanyoflabels)
+    - [doesNotHaveLabels](./validations.md#doesnothavelabels)
+    - [labelMatchesRegexp](./validations.md#labelmatchesregexp)
+    - [labelHasAllowedValue](./validations.md#labelhasallowedvalue)
+    - [expressionDoesNotUseLabels](./validations.md#expressiondoesnotuselabels)
+    - [nonEmptyLabels](./validations.md#nonemptylabels)
+    - [exclusiveLabels](./validations.md#exclusivelabels)
+    -
 - [Annotations](#annotations)
+    - [hasAnnotations](./validations.md#hasannotations)
+    - [doesNotHaveAnnotations](./validations.md#doesnothaveannotations)
+    - [hasAnyOfAnnotations](./validations.md#hasanyofannotations)
+    - [annotationMatchesRegexp](./validations.md#annotationmatchesregexp)
+    - [annotationHasAllowedValue](./validations.md#annotationhasallowedvalue)
+    - [annotationIsValidURL](./validations.md#annotationisvalidurl)
+    - [annotationIsValidPromQL](./validations.md#annotationisvalidpromql)
+    - [validateAnnotationTemplates](./validations.md#validateannotationtemplates)
+    -
 - [PromQL expression](#promql-expression)
+    - [expressionDoesNotUseOlderDataThan](./validations.md#expressiondoesnotuseolderdatathan)
+    - [expressionDoesNotUseRangeShorterThan](./validations.md#expressiondoesnotuserangeshorterthan)
+    - [expressionDoesNotUseIrate](./validations.md#expressiondoesnotuseirate)
+    - [validFunctionsOnCounters](./validations.md#validfunctionsoncounters)
+    - [rateBeforeAggregation](./validations.md#ratebeforeaggregation)
+    - [expressionCanBeEvaluated](./validations.md#expressioncanbeevaluated)
+    - [expressionUsesExistingLabels](./validations.md#expressionusesexistinglabels)
+    - [expressionSelectorsMatchesAnything](./validations.md#expressionselectorsmatchesanything)
+    -
 - [Alert](#alert)
+    - [forIsNotLongerThan](./validations.md#forisnotlongerthan)
 
 ## Labels
 
@@ -55,7 +83,7 @@ params:
 ### `labelHasAllowedValue`
 
 Fails if rule label value is not one of the allowed values. If the `commaSeparatedValue` is set to true, the label value
-to true, the label vaue is split by a comma, and the distinct values are check if valid.
+to true, the label value is split by a comma, and the distinct values are checked if valid.
 > It's quite common to have well known severities for alerts which can be important even in the
 > Alertmanager routing tree. Ths is how you can make sure only the well-known severities are used.
 

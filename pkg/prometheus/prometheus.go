@@ -81,7 +81,7 @@ func (s *Client) Labels() ([]string, error) {
 		defer cancel()
 		start := time.Now()
 		result, warnings, err := s.apiClient.LabelNames(ctx, time.Now().Add(-time.Minute), time.Now())
-		log.Debugf("loaded all prometheus label names from %s in %s", s.url, time.Since(start))
+		log.Infof("loaded all prometheus label names from %s in %s", s.url, time.Since(start))
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (s *Client) Query(query string) ([]*model.Sample, int, time.Duration, error
 		start := time.Now()
 		result, warnings, err := s.apiClient.Query(ctx, query, time.Now())
 		duration = time.Since(start)
-		log.Debugf("query on %s prometheus took %s", s.url, duration)
+		log.Infof("query `%s` on %s prometheus took %s", query, s.url, duration)
 		if err != nil {
 			return nil, 0, 0, fmt.Errorf("error querying prometheus: %w", err)
 		}
