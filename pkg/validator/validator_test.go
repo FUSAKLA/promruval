@@ -50,12 +50,12 @@ var testCases = []struct {
 	// labelMatchesRegexp
 	{name: "ruleLabelMatchesRegexp", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(".*")}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
 	{name: "ruleLabelMissingRegexValidatedLabel", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(".*")}, rule: rulefmt.Rule{}, expectedErrors: 0},
-	{name: "ruleLabelDoesNotMatchRegexp", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile("[0-9]+")}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 1},
+	{name: "ruleLabelDoesNotMatchRegexp", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(`\d+`)}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 1},
 
 	// annotationMatchesRegexp
 	{name: "ruleAnnotationMatchesRegexp", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(".*")}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 0},
 	{name: "ruleAnnotationMissingRegexValidatedLabel", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(".*")}, rule: rulefmt.Rule{}, expectedErrors: 0},
-	{name: "ruleAnnotationDoesNotMatchRegexp", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile("[0-9]+")}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 1},
+	{name: "ruleAnnotationDoesNotMatchRegexp", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(`\d+`)}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 1},
 
 	// labelHasAllowedValue
 	{name: "ruleHasLabelWithAllowedValue", validator: labelHasAllowedValue{label: "foo", allowedValues: []string{"bar"}}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
@@ -114,12 +114,17 @@ var testCases = []struct {
 	// validFunctionsOnCounters
 	{name: "rateOnCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: "rate(foo_bar_total[1m])"}, expectedErrors: 0},
 	{name: "rateOnNonCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: "rate(foo_bar[1m])"}, expectedErrors: 1},
-	{name: "increaseOnNonCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: "increase ( foo_bar [1m] )"}, expectedErrors: 1},
+	{name: "increaseOnCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: `increase(foo_bar_total{namespace="foo"}[1m])`}, expectedErrors: 0},
+	{name: "increaseOnNonCounter", validator: validFunctionsOnCounters{}, rule: rulefmt.Rule{Expr: `increase(foo_bar{namespace="foo"}[1m])`}, expectedErrors: 1},
+	{name: "increaseOnHistogram", validator: validFunctionsOnCounters{allowHistograms: true}, rule: rulefmt.Rule{Expr: `increase(foo_bar_count{namespace="foo"}[1m])`}, expectedErrors: 0},
+	{name: "increaseOnHistogramNotAllowed", validator: validFunctionsOnCounters{allowHistograms: false}, rule: rulefmt.Rule{Expr: `increase(foo_bar_count{namespace="foo"}[1m])`}, expectedErrors: 1},
 
 	// rateBeforeAggregation
+	{name: "IncreaseWithoutAggregation", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: `increase(foo_bar{label="value"}[1m]) * count(foo_bar{label="value"})`}, expectedErrors: 0},
+	{name: "IncreaseWithAggregation", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: `increase(count(foo_bar{label="value"})[1m:]) * count(foo_bar{label="value"})`}, expectedErrors: 1},
 	{name: "SumAfterRate", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "sum(rate(foo_bar_total[1m]))"}, expectedErrors: 0},
-	{name: "SumBeforeRate", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "rate(sum(foo_bar_total)[5m:])"}, expectedErrors: 1},
-	{name: "minBeforeIncrease", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "increase(min(foo_bar_total)[5m:])"}, expectedErrors: 1},
+	{name: "SumBeforeRate", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "rate(sum(foo_bar_total)[1m])"}, expectedErrors: 1},
+	{name: "MinBeforeIncrease", validator: rateBeforeAggregation{}, rule: rulefmt.Rule{Expr: "increase(min(foo_bar_total)[1m])"}, expectedErrors: 1},
 
 	// nonEmptyLabels
 	{name: "NonEmptyLabel", validator: nonEmptyLabels{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
