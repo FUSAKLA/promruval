@@ -3,7 +3,7 @@ package validator
 import (
 	"fmt"
 	"github.com/fusakla/promruval/pkg/prometheus"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
 type Validator interface {

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/prometheus/prometheus/template"
 	"gopkg.in/yaml.v3"
@@ -297,7 +297,7 @@ func (h validateAnnotationTemplates) String() string {
 
 func (h validateAnnotationTemplates) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	data := template.AlertTemplateData(map[string]string{}, map[string]string{}, 0)
+	data := template.AlertTemplateData(map[string]string{}, map[string]string{}, "", 0)
 	defs := []string{
 		"{{$labels := .Labels}}",
 		"{{$externalLabels := .ExternalLabels}}",
@@ -305,7 +305,7 @@ func (h validateAnnotationTemplates) Validate(rule rulefmt.Rule, _ *prometheus.C
 		"{{$value := .Value}}",
 	}
 	for k, v := range rule.Annotations {
-		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(ctx context.Context, s string, time time.Time) (promql.Vector, error) { return nil, nil }, &url.URL{})
+		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(ctx context.Context, s string, time time.Time) (promql.Vector, error) { return nil, nil }, &url.URL{}, []string{})
 		if _, err := t.Expand(); err != nil && !strings.Contains(err.Error(), "error executing template") {
 			errs = append(errs, fmt.Errorf("invalid template of annotation %s: %w", k, err))
 		}

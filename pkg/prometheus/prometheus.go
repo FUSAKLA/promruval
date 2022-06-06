@@ -63,7 +63,7 @@ func (s *Client) SelectorMatch(selector string) ([]model.LabelSet, error) {
 		defer cancel()
 		result, warnings, err := s.apiClient.Series(ctx, []string{selector}, time.Now().Add(-time.Minute), time.Now())
 		if err != nil {
-			return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
+			return nil, fmt.Errorf("failed to query series: %w", err)
 		}
 		if len(warnings) > 0 {
 			log.Warnf("Warning querying Prometheus: %s\n", warnings)
@@ -80,7 +80,7 @@ func (s *Client) Labels() ([]string, error) {
 		ctx, cancel := s.newContext()
 		defer cancel()
 		start := time.Now()
-		result, warnings, err := s.apiClient.LabelNames(ctx, time.Now().Add(-time.Minute), time.Now())
+		result, warnings, err := s.apiClient.LabelNames(ctx, []string{}, time.Now().Add(-time.Minute), time.Now())
 		log.Infof("loaded all prometheus label names from %s in %s", s.url, time.Since(start))
 		if err != nil {
 			return nil, err

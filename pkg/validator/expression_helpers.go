@@ -39,8 +39,8 @@ func getExpressionSelectors(expr string) ([]string, error) {
 	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.VectorSelector:
-			v.Offset = 0
-			selectors = append(selectors, v.String())
+			s := &parser.VectorSelector{Name: v.Name, LabelMatchers: v.LabelMatchers}
+			selectors = append(selectors, s.String())
 		}
 		return nil
 	})
