@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/fusakla/promruval/pkg/prometheus"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
 func newHasLabels(paramsConfig yaml.Node) (Validator, error) {

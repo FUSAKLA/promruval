@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/fusakla/promruval/pkg/prometheus"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -15,19 +15,19 @@ import (
 
 func newExpressionDoesNotUseOlderDataThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Limit model.Duration `yaml:"limit"`
+		Limit time.Duration `yaml:"limit"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Limit == model.Duration(0) {
+	if params.Limit == time.Duration(0) {
 		return nil, fmt.Errorf("missing limit")
 	}
 	return &expressionDoesNotUseOlderDataThan{limit: params.Limit}, nil
 }
 
 type expressionDoesNotUseOlderDataThan struct {
-	limit model.Duration
+	limit time.Duration
 }
 
 func (h expressionDoesNotUseOlderDataThan) String() string {
@@ -48,7 +48,10 @@ func (h expressionDoesNotUseOlderDataThan) Validate(rule rulefmt.Rule, _ *promet
 				errs = append(errs, fmt.Errorf("expr uses `%s` old data in matrix selector which is more than limit `%s`", model.Duration(n.Range), h.limit))
 			}
 		case *parser.VectorSelector:
-			if n.Offset > time.Duration(h.limit) {
+			if n.OriginalOffset > time.Duration(h.limit) {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(n.Offset), h.limit))
+			}
+			if n.Timestamp != nil && time.Since(time.Unix(*n.Timestamp, 0)) > h.limit {
 				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(n.Offset), h.limit))
 			}
 		case *parser.SubqueryExpr:

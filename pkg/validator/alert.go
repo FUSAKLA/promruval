@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/fusakla/promruval/pkg/prometheus"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	"gopkg.in/yaml.v3"
 )
 

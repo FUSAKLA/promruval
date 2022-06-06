@@ -7,7 +7,7 @@ import (
 	"github.com/fusakla/promruval/pkg/report"
 	"github.com/fusakla/promruval/pkg/validator"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/pkg/rulefmt"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"os"
