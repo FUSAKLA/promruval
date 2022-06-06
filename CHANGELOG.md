@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.1.0] - 2022-06-06
+
+- [#22](https://github.com/FUSAKLA/promruval/pull/22) Upgrade Prometheus dependencies to support newest PromQL features
+
 ## [v2.0.1] - 2022-06-06
 
 - [#21](https://github.com/FUSAKLA/promruval/pull/21) Fix `validFunctionsOnCounters` and `rateBeforeAggregation` validators
