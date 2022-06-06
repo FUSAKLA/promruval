@@ -26,6 +26,9 @@ validationRules:
           evaluationDurationLimit: 10s
       - type: expressionUsesExistingLabels
       - type: expressionSelectorsMatchesAnything
+      - type: expressionDoesNotUseOlderDataThan
+        params:
+          limit: "4w"
 
   - name: check-team-label
     scope: Alert

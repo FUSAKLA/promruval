@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.1.1] - 2022-06-06
+
+- [#23](https://github.com/FUSAKLA/promruval/pull/23) Fix unmarshall of `expressionDoesNotUseOlderDataThan` params.
+
 ## [v2.1.0] - 2022-06-06
 
 - [#22](https://github.com/FUSAKLA/promruval/pull/22) Upgrade Prometheus dependencies to support newest PromQL features

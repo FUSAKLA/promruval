@@ -15,15 +15,15 @@ import (
 
 func newExpressionDoesNotUseOlderDataThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Limit time.Duration `yaml:"limit"`
+		Limit model.Duration `yaml:"limit"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Limit == time.Duration(0) {
+	if params.Limit == 0 {
 		return nil, fmt.Errorf("missing limit")
 	}
-	return &expressionDoesNotUseOlderDataThan{limit: params.Limit}, nil
+	return &expressionDoesNotUseOlderDataThan{limit: time.Duration(params.Limit)}, nil
 }
 
 type expressionDoesNotUseOlderDataThan struct {
