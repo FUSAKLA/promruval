@@ -15,15 +15,15 @@ import (
 
 func newExpressionDoesNotUseOlderDataThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Limit time.Duration `yaml:"limit"`
+		Limit model.Duration `yaml:"limit"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Limit == time.Duration(0) {
+	if params.Limit == 0 {
 		return nil, fmt.Errorf("missing limit")
 	}
-	return &expressionDoesNotUseOlderDataThan{limit: params.Limit}, nil
+	return &expressionDoesNotUseOlderDataThan{limit: time.Duration(params.Limit)}, nil
 }
 
 type expressionDoesNotUseOlderDataThan struct {
@@ -44,18 +44,18 @@ func (h expressionDoesNotUseOlderDataThan) Validate(rule rulefmt.Rule, _ *promet
 		// TODO(FUSAKLA) Having range query in subquery should have the time added.
 		switch n := n.(type) {
 		case *parser.MatrixSelector:
-			if n.Range > time.Duration(h.limit) {
+			if n.Range > h.limit {
 				errs = append(errs, fmt.Errorf("expr uses `%s` old data in matrix selector which is more than limit `%s`", model.Duration(n.Range), h.limit))
 			}
 		case *parser.VectorSelector:
-			if n.OriginalOffset > time.Duration(h.limit) {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(n.Offset), h.limit))
+			if n.OriginalOffset > h.limit {
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(n.OriginalOffset), h.limit))
 			}
 			if n.Timestamp != nil && time.Since(time.Unix(*n.Timestamp, 0)) > h.limit {
-				errs = append(errs, fmt.Errorf("expr uses `%s` old data in vector selector which is more than limit `%s`", model.Duration(n.Offset), h.limit))
+				errs = append(errs, fmt.Errorf("expr uses `%s` old data because of @timestamp in vector selector which is more than limit `%s`", time.Since(time.Unix(*n.Timestamp, 0)), h.limit))
 			}
 		case *parser.SubqueryExpr:
-			if n.Range+n.Offset > time.Duration(h.limit) {
+			if n.Range+n.Offset > h.limit {
 				errs = append(errs, fmt.Errorf("expr uses `%s` old data in subquery which is more than limit `%s`", model.Duration(n.Range+n.Offset), h.limit))
 			}
 		}
