@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.3.0] - 2022-06-07
+
 - [#25](https://github.com/FUSAKLA/promruval/pull/25) 
   - Delete forgotten debug print :ashamed:
   - Redirect logging to stderr
