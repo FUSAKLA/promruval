@@ -1,0 +1,27 @@
+rule_files:
+  - "rules.yaml"
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'prometheus_tsdb_symbol_table_size_bytes{app_label="prometheus-harvester", cluster="tt-k8s1.ko", instance="ok"}'
+        values: '10000+0x1440 100+0x1440'
+      - series: 'prometheus_tsdb_symbol_table_size_bytes{app_label="prometheus-harvester", cluster="tt-k8s2.ko", instance="little-affected"}'
+        values: '1024+0x1440 1030+0x1440'
+      - series: 'prometheus_tsdb_symbol_table_size_bytes{app_label="prometheus-harvester", cluster="tt-k8s2.ko", instance="affected"}'
+        values: '1024+0x1440 2048+0x1440'
+    alert_rule_test:
+      - eval_time: 1d1h
+        alertname: SignificantIncreaseOfLabelCardinality
+        exp_alerts:
+          - exp_labels:
+              team: inframon@firma.seznam.cz
+              severity: warning
+              alert_type: monitoring
+              cluster: tt-k8s2.ko
+            exp_annotations:
+              title: 'Number of unique labels in prometheus in tt-k8s2.ko has increased significantly'
+              description: 'Symbol table size corresponding to the number of unique labels has increased by 1kiB.'
+              playbook: 'on-call/prometheus/increased-labels-cardinality.md'
