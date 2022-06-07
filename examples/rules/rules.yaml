@@ -2,6 +2,7 @@ groups:
   - name: group1
     partial_response_strategy: abort
     rules:
+      # foo bar
       - record: recorded_metrics
         expr: 1
         labels:
@@ -9,8 +10,9 @@ groups:
 
   - name: testGroup
     rules:
+      # ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
       - alert: test
-        expr: avg_over_time(max_over_time(up{job="prometheus"}[10h] offset 5m)[10m:10m])
+        expr: avg_over_time(max_over_time(up{job="prometheus"}[10h] offset 10d)[10m:10m])
         for: 4w
         labels:
           severity: critical

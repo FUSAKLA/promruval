@@ -43,3 +43,10 @@ func NewFromConfig(config config.ValidatorConfig) (Validator, error) {
 	}
 	return validatorFactory(config.Params)
 }
+
+func KnownValidatorName(name string) bool {
+	if _, ok := registeredValidators[name]; ok {
+		return true
+	}
+	return false
+}

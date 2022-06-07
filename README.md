@@ -183,6 +183,25 @@ would be flaky.
 
 Therefore, it's recommended to use these check as a warning and do not fail if it does not succeed.
 
+### Disabling validations per rule
+
+If you want to disable particular validator for a certain rule, you can add a comment in above it with a list of
+validator names to ignore in theis case.
+By default, the comment prefix is `ignore_validations` bud can be changed using the `customDisableComment` config option
+in [config](#configuration).
+Value of the comment should be comma separated list of [validation names](./docs/validations.md)
+
+Example:
+
+```yaml
+groups:
+  # ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
+  - name: foo
+    rules:
+      - record: bar
+        expr: 1
+```
+
 ### Disabling rules
 
 If you want to temporarily disable any of the rules for all the tested rules,
