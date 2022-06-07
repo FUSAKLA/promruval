@@ -185,9 +185,11 @@ Therefore, it's recommended to use these check as a warning and do not fail if i
 
 ### Disabling validations per rule
 
-If you want to disable particular validator for a certain rule, you can add a comment in above it with a list of
-validator names to ignore in theis case.
-By default, the comment prefix is `ignore_validations` bud can be changed using the `customDisableComment` config option
+If you want to disable particular validation for a certain rule, you can add a comment above it with a list of
+validation names to ignore. Alternatively, the comment can be put on its own line _inside_ the `expr` of the rule.
+The in-expression comment can be present multiple times.
+
+By default, the comment prefix is `ignore_validations` but can be changed using the `customDisableComment` config option
 in [config](#configuration).
 Value of the comment should be comma separated list of [validation names](./docs/validations.md)
 
@@ -195,11 +197,19 @@ Example:
 
 ```yaml
 groups:
-  # ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
   - name: foo
     rules:
+      # The following validations will be ignored in the rule that immediately follows.
+      # ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
       - record: bar
         expr: 1
+      # The same validations are disabled for the following rule, but the comments are in the expression.
+      - name: baz
+        expr: |
+          # ignore_validations: expressionSelectorsMatchesAnything
+          up{
+            # ignore_validations: expressionDoesNotUseOlderDataThan
+          }
 ```
 
 ### Disabling rules
