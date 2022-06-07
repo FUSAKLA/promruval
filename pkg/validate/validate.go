@@ -122,7 +122,7 @@ func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotat
 	start := time.Now()
 	fileCount := len(fileNames)
 	for i, fileName := range fileNames {
-		log.Infof("processing file %d/%d %s", i, fileCount, fileName)
+		log.Infof("processing file %d/%d %s", i+1, fileCount, fileName)
 		validationReport.FilesCount++
 		fileReport := validationReport.NewFileReport(fileName)
 		f, err := os.Open(fileName)
