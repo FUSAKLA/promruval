@@ -1,5 +1,5 @@
 # customExcludeAnnotation: my_disable_annotation
-
+# customDisableComment: my_disable_comment
 
 prometheus:
   url: http://demo.robustperception.io:9090
@@ -28,7 +28,7 @@ validationRules:
       - type: expressionSelectorsMatchesAnything
       - type: expressionDoesNotUseOlderDataThan
         params:
-          limit: "4w"
+          limit: "6h"
 
   - name: check-team-label
     scope: Alert

@@ -7,6 +7,6 @@
 # Dependency directories (remove the comment below to include it)
 vendor/
 
-.promruval_cache.json
+*_cache.json
 promruval
 tmp

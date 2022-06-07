@@ -18,6 +18,7 @@ var ValidationScopes = []ValidationScope{AlertScope, RecordingRuleScope, AllRule
 
 type Config struct {
 	CustomExcludeAnnotation string           `yaml:"customExcludeAnnotation"`
+	CustomDisableComment    string           `yaml:"customDisableComment"`
 	ValidationRules         []ValidationRule `yaml:"validationRules"`
 	Prometheus              PrometheusConfig `yaml:"prometheus"`
 }

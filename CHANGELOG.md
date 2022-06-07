@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.2.0] - 2022-06-07
+
+- [#24](https://github.com/FUSAKLA/promruval/pull/24) Support disabling validators per rule using comments in yaml,
+  see [the docs](./README.md#disabling-validations-per-rule)
+
 ## [v2.1.1] - 2022-06-06
 
 - [#23](https://github.com/FUSAKLA/promruval/pull/23) Fix unmarshall of `expressionDoesNotUseOlderDataThan` params.
@@ -17,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v2.0.1] - 2022-06-06
 
-- [#21](https://github.com/FUSAKLA/promruval/pull/21) Fix `validFunctionsOnCounters` and `rateBeforeAggregation` validators
+- [#21](https://github.com/FUSAKLA/promruval/pull/21) Fix `validFunctionsOnCounters` and `rateBeforeAggregation`
+  validators
 
 ## [v2.0.0] - 2022-06-03
 

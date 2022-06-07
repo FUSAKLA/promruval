@@ -72,7 +72,7 @@ func (r *FileReport) NewGroupReport(name string) *GroupReport {
 	return &newReport
 }
 
-func (r FileReport) AsText(output *IndentedOutput) {
+func (r *FileReport) AsText(output *IndentedOutput) {
 	if r.Valid {
 		return
 	}

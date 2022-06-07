@@ -109,6 +109,9 @@ func main() {
 		if validationConfig.CustomExcludeAnnotation != "" {
 			mainValidationConfig.CustomExcludeAnnotation = validationConfig.CustomExcludeAnnotation
 		}
+		if validationConfig.CustomDisableComment != "" {
+			mainValidationConfig.CustomDisableComment = validationConfig.CustomDisableComment
+		}
 		mainValidationConfig.ValidationRules = append(mainValidationConfig.ValidationRules, validationConfig.ValidationRules...)
 	}
 	validationRules, err := validationRulesFromConfig(mainValidationConfig)
@@ -157,7 +160,11 @@ func main() {
 		if mainValidationConfig.CustomExcludeAnnotation != "" {
 			excludeAnnotation = mainValidationConfig.CustomExcludeAnnotation
 		}
-		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation, prometheusClient)
+		disableValidatorsComment := "ignore_validations"
+		if mainValidationConfig.CustomDisableComment != "" {
+			disableValidatorsComment = mainValidationConfig.CustomDisableComment
+		}
+		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation, disableValidatorsComment, prometheusClient)
 
 		if mainValidationConfig.Prometheus.Url != "" {
 			prometheusClient.DumpCache()
