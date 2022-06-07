@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Log progress
   - Fix e2e test
 
+- [#26](https://github.com/FUSAKLA/promruval/pull/26)
+  - Allow disabling validations in comments inside the `expr` of rules.
+    This is useful when you generate the prometheus rule files from a system
+    that doesn't support YAML comments, e.g. jsonnet.
 
 ## [v2.2.0] - 2022-06-07
 

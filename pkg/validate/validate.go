@@ -89,20 +89,27 @@ func (r *ruleWithComment) UnmarshalYAML(value *yaml.Node) error {
 func (r *ruleWithComment) disabledValidators(commentPrefix string) ([]string, error) {
 	commentPrefix += ":"
 	var disabledValidators []string
-	if r.node.HeadComment == "" {
-		return disabledValidators, nil
-	}
-	parts := strings.Split(r.node.HeadComment, commentPrefix)
-	if len(parts) != 2 {
-		return disabledValidators, nil
-	}
-	validators := strings.Split(parts[1], ",")
-	for _, v := range validators {
-		vv := strings.TrimSpace(v)
-		if !validator.KnownValidatorName(vv) {
-			return disabledValidators, fmt.Errorf("unknown valdator name `%s` in the `%s` comment", vv, commentPrefix)
+	allComments := strings.Split(r.node.HeadComment, "\n")
+	for _, line := range strings.Split(r.rule.Expr.Value, "\n") {
+		before, comment, found := strings.Cut(line, "#")
+		if !found || strings.TrimSpace(before) != "" {
+			continue
 		}
-		disabledValidators = append(disabledValidators, vv)
+		allComments = append(allComments, comment)
+	}
+	for _, comment := range allComments {
+		_, csv, found := strings.Cut(comment, commentPrefix)
+		if !found {
+			continue
+		}
+		validators := strings.Split(csv, ",")
+		for _, v := range validators {
+			vv := strings.TrimSpace(v)
+			if !validator.KnownValidatorName(vv) {
+				return disabledValidators, fmt.Errorf("unknown validator name `%s` in the `%s` comment", vv, commentPrefix)
+			}
+			disabledValidators = append(disabledValidators, vv)
+		}
 	}
 	return disabledValidators, nil
 }
