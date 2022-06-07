@@ -113,7 +113,9 @@ func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotat
 		validationReport.ValidationRules = append(validationReport.ValidationRules, r)
 	}
 	start := time.Now()
-	for _, fileName := range fileNames {
+	fileCount := len(fileNames)
+	for i, fileName := range fileNames {
+		log.Infof("processing file %d/%d %s", i, fileCount, fileName)
 		validationReport.FilesCount++
 		fileReport := validationReport.NewFileReport(fileName)
 		f, err := os.Open(fileName)
@@ -123,10 +125,8 @@ func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotat
 			fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %s", fileName, err)}
 			continue
 		}
-
 		var rf rulesFile
 		decoder := yaml.NewDecoder(f)
-		//decoder.KnownFields(true)
 		err = decoder.Decode(&rf)
 		if err != nil {
 			validationReport.Failed = true
@@ -191,7 +191,6 @@ func Files(fileNames []string, validationRules []*ValidationRule, excludeAnnotat
 						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, v, time.Since(start))
 					}
 					if len(ruleReport.Errors) > 0 {
-						fmt.Println(">>>>>>>>>", fileName, group.Name, rule.Expr)
 						validationReport.Failed = true
 						fileReport.Valid = false
 						groupReport.Valid = false

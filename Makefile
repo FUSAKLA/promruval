@@ -36,7 +36,7 @@ build:
 
 e2e-test: build
 	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) $(E2E_TESTS_RULES_FILES)
-	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILES)
+	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE)
 
 docker: build
 	docker build -t fusakla/promruval .
