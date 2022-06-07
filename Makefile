@@ -8,7 +8,7 @@ PROMRUVAL_BIN := ./promruval
 
 E2E_TESTS_VALIDATIONS_FILE := examples/validation.yaml
 E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE := examples/additional-validation.yaml
-E2E_TESTS_RULES_FILE := examples/rules.yaml
+E2E_TESTS_RULES_FILES := examples/rules/*.yaml
 
 all: deps lint build test e2e-test
 
@@ -35,8 +35,8 @@ build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(PROMRUVAL_BIN)
 
 e2e-test: build
-	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) $(E2E_TESTS_RULES_FILE)
-	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE)
+	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) $(E2E_TESTS_RULES_FILES)
+	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILES)
 
 docker: build
 	docker build -t fusakla/promruval .
