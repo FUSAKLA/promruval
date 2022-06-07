@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- [#25](https://github.com/FUSAKLA/promruval/pull/25) 
+  - Delete forgotten debug print :ashamed:
+  - Redirect logging to stderr
+  - Log progress
+  - Fix e2e test
+
+
 ## [v2.2.0] - 2022-06-07
 
 - [#24](https://github.com/FUSAKLA/promruval/pull/24) Support disabling validators per rule using comments in yaml,

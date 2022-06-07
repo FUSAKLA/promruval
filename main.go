@@ -133,12 +133,12 @@ func main() {
 		}
 		fmt.Println(output)
 	case validateCmd.FullCommand():
+		log.SetLevel(log.InfoLevel)
+		log.SetOutput(os.Stderr)
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true})
 		if *debug {
 			log.SetLevel(log.DebugLevel)
-		} else {
-			log.SetLevel(log.InfoLevel)
 		}
-		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true})
 		var filesToBeValidated []string
 		for _, path := range *filePaths {
 			paths, err := filepath.Glob(path)
