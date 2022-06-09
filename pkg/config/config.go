@@ -70,5 +70,5 @@ func (t *ValidationScope) UnmarshalYAML(unmarshal func(interface{}) error) error
 			return nil
 		}
 	}
-	return fmt.Errorf("invalid vaidation scope `%s`", ruleType)
+	return fmt.Errorf("invalid validation scope `%s`", ruleType)
 }
