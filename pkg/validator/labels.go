@@ -200,7 +200,7 @@ func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 		return nil, err
 	}
 	if params.Label == "" {
-		return nil, fmt.Errorf("missing lanel name")
+		return nil, fmt.Errorf("missing label name")
 	}
 	expr, err := regexp.Compile(params.Regexp)
 	if err != nil {
@@ -284,7 +284,7 @@ func (h exclusiveLabels) String() string {
 	if h.label1Value != "" {
 		text += fmt.Sprintf("with value `%s` ", h.label1Value)
 	}
-	text += fmt.Sprintf(", it cannot has a label `%s`", h.label2)
+	text += fmt.Sprintf(", it cannot have label `%s`", h.label2)
 	if h.label2Value != "" {
 		text += fmt.Sprintf("with value `%s` ", h.label2Value)
 	}
@@ -304,7 +304,7 @@ func (h exclusiveLabels) Validate(rule rulefmt.Rule, _ *prometheus.Client) []err
 	if !hasLabel2 {
 		return []error{}
 	}
-	errMsg += fmt.Sprintf(", it cannot has label `%s`", h.label2)
+	errMsg += fmt.Sprintf(", it cannot have label `%s`", h.label2)
 	if h.label2Value == "" {
 		return []error{fmt.Errorf(errMsg)}
 	}

@@ -119,7 +119,7 @@ type expressionDoesNotUseRangeShorterThan struct {
 }
 
 func (h expressionDoesNotUseRangeShorterThan) String() string {
-	return fmt.Sprintf("expr does not use range selctor shorter than `%s`", h.limit)
+	return fmt.Sprintf("expr does not use range selector shorter than `%s`", h.limit)
 }
 
 func (h expressionDoesNotUseRangeShorterThan) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -279,10 +279,10 @@ type expressionCanBeEvaluated struct {
 func (h expressionCanBeEvaluated) String() string {
 	msg := "expression can be successfully evaluated on the live Prometheus instance"
 	if h.timeSeriesLimit > 0 {
-		msg += fmt.Sprintf(" and number of time series it the result is not higher than %d", h.timeSeriesLimit)
+		msg += fmt.Sprintf(" and the number of time series in the result is not higher than %d", h.timeSeriesLimit)
 	}
 	if h.evaluationDurationLimit != 0 {
-		msg += fmt.Sprintf(" and the evaluation is no loger than %s ", h.evaluationDurationLimit)
+		msg += fmt.Sprintf(" and the evaluation is not longer than %s", h.evaluationDurationLimit)
 	}
 	return msg
 }
@@ -298,7 +298,7 @@ func (h expressionCanBeEvaluated) Validate(rule rulefmt.Rule, prometheusClient *
 		return append(errs, err)
 	}
 	if h.timeSeriesLimit != 0 && count > h.timeSeriesLimit {
-		errs = append(errs, fmt.Errorf("query returned %d series exceeding the %d limit", count, h.timeSeriesLimit))
+		errs = append(errs, fmt.Errorf("query returned %d series exceeding the limit %d", count, h.timeSeriesLimit))
 	}
 	if h.evaluationDurationLimit != 0 && duration > h.evaluationDurationLimit {
 		errs = append(errs, fmt.Errorf("query took %s which exceeds the configured maximum %s", duration, h.evaluationDurationLimit))

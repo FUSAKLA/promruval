@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- [#27](https://github.com/FUSAKLA/promruval/pull/27)
+  - typos and wording in validator messages were corrected
+
 ## [v2.3.0] - 2022-06-07
 
 - [#25](https://github.com/FUSAKLA/promruval/pull/25) 
