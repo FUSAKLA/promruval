@@ -2,15 +2,16 @@ package validator
 
 import (
 	"fmt"
-	"github.com/fusakla/promruval/pkg/prometheus"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
-	"regexp"
-	"strings"
-	"time"
 )
 
 func newExpressionDoesNotUseOlderDataThan(paramsConfig yaml.Node) (Validator, error) {

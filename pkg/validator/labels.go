@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/fusakla/promruval/pkg/prometheus"
+	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
 

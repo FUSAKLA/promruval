@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
-	"github.com/fusakla/promruval/pkg/config"
-	"github.com/fusakla/promruval/pkg/prometheus"
-	"github.com/fusakla/promruval/pkg/report"
-	"github.com/fusakla/promruval/pkg/validate"
-	"github.com/fusakla/promruval/pkg/validator"
+	doublestar "github.com/bmatcuk/doublestar/v4"
+	"github.com/fusakla/promruval/v2/pkg/config"
+	"github.com/fusakla/promruval/v2/pkg/prometheus"
+	"github.com/fusakla/promruval/v2/pkg/report"
+	"github.com/fusakla/promruval/v2/pkg/validate"
+	"github.com/fusakla/promruval/v2/pkg/validator"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v3"
@@ -141,7 +141,7 @@ func main() {
 		}
 		var filesToBeValidated []string
 		for _, path := range *filePaths {
-			paths, err := filepath.Glob(path)
+			paths, err := doublestar.Glob(os.DirFS("."), path)
 			if err != nil {
 				exitWithError(err)
 			}

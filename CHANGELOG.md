@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.4.0] - 2023-01-10
+
+- [#30](https://github.com/FUSAKLA/promruval/pull/30)
+  - Upgrade Go to 1.19.
+  - :warning: CHANGE - go.mod version bumped to match the project major version, if you use promruval as a library,
+                       make sure to change the package to `github.com/fusakla/promruval/v2`.
+  - Updated README.md installation instructions.
+
+
 ## [v2.3.1] - 2022-06-29
 
 - [#27](https://github.com/FUSAKLA/promruval/pull/27)

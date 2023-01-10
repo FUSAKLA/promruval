@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fusakla/promruval/pkg/config"
-	"gopkg.in/yaml.v3"
 	"time"
+
+	"github.com/fusakla/promruval/v2/pkg/config"
+	"gopkg.in/yaml.v3"
 )
 
 type ValidationRule interface {

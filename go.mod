@@ -1,9 +1,10 @@
-module github.com/fusakla/promruval
+module github.com/fusakla/promruval/v2
 
-go 1.18
+go 1.19
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
+	github.com/bmatcuk/doublestar/v4 v4.0.2
 	github.com/creasty/defaults v1.6.0
 	github.com/prometheus/client_golang v1.12.2
 	github.com/prometheus/common v0.34.0

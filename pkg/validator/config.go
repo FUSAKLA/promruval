@@ -2,7 +2,8 @@ package validator
 
 import (
 	"fmt"
-	"github.com/fusakla/promruval/pkg/config"
+
+	"github.com/fusakla/promruval/v2/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 

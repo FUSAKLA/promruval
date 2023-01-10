@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fusakla/promruval/pkg/config"
+	"github.com/fusakla/promruval/v2/pkg/config"
 	"github.com/prometheus/client_golang/api"
-	"github.com/prometheus/client_golang/api/prometheus/v1"
+	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 	log "github.com/sirupsen/logrus"
 )
