@@ -3,11 +3,12 @@ package prometheus
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/fusakla/promruval/pkg/config"
-	"github.com/prometheus/common/model"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
+
+	"github.com/fusakla/promruval/v2/pkg/config"
+	"github.com/prometheus/common/model"
 )
 
 func NewQueryVectorResponseMock(seriesCount int) interface{} {
@@ -71,7 +72,7 @@ func (m *mockV1Client) newResponseMock() *http.Response {
 	if err != nil {
 		panic(err)
 	}
-	return &http.Response{StatusCode: status, Body: ioutil.NopCloser(bytes.NewReader(js))}
+	return &http.Response{StatusCode: status, Body: io.NopCloser(bytes.NewReader(js))}
 }
 
 func (m mockV1Client) RoundTrip(_ *http.Request) (*http.Response, error) {

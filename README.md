@@ -46,7 +46,7 @@ Using [prebuilt binaries](https://github.com/FUSAKLA/promruval/releases/latest),
 [Docker image](https://hub.docker.com/r/fusakla/promruval) of build it yourself.
 
  ```bash
-go get github.com/fusakla/promruval
+go install github.com/fusakla/promruval@latest
 ```
 
 or

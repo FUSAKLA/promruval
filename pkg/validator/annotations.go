@@ -3,15 +3,16 @@ package validator
 import (
 	"context"
 	"fmt"
-	"github.com/asaskevich/govalidator"
-	"github.com/fusakla/promruval/pkg/prometheus"
-	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/promql"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/asaskevich/govalidator"
+	"github.com/fusakla/promruval/v2/pkg/prometheus"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/promql"
 
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"

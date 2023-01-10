@@ -2,14 +2,15 @@ package validator
 
 import (
 	"fmt"
-	"github.com/fusakla/promruval/pkg/prometheus"
-	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/model/rulefmt"
-	"gotest.tools/assert"
 	"reflect"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/fusakla/promruval/v2/pkg/prometheus"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/model/rulefmt"
+	"gotest.tools/assert"
 )
 
 var testCases = []struct {

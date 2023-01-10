@@ -2,18 +2,19 @@ package validate
 
 import (
 	"fmt"
-	"github.com/fusakla/promruval/pkg/config"
-	"github.com/fusakla/promruval/pkg/prometheus"
-	"github.com/fusakla/promruval/pkg/report"
-	"github.com/fusakla/promruval/pkg/validator"
-	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/model/rulefmt"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 	"os"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/fusakla/promruval/v2/pkg/config"
+	"github.com/fusakla/promruval/v2/pkg/prometheus"
+	"github.com/fusakla/promruval/v2/pkg/report"
+	"github.com/fusakla/promruval/v2/pkg/validator"
+	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/model/rulefmt"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 )
 
 func NewValidationRule(name string, scope config.ValidationScope) *ValidationRule {
