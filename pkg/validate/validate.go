@@ -67,6 +67,7 @@ type ruleGroup struct {
 	Name                    string            `yaml:"name"`
 	Interval                model.Duration    `yaml:"interval,omitempty"`
 	PartialResponseStrategy string            `yaml:"partial_response_strategy,omitempty"`
+	SourceTenants           []string          `yaml:"source_tenants,omitempty"`
 	Rules                   []ruleWithComment `yaml:"rules"`
 }
 
