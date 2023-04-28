@@ -1,7 +1,7 @@
 # Promruval
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/fusakla/promruval)](https://goreportcard.com/report/github.com/fusakla/promruval)
-[![GitHub actions CI](https://img.shields.io/github/workflow/status/fusakla/promruval/Go/master)](https://github.com/FUSAKLA/promruval/actions?query=branch%3Amaster)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/fusakla/promruval/go.yaml)](https://github.com/FUSAKLA/promruval/actions?query=branch%3Amaster)
 [![Docker Pulls](https://img.shields.io/docker/pulls/fusakla/promruval)](https://hub.docker.com/r/fusakla/promruval)
 [![GitHub binaries download](https://img.shields.io/github/downloads/fusakla/promruval/total?label=Prebuilt%20binaries%20downloads)](https://github.com/FUSAKLA/promruval/releases/latest)
 
