@@ -9,6 +9,8 @@ groups:
           foo: bar
 
   - name: testGroup
+    partial_response_strategy: "warn"
+    source_tenants: ["tenant1", "tenant2"]
     rules:
       # Comment before.
       # Comment on the same line. ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
@@ -16,6 +18,7 @@ groups:
       - alert: test
         expr: avg_over_time(max_over_time(up{job="prometheus"}[10h] offset 10d)[10m:10m])
         for: 4w
+        keep_firing_for: 5m
         labels:
           severity: critical
           team: sre@mail.com

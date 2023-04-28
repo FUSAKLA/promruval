@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.5.0] - 2023-04-29
+
+- Upgrade all dependencies
+- Upgrade to Go 1.19
+- Support `keep_firing_for` in alert rule
+- Support `source_tenants` in rule group used by Cortex/Mimir
+- Add linting to CI
+
 ## [v2.4.1] - 2023-01-10
 
 - Fixed installation instructions in README.
@@ -28,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v2.3.0] - 2022-06-07
 
-- [#25](https://github.com/FUSAKLA/promruval/pull/25) 
+- [#25](https://github.com/FUSAKLA/promruval/pull/25)
   - Delete forgotten debug print :ashamed:
   - Redirect logging to stderr
   - Log progress
