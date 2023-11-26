@@ -386,3 +386,36 @@ func (h expressionSelectorsMatchesAnything) Validate(rule rulefmt.Rule, promethe
 	}
 	return errs
 }
+
+/********/
+func newExpressionWithNoMetricName(paramsConfig yaml.Node) (Validator, error) {
+	params := struct{}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &expressionWithNoMetricName{}, nil
+}
+
+type expressionWithNoMetricName struct{}
+
+func (e expressionWithNoMetricName) String() string {
+	return "The expression has a metric with no name"
+}
+
+func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+	if prometheusClient == nil {
+		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
+		return nil
+	}
+	var errs []error
+	selectors, err := getExpressionMetricsNames(rule.Expr)
+	if err != nil {
+		return []error{err}
+	}
+	for _, s := range selectors {
+		if s == "" {
+			errs = append(errs, fmt.Errorf("selector `%s` does not have a metric name", s))
+		}
+	}
+	return errs
+}

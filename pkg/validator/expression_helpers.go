@@ -46,3 +46,20 @@ func getExpressionSelectors(expr string) ([]string, error) {
 	})
 	return selectors, nil
 }
+
+func getExpressionMetricsNames(expr string) ([]string, error) {
+	promQl, err := parser.ParseExpr(expr)
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
+	}
+	var names []string
+	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
+		switch v := n.(type) {
+		case *parser.VectorSelector:
+			s := &parser.VectorSelector{Name: v.Name}
+			names = append(names, s.String())
+		}
+		return nil
+	})
+	return names, nil
+}
