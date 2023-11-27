@@ -408,13 +408,13 @@ func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, prometheusClient
 		return nil
 	}
 	var errs []error
-	selectors, err := getExpressionMetricsNames(rule.Expr)
+	names, err := getExpressionMetricsNames(rule.Expr)
 	if err != nil {
 		return []error{err}
 	}
-	for _, s := range selectors {
+	for _, s := range names {
 		if s == "" {
-			errs = append(errs, fmt.Errorf("selector `%s` does not have a metric name", s))
+			errs = append(errs, fmt.Errorf("missing metric name for expression `%s`", rule.Expr))
 		}
 	}
 	return errs
