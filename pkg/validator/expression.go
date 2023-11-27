@@ -399,7 +399,7 @@ func newExpressionWithNoMetricName(paramsConfig yaml.Node) (Validator, error) {
 type expressionWithNoMetricName struct{}
 
 func (e expressionWithNoMetricName) String() string {
-	return "The expression has a metric with no name"
+	return "expression with no metric name"
 }
 
 func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
