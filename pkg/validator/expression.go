@@ -8,6 +8,7 @@ import (
 
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
@@ -412,5 +413,65 @@ func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, _ *prometheus.Cl
 			errs = append(errs, fmt.Errorf("missing metric name for vector `%s`", v.Vector.String()))
 		}
 	}
+	return errs
+}
+
+func newExpressionDoesNotUseMetrics(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		MetricNameRegexps []string `yaml:"metricNameRegexps"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	v := expressionDoesNotUseMetrics{}
+	for _, r := range params.MetricNameRegexps {
+		compiled, err := regexp.Compile("^" + r + "$")
+		if err != nil {
+			return nil, err
+		}
+		v.metricNameRegexps = append(v.metricNameRegexps, compiled)
+	}
+	return &v, nil
+}
+
+type expressionDoesNotUseMetrics struct {
+	metricNameRegexps []*regexp.Regexp
+}
+
+func (h expressionDoesNotUseMetrics) String() string {
+	return "expression does not use any of these metrics regexps: " + strings.Join(func() []string {
+		var res []string
+		for _, r := range h.metricNameRegexps {
+			res = append(res, r.String())
+		}
+		return res
+	}(), ",")
+}
+
+func (h expressionDoesNotUseMetrics) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+	expr, err := parser.ParseExpr(rule.Expr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+	}
+	var errs []error
+	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+		switch v := n.(type) {
+		case *parser.VectorSelector:
+			// Do not check the VectorSelector.Name since it is automatically parsed into the __name__ LabelMatcher
+			for _, l := range v.LabelMatchers {
+				// We care just for the special __name__ label containing name of the metric
+				// and since we cannot match regexp on regexp.. lets just check for equality
+				if l.Name != "__name__" || l.Type != labels.MatchEqual {
+					continue
+				}
+				for _, r := range h.metricNameRegexps {
+					if r.MatchString(l.Value) {
+						errs = append(errs, fmt.Errorf("expression uses metric `%s` which is forbidden", l.Value))
+					}
+				}
+			}
+		}
+		return nil
+	})
 	return errs
 }

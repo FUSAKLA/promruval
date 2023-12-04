@@ -24,6 +24,7 @@ var registeredValidators = map[string]validatorCreator{
 	"expressionDoesNotUseLabels":           newExpressionDoesNotUseLabels,
 	"expressionDoesNotUseOlderDataThan":    newExpressionDoesNotUseOlderDataThan,
 	"expressionDoesNotUseRangeShorterThan": newExpressionDoesNotUseRangeShorterThan,
+	"expressionDoesNotUseMetrics":          newExpressionDoesNotUseMetrics,
 	"annotationIsValidPromQL":              newAnnotationIsValidPromQL,
 	"validateAnnotationTemplates":          newValidateAnnotationTemplates,
 	"forIsNotLongerThan":                   newForIsNotLongerThan,
