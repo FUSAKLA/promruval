@@ -387,7 +387,6 @@ func (h expressionSelectorsMatchesAnything) Validate(rule rulefmt.Rule, promethe
 	return errs
 }
 
-/********/
 func newExpressionWithNoMetricName(paramsConfig yaml.Node) (Validator, error) {
 	params := struct{}{}
 	if err := paramsConfig.Decode(&params); err != nil {
