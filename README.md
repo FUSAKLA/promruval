@@ -65,7 +65,7 @@ Prometheus rules validation tool.
 
 Flags:
       --help   Show context-sensitive help (also try --help-long and --help-man).
-  -c, --config-file=CONFIG-FILE ...  
+  -c, --config-file=CONFIG-FILE ...
                Path to validation config file. Can be passed multiple times, only validationRules will be reflected from the additional configs.
       --debug  Enable debug logging.
 
@@ -81,9 +81,9 @@ Commands:
   validate [<flags>] <path>...
     Validate Prometheus rule files using validation rules from config file.
 
-    -d, --disable-rule=DISABLE-RULE ...  
+    -d, --disable-rule=DISABLE-RULE ...
                                    Allows to disable any validation rules by it's name. Can be passed multiple times.
-    -e, --enable-rule=ENABLE-RULE ...  
+    -e, --enable-rule=ENABLE-RULE ...
                                    Only enable these validation rules. Can be passed multiple times.
     -o, --output=[text,json,yaml]  Format of the output.
         --color                    Use color output.
@@ -91,7 +91,7 @@ Commands:
   validation-docs [<flags>]
     Print human readable form of the validation rules from config file.
 
-    -o, --output=[text,markdown,html]  
+    -o, --output=[text,markdown,html]
       Format of the output.
 ```
 
@@ -132,7 +132,7 @@ customExcludeAnnotation: my_disable_annotation
 prometheus:
   # URL of the running prometheus instance to be used
   url: https://foo.bar/
-  # OPTIONAL Skip TLS verification 
+  # OPTIONAL Skip TLS verification
   insecureSkipTlsVerify: false
   # OPTIONAL Timeout for any request on the Prometheus instance
   timeout: 30s
@@ -243,7 +243,8 @@ groups:
 If you want more human readable validation summary (for a documentation or generating readable git pages)
 you can use the `validation-docs` command, see the [usage](#usage).
 It should print out more human readable form than the configuration file is
-and supports multiple output formats.
+and supports multiple output formats such as `text`, `markdown` and `HTML`.
+See the examples for the output for [Markdown](./examples/human_readable.md) and [HTML](./examples/human_readable.html).
 
 ```bash
 promruval validation-docs --config-file examples/validation.yaml --output=html
