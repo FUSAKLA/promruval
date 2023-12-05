@@ -3,6 +3,7 @@ package validator
 import (
 	"fmt"
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
+	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"gotest.tools/assert"
@@ -15,6 +16,7 @@ import (
 var testCases = []struct {
 	name           string
 	validator      Validator
+	group          unmarshaler.RuleGroup
 	rule           rulefmt.Rule
 	promClient     *prometheus.Client
 	expectedErrors int
@@ -194,7 +196,7 @@ var testCases = []struct {
 func Test(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("%s:%s", reflect.TypeOf(tc.validator), tc.name), func(t *testing.T) {
-			errs := tc.validator.Validate(tc.rule, tc.promClient)
+			errs := tc.validator.Validate(tc.group, tc.rule, tc.promClient)
 			assert.Equal(t, len(errs), tc.expectedErrors, "unexpected number of errors, expected %d but got: %s", tc.expectedErrors, errs)
 		})
 	}

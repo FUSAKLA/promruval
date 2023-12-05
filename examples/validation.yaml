@@ -10,11 +10,11 @@ validationRules:
     validations:
       - type: hasLabels
         params:
-          labels: [ "severity" ]
+          labels: ["severity"]
       - type: labelHasAllowedValue
         params:
           label: "severity"
-          allowedValues: [ "info", "warning", "critical" ]
+          allowedValues: ["info", "warning", "critical"]
       - type: exclusiveLabels
         params:
           firstLabel: severity
@@ -35,7 +35,7 @@ validationRules:
     validations:
       - type: hasLabels
         params:
-          labels: [ "xxx" ]
+          labels: ["xxx"]
       - type: labelHasAllowedValue
         params:
           label: "team"
@@ -47,7 +47,7 @@ validationRules:
     validations:
       - type: hasAnyOfAnnotations
         params:
-          annotations: [ "playbook", "link" ]
+          annotations: ["playbook", "link"]
       - type: annotationIsValidURL
         params:
           annotation: "link"
@@ -58,7 +58,7 @@ validationRules:
     validations:
       - type: hasAnnotations
         params:
-          annotations: [ "title" ]
+          annotations: ["title"]
 
   - name: check-prometheus-limitations
     scope: All rules
@@ -68,9 +68,12 @@ validationRules:
           limit: "6h"
       - type: expressionDoesNotUseLabels
         params:
-          labels: [ "cluster", "locality", "prometheus-type", "replica" ]
-
-  - name: check-metric-name
-    scope: Alert
-    validations:
-      - type: expressionWithNoMetricName
+          labels: ["cluster", "locality", "prometheus-type", "replica"]
+      - type: hasSourceTenantsForMetrics
+        params:
+          sourceTenants:
+            k8s: "container_.*|kube_.*"
+      - name: check-metric-name
+        scope: Alert
+        validations:
+          - type: expressionWithNoMetricName
