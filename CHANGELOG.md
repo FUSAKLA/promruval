@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.7.0] - 2023-12-06
 - Added new validator `expressionDoesNotUseMetrics`, see its [docs](docs/validations.md#expressiondoesnotusemetrics).
 - Added new validator `hasSourceTenantsForMetrics`, see its [docs](docs/validations.md#hassourcetenantsformetrics).
 - Improved the HTML output of human readable validation description.
