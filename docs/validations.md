@@ -111,7 +111,6 @@ params:
   firstLabelValue: "critical" # Optional, if not set, only presence of the label excludes the second label
   secondLabel: "page"
   secondLabelValue: "true" # Optional, if set, fails only if also the second label value matches
-  secondLabelValue: "true" # Optional, if set, fails only if also the second label value matches
 ```
 
 ## Annotations
@@ -277,9 +276,7 @@ instance.
 
 ### `expressionWithNoMetricName`
 
-> Fails if an expression doesn't use an explicit metric name.
-
-Verifies that all of the selectors in the expression (eg `up{foo="bar"}`) has a metric name. The metric name can appear before the curly braces or in `__name__` label. Fails if an expressions doesn't have a metric name.
+Fails if an expression doesn't use an explicit metric name (also if used as `__name__` label) in all its selectors(eg `up{foo="bar"}`).
 
 ## Alert
 
