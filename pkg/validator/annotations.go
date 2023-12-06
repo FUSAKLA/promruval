@@ -278,7 +278,7 @@ func (h annotationIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 		return []error{}
 	}
 	if _, err := parser.ParseExpr(value); err != nil {
-		return []error{fmt.Errorf("annotation `%s` is not valid PromQL: %s", h.annotation, err)}
+		return []error{fmt.Errorf("annotation `%s` is not valid PromQL: %w", h.annotation, err)}
 	}
 	return []error{}
 }

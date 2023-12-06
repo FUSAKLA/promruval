@@ -32,7 +32,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 		if err != nil {
 			validationReport.Failed = true
 			fileReport.Valid = false
-			fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %s", fileName, err)}
+			fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %w", fileName, err)}
 			continue
 		}
 		var rf unmarshaler.RulesFile
@@ -41,7 +41,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 		if err != nil {
 			validationReport.Failed = true
 			fileReport.Valid = false
-			fileReport.Errors = []error{fmt.Errorf("invalid file %s: %s", fileName, err)}
+			fileReport.Errors = []error{fmt.Errorf("invalid file %s: %w", fileName, err)}
 			continue
 		}
 		for _, group := range rf.Groups {

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved the HTML output of human readable validation description.
 - Added examples of the human-readable validation descriptions to the examples dir.
 - Refactored the validation so it can use also group to validate the context of the rule.
+- Improve linting and fix all the linting issues.
 
 ## [v2.6.0] - 2023-12-06
 - Added new validator `expressionWithNoMetricName`, see its [docs](docs/validations.md#expressionwithnometricname). Thanks @tizki !

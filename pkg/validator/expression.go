@@ -39,7 +39,7 @@ func (h expressionDoesNotUseOlderDataThan) String() string {
 func (h expressionDoesNotUseOlderDataThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
-		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
@@ -127,7 +127,7 @@ func (h expressionDoesNotUseRangeShorterThan) String() string {
 func (h expressionDoesNotUseRangeShorterThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
-		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
@@ -159,7 +159,7 @@ func (h expressionDoesNotUseIrate) String() string {
 func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
-		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
@@ -200,7 +200,7 @@ func (h validFunctionsOnCounters) String() string {
 func (h validFunctionsOnCounters) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
-		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
 	match := regexp.MustCompile(`_total$`)
@@ -241,7 +241,7 @@ func (h rateBeforeAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Ru
 	var errs []error
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
-		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
 		switch n := n.(type) {
@@ -451,7 +451,7 @@ func (h expressionDoesNotUseMetrics) String() string {
 func (h expressionDoesNotUseMetrics) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
-		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
 	usedMetrics, err := getExpressionMetrics(expr.String())

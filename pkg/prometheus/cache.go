@@ -2,9 +2,10 @@ package prometheus
 
 import (
 	"encoding/json"
-	"github.com/prometheus/common/model"
 	"os"
 	"time"
+
+	"github.com/prometheus/common/model"
 
 	log "github.com/sirupsen/logrus"
 )

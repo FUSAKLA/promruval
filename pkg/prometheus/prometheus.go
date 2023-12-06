@@ -15,12 +15,12 @@ import (
 )
 
 func NewClient(config config.PrometheusConfig) (*Client, error) {
-	return NewClientWithRoundTripper(config, &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: config.InsecureSkipTlsVerify}})
+	return NewClientWithRoundTripper(config, &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: config.InsecureSkipTLSVerify}})
 }
 
 func NewClientWithRoundTripper(config config.PrometheusConfig, tripper http.RoundTripper) (*Client, error) {
 	cli, err := api.NewClient(api.Config{
-		Address:      config.Url,
+		Address:      config.URL,
 		RoundTripper: tripper,
 	})
 	if err != nil {
@@ -29,7 +29,7 @@ func NewClientWithRoundTripper(config config.PrometheusConfig, tripper http.Roun
 	v1cli := v1.NewAPI(cli)
 	promClient := Client{
 		apiClient: v1cli,
-		url:       config.Url,
+		url:       config.URL,
 		timeout:   config.Timeout,
 		cache:     newCache(config.CacheFile, config.MaxCacheAge),
 	}

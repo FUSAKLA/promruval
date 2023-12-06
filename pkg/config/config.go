@@ -25,9 +25,9 @@ type Config struct {
 }
 
 type PrometheusConfig struct {
-	Url                   string        `yaml:"url"`
+	URL                   string        `yaml:"url"`
 	Timeout               time.Duration `yaml:"timeout" default:"30s"`
-	InsecureSkipTlsVerify bool          `yaml:"insecureSkipTlsVerify"`
+	InsecureSkipTLSVerify bool          `yaml:"insecureSkipTlsVerify"`
 	CacheFile             string        `yaml:"cacheFile,omitempty" default:".promruval_cache.json"`
 	MaxCacheAge           time.Duration `yaml:"maxCacheAge,omitempty" default:"1h"`
 }

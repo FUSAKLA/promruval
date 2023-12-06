@@ -30,6 +30,9 @@ $(RELEASE_NOTES): $(TMP_DIR)
 lint:
 	golangci-lint run
 
+lint-fix:
+	golangci-lint run --fix
+
 test:
 	go test -race ./...
 
