@@ -401,11 +401,7 @@ func (e expressionWithNoMetricName) String() string {
 	return "expression with no metric name"
 }
 
-func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
-	if prometheusClient == nil {
-		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
-		return nil
-	}
+func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	names, err := getExpressionMetricsNames(rule.Expr)
 	if err != nil {
