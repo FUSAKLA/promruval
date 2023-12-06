@@ -36,7 +36,8 @@ or [watch a lightning talk about it from PromCon](https://www.youtube.com/watch?
 - and many more...
 
 Validations are quite variable, so you can use them as you fit.
-Full list of supported validations can be found [here](docs/validations.md).
+
+**👉 Full list of supported validations can be found [here](docs/validations.md).**
 
 In case of any missing, please create a feature request!
 
