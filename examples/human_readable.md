@@ -26,10 +26,11 @@ Validation rules:
     - All rules does not use any of the `cluster`,`locality`,`prometheus-type`,`replica` labels is in its expression
 
   check-source-tenants
-    - All rules verifies if the rule group, the rule belongs to, has the required source_tenants configured, according to the mapping of metric names to tenants: `k8s`:`^container_.*|kube_.*$`
+    - All rules rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: `k8s`:`^container_.*|kube_.*$`
+    - All rules rule group, the rule belongs to, does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`
 
   check-metric-name
-    - Alert expression with no metric name
+    - Alert expression uses metric name in selectors
 
   another-checks
     - All rules labels does not have empty values

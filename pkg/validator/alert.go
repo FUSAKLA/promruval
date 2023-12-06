@@ -28,7 +28,7 @@ type forIsNotLongerThan struct {
 }
 
 func (h forIsNotLongerThan) String() string {
-	return fmt.Sprintf("alert `for` is not longer than `%s`", h.limit)
+	return fmt.Sprintf("`for` is not longer than `%s`", h.limit)
 }
 
 func (h forIsNotLongerThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {

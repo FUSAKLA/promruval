@@ -42,7 +42,7 @@ func (h hasSourceTenantsForMetrics) String() string {
 	for tenant, metricsRegexp := range h.sourceTenants {
 		tenantStrings = append(tenantStrings, fmt.Sprintf("`%s`:`%s`", tenant, metricsRegexp.String()))
 	}
-	return fmt.Sprintf("verifies if the rule group, the rule belongs to, has the required source_tenants configured, according to the mapping of metric names to tenants: %s", strings.Join(tenantStrings, ", "))
+	return fmt.Sprintf("rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: %s", strings.Join(tenantStrings, ", "))
 }
 
 func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -63,25 +63,25 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 }
 
 // TODO this validation should happen just once per rule group, but for simplicity it is done per rule leading to multiple errors for the same rule group.
-func newHasValidSourceTenants(paramsConfig yaml.Node) (Validator, error) {
+func newHasAllowedSourceTenants(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		AllowedSourceTenants []string `yaml:"allowedSourceTenants"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	return &hasValidSourceTenants{allowedSourceTenants: params.AllowedSourceTenants}, nil
+	return &hasAllowedSourceTenants{allowedSourceTenants: params.AllowedSourceTenants}, nil
 }
 
-type hasValidSourceTenants struct {
+type hasAllowedSourceTenants struct {
 	allowedSourceTenants []string
 }
 
-func (h hasValidSourceTenants) String() string {
-	return fmt.Sprintf("verifies if the rule group, the rule belongs to, does not have other than configure allowed `source_tenants`: %s", strings.Join(h.allowedSourceTenants, ", "))
+func (h hasAllowedSourceTenants) String() string {
+	return fmt.Sprintf("rule group, the rule belongs to, does not have other `source_tenants` than: `%s`", strings.Join(h.allowedSourceTenants, "`, `"))
 }
 
-func (h hasValidSourceTenants) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
+func (h hasAllowedSourceTenants) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
 	var invalidTenants []string
 	for _, tenant := range group.SourceTenants {
 		if !slices.Contains(h.allowedSourceTenants, tenant) {

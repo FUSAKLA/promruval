@@ -38,7 +38,7 @@ var registeredValidators = map[string]validatorCreator{
 	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
 	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
 	"hasSourceTenantsForMetrics":           newHasSourceTenantsForMetrics,
-	"hasValidSourceTenants":                newHasValidSourceTenants,
+	"hasAllowedSourceTenants":              newHasAllowedSourceTenants,
 }
 
 func NewFromConfig(config config.ValidatorConfig) (Validator, error) {
