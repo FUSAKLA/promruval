@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added new validator `expressionDoesNotUseMetrics`, see its [docs](docs/validations.md#expressiondoesnotusemetrics).
+
 ## [v2.6.0] - 2023-12-06
 - Added new validator `expressionWithNoMetricName`, see its [docs](docs/validations.md#expressionwithnometricname). Thanks @tizki !
 - Upgrade to go 1.21

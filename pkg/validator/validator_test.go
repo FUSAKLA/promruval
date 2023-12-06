@@ -181,6 +181,14 @@ var testCases = []struct {
 	 ) * 100 > 10
 	 and
 	 sum(rate( {job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler) > 2`}, expectedErrors: 2},
+
+	// expressionDoesNotUseMetrics
+	{name: "emptyList", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{}}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
+	{name: "doesNotUseForbiddenMetric", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`foo_bar`)}}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
+	{name: "usesForbiddenMetric", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`foo_bar`)}}, rule: rulefmt.Rule{Expr: `foo_bar{foo="bar"}`}, expectedErrors: 1},
+	{name: "usesTwoOfThreeForbiddenMetrics", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`foo_bar`), regexp.MustCompile(`foo_baz`), regexp.MustCompile(`^foo$`)}}, rule: rulefmt.Rule{Expr: `foo_baz{foo="bar"} and foo_bar`}, expectedErrors: 2},
+	{name: "usesMetricMatchingRegexp", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`foo_bar.*`)}}, rule: rulefmt.Rule{Expr: `foo_baz_baz{foo="bar"} and foo_bar`}, expectedErrors: 1},
+	{name: "regexpIsFullyAnchored", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`^foo_bar$`)}}, rule: rulefmt.Rule{Expr: `foo_baz_baz{foo="bar"} and foo_bar`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

@@ -19,6 +19,7 @@
     - [`annotationIsValidPromQL`](#annotationisvalidpromql)
     - [`validateAnnotationTemplates`](#validateannotationtemplates)
   - [PromQL expression](#promql-expression)
+    - [`expressionDoesNotUseMetrics`](#expressiondoesnotusemetrics)
     - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
     - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
     - [`expressionDoesNotUseRangeShorterThan`](#expressiondoesnotuserangeshorterthan)
@@ -168,7 +169,7 @@ params:
 
 Fails if annotation value is not a valid URL. If `resolveURL` is enabled, tries to make an HTTP request to the specified
 URL and fails if the request does not succeed or returns 404 HTTP status code.
-> It's common practise to link a playbook with guide how to solve the alert in the alert itself.
+> It's common practice to link a playbook with guide how to solve the alert in the alert itself.
 > This way you can verify it's a working URL and possibly if it really exists.
 
 ```yaml
@@ -192,6 +193,16 @@ Fails if the annotation contains invalid Go template.
 
 ## PromQL expression
 
+### `expressionDoesNotUseMetrics`
+
+Fails if the rule expression uses metrics matching any of the metric name fully anchored(will be surrounded by `^...$`) regexps.
+> If you want to avoid using some metrics in the rules, you can use this validation to make sure it won't happen.
+
+```yaml
+params:
+  metricNameRegexps: [ "foo_bar.*", "foo_baz" ]
+```
+
 ### `expressionDoesNotUseLabels`
 
 Fails if the rule uses any of specified labels in its `expr` label matchers, aggregations or joins.
@@ -205,7 +216,7 @@ params:
 
 ### `expressionDoesNotUseOlderDataThan`
 
-Fails if the rule `expr` uses older data than specified limit in Prometheus duration syntax. Checks even in subqueries
+Fails if the rule `expr` uses older data than specified limit in Prometheus duration syntax. Checks even in sub-queries
 and offsets.
 > Useful to avoid writing queries which expects longer data retention than the Prometheus actually has.
 
@@ -242,7 +253,7 @@ Fails if aggregation function is used before the `rate` or `increase` functions.
 > Queries live prometheus instance, requires the `prometheus` config to be set.
 
 This validation runs the expression against the actual Prometheus instance and checks if it ends with error.
-Possibly you can set maximum allowed query execution time and maximum number of resulting timeseries.
+Possibly you can set maximum allowed query execution time and maximum number of resulting time series.
 
 ```yaml
 params:
@@ -265,9 +276,7 @@ instance.
 
 ### `expressionWithNoMetricName`
 
-> Fails if an expression doesn't use an explicit metric name.
-
-Verifies that all of the selectors in the expression (eg `up{foo="bar"}`) has a metric name. The metric name can appear before the curly braces or in `__name__` label. Fails if an expressions doesn't have a metric name.
+Fails if an expression doesn't use an explicit metric name (also if used as `__name__` label) in all its selectors(eg `up{foo="bar"}`).
 
 ## Alert
 
