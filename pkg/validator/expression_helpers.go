@@ -48,20 +48,26 @@ func getExpressionSelectors(expr string) ([]string, error) {
 	return selectors, nil
 }
 
-func getExpressionMetricsNames(expr string) ([]string, error) {
+type VectorSelectorWithMetricName struct {
+	Vector     *parser.VectorSelector
+	MetricName string
+}
+
+func getExpressionMetricsNames(expr string) ([]VectorSelectorWithMetricName, error) {
 	promQl, err := parser.ParseExpr(expr)
 	if err != nil {
-		return []string{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
+		return []VectorSelectorWithMetricName{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
 	}
-	var names []string
+	var vectors []VectorSelectorWithMetricName
 	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.VectorSelector:
-			names = append(names, getMetricNameFromLabels(v.LabelMatchers))
+			metricName := getMetricNameFromLabels(v.LabelMatchers)
+			vectors = append(vectors, VectorSelectorWithMetricName{Vector: v, MetricName: metricName})
 		}
 		return nil
 	})
-	return names, nil
+	return vectors, nil
 }
 
 func getMetricNameFromLabels(labels []*labels.Matcher) string {

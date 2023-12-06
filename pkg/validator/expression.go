@@ -403,13 +403,13 @@ func (e expressionWithNoMetricName) String() string {
 
 func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	names, err := getExpressionMetricsNames(rule.Expr)
+	vectorsWithNames, err := getExpressionMetricsNames(rule.Expr)
 	if err != nil {
 		return []error{err}
 	}
-	for _, s := range names {
-		if s == "" {
-			errs = append(errs, fmt.Errorf("missing metric name for expression `%s`", rule.Expr))
+	for _, v := range vectorsWithNames {
+		if v.MetricName == "" {
+			errs = append(errs, fmt.Errorf("missing metric name for vector `%s`", v.Vector.String()))
 		}
 	}
 	return errs
