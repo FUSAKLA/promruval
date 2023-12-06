@@ -1,38 +1,36 @@
 # Supported validations
 
-- [Labels](#labels)
-    - [hasLabels](./validations.md#haslabels)
-    - [hasAnyOfLabels](./validations.md#hasanyoflabels)
-    - [doesNotHaveLabels](./validations.md#doesnothavelabels)
-    - [labelMatchesRegexp](./validations.md#labelmatchesregexp)
-    - [labelHasAllowedValue](./validations.md#labelhasallowedvalue)
-    - [expressionDoesNotUseLabels](./validations.md#expressiondoesnotuselabels)
-    - [nonEmptyLabels](./validations.md#nonemptylabels)
-    - [exclusiveLabels](./validations.md#exclusivelabels)
-    -
-- [Annotations](#annotations)
-    - [hasAnnotations](./validations.md#hasannotations)
-    - [doesNotHaveAnnotations](./validations.md#doesnothaveannotations)
-    - [hasAnyOfAnnotations](./validations.md#hasanyofannotations)
-    - [annotationMatchesRegexp](./validations.md#annotationmatchesregexp)
-    - [annotationHasAllowedValue](./validations.md#annotationhasallowedvalue)
-    - [annotationIsValidURL](./validations.md#annotationisvalidurl)
-    - [annotationIsValidPromQL](./validations.md#annotationisvalidpromql)
-    - [validateAnnotationTemplates](./validations.md#validateannotationtemplates)
-    -
-- [PromQL expression](#promql-expression)
-    - [expressionDoesNotUseOlderDataThan](./validations.md#expressiondoesnotuseolderdatathan)
-    - [expressionDoesNotUseRangeShorterThan](./validations.md#expressiondoesnotuserangeshorterthan)
-    - [expressionDoesNotUseIrate](./validations.md#expressiondoesnotuseirate)
-    - [validFunctionsOnCounters](./validations.md#validfunctionsoncounters)
-    - [rateBeforeAggregation](./validations.md#ratebeforeaggregation)
-    - [expressionCanBeEvaluated](./validations.md#expressioncanbeevaluated)
-    - [expressionUsesExistingLabels](./validations.md#expressionusesexistinglabels)
-    - [expressionSelectorsMatchesAnything](./validations.md#expressionselectorsmatchesanything)
-    - [expressionWithNoMetricName]
-    - 
-- [Alert](#alert)
-    - [forIsNotLongerThan](./validations.md#forisnotlongerthan)
+- [Supported validations](#supported-validations)
+  - [Labels](#labels)
+    - [`hasLabels`](#haslabels)
+    - [`doesNotHaveLabels`](#doesnothavelabels)
+    - [`hasAnyOfLabels`](#hasanyoflabels)
+    - [`labelMatchesRegexp`](#labelmatchesregexp)
+    - [`labelHasAllowedValue`](#labelhasallowedvalue)
+    - [`nonEmptyLabels`](#nonemptylabels)
+    - [`exclusiveLabels`](#exclusivelabels)
+  - [Annotations](#annotations)
+    - [`hasAnnotations`](#hasannotations)
+    - [`doesNotHaveAnnotations`](#doesnothaveannotations)
+    - [`hasAnyOfAnnotations`](#hasanyofannotations)
+    - [`annotationMatchesRegexp`](#annotationmatchesregexp)
+    - [`annotationHasAllowedValue`](#annotationhasallowedvalue)
+    - [`annotationIsValidURL`](#annotationisvalidurl)
+    - [`annotationIsValidPromQL`](#annotationisvalidpromql)
+    - [`validateAnnotationTemplates`](#validateannotationtemplates)
+  - [PromQL expression](#promql-expression)
+    - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
+    - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
+    - [`expressionDoesNotUseRangeShorterThan`](#expressiondoesnotuserangeshorterthan)
+    - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
+    - [`validFunctionsOnCounters`](#validfunctionsoncounters)
+    - [`rateBeforeAggregation`](#ratebeforeaggregation)
+    - [`expressionCanBeEvaluated`](#expressioncanbeevaluated)
+    - [`expressionUsesExistingLabels`](#expressionusesexistinglabels)
+    - [`expressionSelectorsMatchesAnything`](#expressionselectorsmatchesanything)
+    - [`expressionWithNoMetricName`](#expressionwithnometricname)
+  - [Alert](#alert)
+    - [`forIsNotLongerThan`](#forisnotlongerthan)
 
 ## Labels
 
@@ -111,7 +109,7 @@ params:
   firstLabel: "severity"
   firstLabelValue: "critical" # Optional, if not set, only presence of the label excludes the second label
   secondLabel: "page"
-  secondLabelValue: "true" # Optional, if set, fails only if also the second label value matches 
+  secondLabelValue: "true" # Optional, if set, fails only if also the second label value matches
 ```
 
 ## Annotations
@@ -269,7 +267,7 @@ instance.
 
 > Fails if an expression doesn't use an explicit metric name.
 
-Verifies that any of the selectors in the expression (eg `up{foo="bar"}`) has a metric name. The metric name can appear before the curly braces or in `__name__` label. Fails if an expressions doesn't have a metric name.
+Verifies that all of the selectors in the expression (eg `up{foo="bar"}`) has a metric name. The metric name can appear before the curly braces or in `__name__` label. Fails if an expressions doesn't have a metric name.
 
 ## Alert
 
