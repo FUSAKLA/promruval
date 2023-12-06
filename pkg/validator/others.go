@@ -47,14 +47,14 @@ func (h hasSourceTenantsForMetrics) String() string {
 
 func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	usedMetrics, err := getExpressionUsedMetricNames(rule.Expr)
+	usedMetrics, err := getExpressionMetrics(rule.Expr)
 	if err != nil {
 		errs = append(errs, err)
 		return errs
 	}
 	for _, usedMetric := range usedMetrics {
 		for tenant, metricsRegexp := range h.sourceTenants {
-			if metricsRegexp.MatchString(usedMetric) && !slices.Contains(group.SourceTenants, tenant) {
+			if metricsRegexp.MatchString(usedMetric.Name) && !slices.Contains(group.SourceTenants, tenant) {
 				errs = append(errs, fmt.Errorf("missing source_tenant `%s` for metric `%s`", tenant, usedMetric))
 			}
 		}

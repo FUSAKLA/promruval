@@ -34,54 +34,23 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 	return slices.Compact(usedLabels), nil
 }
 
-func getExpressionVectorSelectors(expr string) ([]parser.VectorSelector, error) {
+func getExpressionVectorSelectors(expr string) ([]*parser.VectorSelector, error) {
 	promQl, err := parser.ParseExpr(expr)
 	if err != nil {
-		return []parser.VectorSelector{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
+		return []*parser.VectorSelector{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
 	}
-	var selectors []parser.VectorSelector
+	var selectors []*parser.VectorSelector
 	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.VectorSelector:
-			selectors = append(selectors, parser.VectorSelector{Name: v.Name, LabelMatchers: v.LabelMatchers})
+			selectors = append(selectors, &parser.VectorSelector{Name: v.Name, LabelMatchers: v.LabelMatchers})
 		}
 		return nil
 	})
 	return selectors, nil
 }
 
-type VectorSelectorWithMetricName struct {
-	Vector     *parser.VectorSelector
-	MetricName string
-}
-
-func getExpressionMetricsNames(expr string) ([]VectorSelectorWithMetricName, error) {
-	promQl, err := parser.ParseExpr(expr)
-	if err != nil {
-		return []VectorSelectorWithMetricName{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
-	}
-	var vectors []VectorSelectorWithMetricName
-	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
-		switch v := n.(type) {
-		case *parser.VectorSelector:
-			metricName := getMetricNameFromLabels(v.LabelMatchers)
-			vectors = append(vectors, VectorSelectorWithMetricName{Vector: v, MetricName: metricName})
-		}
-		return nil
-	})
-	return vectors, nil
-}
-
-func getMetricNameFromLabels(labels []*labels.Matcher) string {
-	for _, l := range labels {
-		if l.Name == "__name__" {
-			return l.Value
-		}
-	}
-	return ""
-}
-
-func getVectorSelectorMetricName(selector parser.VectorSelector) string {
+func getVectorSelectorMetricName(selector *parser.VectorSelector) string {
 	if selector.Name == "" {
 		for _, m := range selector.LabelMatchers {
 			if m.Name == "__name__" && m.Type == labels.MatchEqual {
@@ -92,17 +61,22 @@ func getVectorSelectorMetricName(selector parser.VectorSelector) string {
 	return selector.Name
 }
 
-func getExpressionUsedMetricNames(expr string) ([]string, error) {
+// MetricWithVectorSelector is a struct that contains a metric name and a vector selector where it is used, to give a context, in the error messages.
+type MetricWithVectorSelector struct {
+	VectorSelector     *parser.VectorSelector
+	Name string
+}
+
+func getExpressionMetrics(expr string) ([]MetricWithVectorSelector, error) {
+	metrics := []MetricWithVectorSelector{}
 	vectorSelectors, err := getExpressionVectorSelectors(expr)
 	if err != nil {
-		return []string{}, err
+		return metrics, err
 	}
-	var metricNames []string
 	for _, s := range vectorSelectors {
-		metricNames = append(metricNames, getVectorSelectorMetricName(s))
+		metrics = append(metrics, MetricWithVectorSelector{VectorSelector: s, Name: getVectorSelectorMetricName(s)})
 	}
-	slices.Sort(metricNames)
-	return slices.Compact(metricNames), nil
+	return metrics, nil
 }
 
 func getExpressionSelectors(expr string) ([]string, error) {

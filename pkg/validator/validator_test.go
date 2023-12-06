@@ -2,15 +2,16 @@ package validator
 
 import (
 	"fmt"
+	"reflect"
+	"regexp"
+	"testing"
+	"time"
+
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"gotest.tools/assert"
-	"reflect"
-	"regexp"
-	"testing"
-	"time"
 )
 
 var testCases = []struct {
@@ -169,14 +170,14 @@ var testCases = []struct {
 	) * 100 > 10
 	and
 	sum(rate(http_requests_total{job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler) > 2`}, expectedErrors: 0},
-	{name: "complexExpressionsNoName", validator: expressionWithNoMetricName{}, promClient: prometheus.NewClientMock(prometheus.NewSeriesResponseMock(2), 0, false, false), rule: rulefmt.Rule{Expr: `(
+	{name: "complexExpressionsNoName", validator: expressionWithNoMetricName{}, promClient: nil, rule: rulefmt.Rule{Expr: `(
 	  sum(rate(http_requests_total{code=~"5..", job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
 	/
 	  sum(rate( {job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
 	) * 100 > 10
 	and
 	sum(rate(http_requests_total{job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler) > 2`}, expectedErrors: 1},
-	{name: "complexExpressionsMultipleNoName", validator: expressionWithNoMetricName{}, promClient: prometheus.NewClientMock(prometheus.NewSeriesResponseMock(2), 0, false, false), rule: rulefmt.Rule{Expr: `(
+	{name: "complexExpressionsMultipleNoName", validator: expressionWithNoMetricName{}, promClient: nil, rule: rulefmt.Rule{Expr: `(
 	   sum(rate(http_requests_total{code=~"5..", job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
 	 /
 	   sum(rate( {job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
@@ -191,6 +192,13 @@ var testCases = []struct {
 	{name: "usesTwoOfThreeForbiddenMetrics", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`foo_bar`), regexp.MustCompile(`foo_baz`), regexp.MustCompile(`^foo$`)}}, rule: rulefmt.Rule{Expr: `foo_baz{foo="bar"} and foo_bar`}, expectedErrors: 2},
 	{name: "usesMetricMatchingRegexp", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`foo_bar.*`)}}, rule: rulefmt.Rule{Expr: `foo_baz_baz{foo="bar"} and foo_bar`}, expectedErrors: 1},
 	{name: "regexpIsFullyAnchored", validator: expressionDoesNotUseMetrics{metricNameRegexps: []*regexp.Regexp{regexp.MustCompile(`^foo_bar$`)}}, rule: rulefmt.Rule{Expr: `foo_baz_baz{foo="bar"} and foo_bar`}, expectedErrors: 1},
+
+	// hasSourceTenantsForMetrics
+	{name: "emptyMapping", validator: hasSourceTenantsForMetrics{sourceTenants: map[string]*regexp.Regexp{}}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
+	{name: "usesMetricWithSourceTenantAndGroupHasSourceTenant", validator: hasSourceTenantsForMetrics{sourceTenants: map[string]*regexp.Regexp{"tenant1": regexp.MustCompile(`^teanant1_metric$`)}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant1"}},rule: rulefmt.Rule{Expr: `teanant1_metric{foo="bar"}`}, expectedErrors: 0},
+	{name: "usesMetricWithSourceTenantAndGroupDoesNotHaveSourceTenant", validator: hasSourceTenantsForMetrics{sourceTenants: map[string]*regexp.Regexp{"tenant1": regexp.MustCompile(`^teanant1_metric$`)}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant2"}},rule: rulefmt.Rule{Expr: `teanant1_metric{foo="bar"}`}, expectedErrors: 1},
+	{name: "usesMetricWithSourceTenantAndGroupHasMultipleSourceTenants", validator: hasSourceTenantsForMetrics{sourceTenants: map[string]*regexp.Regexp{"tenant1": regexp.MustCompile(`^teanant1_metric$`)}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant2", "tenant1"}},rule: rulefmt.Rule{Expr: `teanant1_metric{foo="bar"}`}, expectedErrors: 0},
+	{name: "usesMetricWithSourceTenantAndGroupHasMultipleSourceTenantsAndOneIsMissing", validator: hasSourceTenantsForMetrics{sourceTenants: map[string]*regexp.Regexp{"tenant1": regexp.MustCompile(`^teanant1_metric$`)}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant2", "tenant3"}},rule: rulefmt.Rule{Expr: `teanant1_metric{foo="bar"}`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

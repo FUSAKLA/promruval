@@ -69,11 +69,16 @@ validationRules:
       - type: expressionDoesNotUseLabels
         params:
           labels: ["cluster", "locality", "prometheus-type", "replica"]
+
+  - name: check-source-tenants
+    scope: All rules
+    validations:
       - type: hasSourceTenantsForMetrics
         params:
           sourceTenants:
             k8s: "container_.*|kube_.*"
-      - name: check-metric-name
-        scope: Alert
-        validations:
-          - type: expressionWithNoMetricName
+
+  - name: check-metric-name
+    scope: Alert
+    validations:
+      - type: expressionWithNoMetricName

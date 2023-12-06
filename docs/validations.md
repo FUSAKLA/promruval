@@ -294,10 +294,12 @@ params:
 
 ### `hasSourceTenantsForMetrics`
 
-Fails, if the rule uses metric, that matches the specified regular expression for any tenant, but does not have the tenant configured in the  `source_tenants` rule group option the rule belongs to.
+Fails, if the rule uses metric, that matches the specified regular expression for any tenant, but does not have the tenant configured in the  `source_tenants` of the rule group option the rule belongs to.
 
 ```yaml
 params:
   sourceTenants:
     <tenant_name>: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
+    # Example:
+    # k8s: "kube_.*|container_.*"
 ```

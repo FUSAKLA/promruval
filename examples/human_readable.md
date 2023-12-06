@@ -24,7 +24,12 @@ Validation rules:
   check-prometheus-limitations
     - All rules expression does not use data older than `6h0m0s`
     - All rules does not use any of the `cluster`,`locality`,`prometheus-type`,`replica` labels is in its expression
+
+  check-source-tenants
     - All rules verifies if the rule group, the rule belongs to, has the required source_tenants configured, according to the mapping of metric names to tenants: `k8s`:`^container_.*|kube_.*$`
+
+  check-metric-name
+    - Alert expression with no metric name
 
   another-checks
     - All rules labels does not have empty values
