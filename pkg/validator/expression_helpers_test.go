@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestGetExpressionUsedLabels(t *testing.T) {
 	for _, test := range tests {
 		labels, err := getExpressionUsedLabels(test.expr)
 		assert.ElementsMatch(t, labels, test.expected, "Expected labels %v, but got %v", test.expected, labels)
-		if err != test.expectedErr {
+		if !errors.Is(err, test.expectedErr) {
 			t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
 		}
 	}
@@ -62,7 +63,7 @@ func TestGetExpressionMetrics(t *testing.T) {
 		if !reflect.DeepEqual(results, test.expected) {
 			t.Errorf("Expected metric names %v, but got %v", test.expected, results)
 		}
-		if err != test.expectedErr {
+		if !errors.Is(err, test.expectedErr) {
 			t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
 		}
 	}
@@ -89,7 +90,7 @@ func TestGetExpressionSelectors(t *testing.T) {
 		if !reflect.DeepEqual(selectors, test.expected) {
 			t.Errorf("Expected selectors %v, but got %v", test.expected, selectors)
 		}
-		if err != test.expectedErr {
+		if !errors.Is(err, test.expectedErr) {
 			t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
 		}
 	}

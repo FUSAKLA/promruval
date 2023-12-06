@@ -11,7 +11,7 @@ import (
 func getExpressionUsedLabels(expr string) ([]string, error) {
 	promQl, err := parser.ParseExpr(expr)
 	if err != nil {
-		return []string{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
+		return []string{}, fmt.Errorf("failed to parse expression `%s`: %w", expr, err)
 	}
 	var usedLabels []string
 	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
@@ -37,7 +37,7 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 func getExpressionVectorSelectors(expr string) ([]*parser.VectorSelector, error) {
 	promQl, err := parser.ParseExpr(expr)
 	if err != nil {
-		return []*parser.VectorSelector{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
+		return []*parser.VectorSelector{}, fmt.Errorf("failed to parse expression `%s`: %w", expr, err)
 	}
 	var selectors []*parser.VectorSelector
 	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
@@ -63,8 +63,8 @@ func getVectorSelectorMetricName(selector *parser.VectorSelector) string {
 
 // MetricWithVectorSelector is a struct that contains a metric name and a vector selector where it is used, to give a context, in the error messages.
 type MetricWithVectorSelector struct {
-	VectorSelector     *parser.VectorSelector
-	Name string
+	VectorSelector *parser.VectorSelector
+	Name           string
 }
 
 func getExpressionMetrics(expr string) ([]MetricWithVectorSelector, error) {

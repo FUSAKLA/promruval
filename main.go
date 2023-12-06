@@ -104,7 +104,7 @@ func main() {
 		if err != nil {
 			exitWithError(err)
 		}
-		if validationConfig.Prometheus.Url != "" {
+		if validationConfig.Prometheus.URL != "" {
 			mainValidationConfig.Prometheus = validationConfig.Prometheus
 		}
 		if validationConfig.CustomExcludeAnnotation != "" {
@@ -150,7 +150,7 @@ func main() {
 		}
 
 		var prometheusClient *prometheus.Client
-		if mainValidationConfig.Prometheus.Url != "" {
+		if mainValidationConfig.Prometheus.URL != "" {
 			prometheusClient, err = prometheus.NewClient(mainValidationConfig.Prometheus)
 			if err != nil {
 				exitWithError(fmt.Errorf("failed to initialize prometheus client: %w", err))
@@ -167,7 +167,7 @@ func main() {
 		}
 		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation, disableValidatorsComment, prometheusClient)
 
-		if mainValidationConfig.Prometheus.Url != "" {
+		if mainValidationConfig.Prometheus.URL != "" {
 			prometheusClient.DumpCache()
 		}
 
