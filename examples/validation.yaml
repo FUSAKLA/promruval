@@ -77,6 +77,9 @@ validationRules:
         params:
           sourceTenants:
             k8s: "container_.*|kube_.*"
+      - type: hasAllowedSourceTenants
+        params:
+          allowedSourceTenants: ["tenant1", "tenant2", "k8s"]
 
   - name: check-metric-name
     scope: Alert

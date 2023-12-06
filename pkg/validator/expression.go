@@ -121,7 +121,7 @@ type expressionDoesNotUseRangeShorterThan struct {
 }
 
 func (h expressionDoesNotUseRangeShorterThan) String() string {
-	return fmt.Sprintf("expr does not use range selector shorter than `%s`", h.limit)
+	return fmt.Sprintf("expression does not use range selector shorter than `%s`", h.limit)
 }
 
 func (h expressionDoesNotUseRangeShorterThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -153,7 +153,7 @@ func newExpressionDoesNotUseIrate(_ yaml.Node) (Validator, error) {
 type expressionDoesNotUseIrate struct{}
 
 func (h expressionDoesNotUseIrate) String() string {
-	return "expr does not use irate"
+	return "expression does not use irate"
 }
 
 func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -190,7 +190,7 @@ type validFunctionsOnCounters struct {
 }
 
 func (h validFunctionsOnCounters) String() string {
-	msg := "functions `rate` and `increase` used only on metrics with the `_total` suffix"
+	msg := "uses functions `rate` and `increase` only on metrics with the `_total` suffix"
 	if h.allowHistograms {
 		msg += " (metrics ending with _count are exceptions since those are used by histograms)"
 	}
@@ -234,7 +234,7 @@ func newRateBeforeAggregation(_ yaml.Node) (Validator, error) {
 type rateBeforeAggregation struct{}
 
 func (h rateBeforeAggregation) String() string {
-	return "never use aggregation functions before the `rate` or `increase` functions, see https://www.robustperception.io/rate-then-sum-never-sum-then-rate"
+	return "does not use aggregation functions before the `rate` or `increase` functions, see https://www.robustperception.io/rate-then-sum-never-sum-then-rate"
 }
 
 func (h rateBeforeAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -399,7 +399,7 @@ func newExpressionWithNoMetricName(paramsConfig yaml.Node) (Validator, error) {
 type expressionWithNoMetricName struct{}
 
 func (e expressionWithNoMetricName) String() string {
-	return "expression with no metric name"
+	return "expression uses metric name in selectors"
 }
 
 func (e expressionWithNoMetricName) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {

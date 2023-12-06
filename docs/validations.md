@@ -34,6 +34,7 @@
     - [`forIsNotLongerThan`](#forisnotlongerthan)
   - [Others](#others)
     - [`hasSourceTenantsForMetrics`](#hassourcetenantsformetrics)
+    - [`hasValidSourceTenants`](#hasvalidsourcetenants)
 
 ## Labels
 
@@ -302,4 +303,13 @@ params:
     <tenant_name>: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
     # Example:
     # k8s: "kube_.*|container_.*"
+```
+
+### `hasValidSourceTenants`
+
+Fails if the rule group has other than than the configured source tenants.
+
+```yaml
+params:
+  allowedSourceTenants: [ "foo", "bar" ]
 ```

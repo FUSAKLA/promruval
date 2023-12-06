@@ -269,7 +269,7 @@ type annotationIsValidPromQL struct {
 }
 
 func (h annotationIsValidPromQL) String() string {
-	return fmt.Sprintf("Annotation `%s` is a valid PromQL expression", h.annotation)
+	return fmt.Sprintf("annotation `%s` is a valid PromQL expression", h.annotation)
 }
 
 func (h annotationIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -294,7 +294,7 @@ func newValidateAnnotationTemplates(paramsConfig yaml.Node) (Validator, error) {
 type validateAnnotationTemplates struct{}
 
 func (h validateAnnotationTemplates) String() string {
-	return "Annotations are valid templates"
+	return "annotations are valid templates"
 }
 
 func (h validateAnnotationTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
