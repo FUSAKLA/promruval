@@ -2,15 +2,14 @@ package validator
 
 import (
 	"fmt"
-	"reflect"
-	"regexp"
-	"testing"
-	"time"
-
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"gotest.tools/assert"
+	"reflect"
+	"regexp"
+	"testing"
+	"time"
 )
 
 var testCases = []struct {
@@ -157,6 +156,31 @@ var testCases = []struct {
 	// expressionUsesExistingLabels
 	{name: "labelsExists", validator: expressionUsesExistingLabels{}, promClient: prometheus.NewClientMock([]string{"__name__", "foo"}, 0, false, false), rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
 	{name: "labelsDoesNotExist", validator: expressionUsesExistingLabels{}, promClient: prometheus.NewClientMock([]string{"__name__"}, 0, false, false), rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 1},
+
+	{name: "withName", validator: expressionWithNoMetricName{}, promClient: nil, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
+	{name: "withNameInLabel", validator: expressionWithNoMetricName{}, promClient: nil, rule: rulefmt.Rule{Expr: `{__name__="up", foo="bar"}`}, expectedErrors: 0},
+	{name: "noName", validator: expressionWithNoMetricName{}, promClient: nil, rule: rulefmt.Rule{Expr: `{foo="bar"}`}, expectedErrors: 1},
+	{name: "complexExpressionsWithName", validator: expressionWithNoMetricName{}, promClient: nil, rule: rulefmt.Rule{Expr: `(
+	 sum(rate(http_requests_total{code=~"5..", job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
+	/
+	 sum(rate(http_requests_total{job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
+	) * 100 > 10
+	and
+	sum(rate(http_requests_total{job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler) > 2`}, expectedErrors: 0},
+	{name: "complexExpressionsNoName", validator: expressionWithNoMetricName{}, promClient: prometheus.NewClientMock(prometheus.NewSeriesResponseMock(2), 0, false, false), rule: rulefmt.Rule{Expr: `(
+	  sum(rate(http_requests_total{code=~"5..", job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
+	/
+	  sum(rate( {job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
+	) * 100 > 10
+	and
+	sum(rate(http_requests_total{job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler) > 2`}, expectedErrors: 1},
+	{name: "complexExpressionsMultipleNoName", validator: expressionWithNoMetricName{}, promClient: prometheus.NewClientMock(prometheus.NewSeriesResponseMock(2), 0, false, false), rule: rulefmt.Rule{Expr: `(
+	   sum(rate(http_requests_total{code=~"5..", job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
+	 /
+	   sum(rate( {job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler)
+	 ) * 100 > 10
+	 and
+	 sum(rate( {job=~"thanos-query",handler!="exemplars"}[5m])) by (role,handler) > 2`}, expectedErrors: 2},
 }
 
 func Test(t *testing.T) {

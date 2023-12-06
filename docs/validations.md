@@ -29,7 +29,8 @@
     - [expressionCanBeEvaluated](./validations.md#expressioncanbeevaluated)
     - [expressionUsesExistingLabels](./validations.md#expressionusesexistinglabels)
     - [expressionSelectorsMatchesAnything](./validations.md#expressionselectorsmatchesanything)
-    -
+    - [expressionWithNoMetricName]
+    - 
 - [Alert](#alert)
     - [forIsNotLongerThan](./validations.md#forisnotlongerthan)
 
@@ -263,6 +264,12 @@ Fails if any used label is not present in the configured Prometheus instance.
 
 Verifies if any of the selectors in the expression (eg `up{foo="bar"}`) matches actual data in the configured Prometheus
 instance.
+
+### `expressionWithNoMetricName`
+
+> Fails if an expression doesn't use an explicit metric name.
+
+Verifies that any of the selectors in the expression (eg `up{foo="bar"}`) has a metric name. The metric name can appear before the curly braces or in `__name__` label. Fails if an expressions doesn't have a metric name.
 
 ## Alert
 

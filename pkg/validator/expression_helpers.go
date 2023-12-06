@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
 )
 
@@ -45,4 +46,35 @@ func getExpressionSelectors(expr string) ([]string, error) {
 		return nil
 	})
 	return selectors, nil
+}
+
+type VectorSelectorWithMetricName struct {
+	Vector     *parser.VectorSelector
+	MetricName string
+}
+
+func getExpressionMetricsNames(expr string) ([]VectorSelectorWithMetricName, error) {
+	promQl, err := parser.ParseExpr(expr)
+	if err != nil {
+		return []VectorSelectorWithMetricName{}, fmt.Errorf("failed to parse expression `%s`: %s", expr, err)
+	}
+	var vectors []VectorSelectorWithMetricName
+	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
+		switch v := n.(type) {
+		case *parser.VectorSelector:
+			metricName := getMetricNameFromLabels(v.LabelMatchers)
+			vectors = append(vectors, VectorSelectorWithMetricName{Vector: v, MetricName: metricName})
+		}
+		return nil
+	})
+	return vectors, nil
+}
+
+func getMetricNameFromLabels(labels []*labels.Matcher) string {
+	for _, l := range labels {
+		if l.Name == "__name__" {
+			return l.Value
+		}
+	}
+	return ""
 }

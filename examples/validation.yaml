@@ -69,3 +69,8 @@ validationRules:
       - type: expressionDoesNotUseLabels
         params:
           labels: [ "cluster", "locality", "prometheus-type", "replica" ]
+
+  - name: check-metric-name
+    scope: Alert
+    validations:
+      - type: expressionWithNoMetricName

@@ -35,6 +35,7 @@ var registeredValidators = map[string]validatorCreator{
 	"expressionCanBeEvaluated":             newExpressionCanBeEvaluated,
 	"expressionUsesExistingLabels":         newExpressionUsesExistingLabels,
 	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
+	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
 }
 
 func NewFromConfig(config config.ValidatorConfig) (Validator, error) {
