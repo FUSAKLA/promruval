@@ -29,13 +29,14 @@ groups:
           disabled_validation_rules: check-team-label,check-prometheus-limitations
 
   - name: testIgnoreValidationsInExpr
+    source_tenants: ["k8s"]
     rules:
       - alert: test
         expr: |
           # Comment before.
           # Comment on the same line. ignore_validations: labelHasAllowedValue
           # Comment after.
-          foo{
+          kube_pod_labels{
             # ignore_validations: expressionSelectorsMatchesAnything, hasLabels
           }
         for: 1m

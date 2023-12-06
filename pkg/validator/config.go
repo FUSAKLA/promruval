@@ -37,6 +37,7 @@ var registeredValidators = map[string]validatorCreator{
 	"expressionUsesExistingLabels":         newExpressionUsesExistingLabels,
 	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
 	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
+	"hasSourceTenantsForMetrics":           newHasSourceTenantsForMetrics,
 }
 
 func NewFromConfig(config config.ValidatorConfig) (Validator, error) {
@@ -52,4 +53,13 @@ func KnownValidatorName(name string) bool {
 		return true
 	}
 	return false
+}
+
+func KnownValidators(validatorNames []string) error {
+	for _, validatorName := range validatorNames {
+		if !KnownValidatorName(validatorName) {
+			return fmt.Errorf("unknown validator `%s`", validatorName)
+		}
+	}
+	return nil
 }

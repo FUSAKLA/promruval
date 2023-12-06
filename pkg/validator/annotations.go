@@ -11,6 +11,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
+	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/promql"
 
@@ -41,7 +42,7 @@ func (h hasAnnotations) String() string {
 	return fmt.Sprintf("has all of these annotations: `%s`", strings.Join(h.annotations, "`,`"))
 }
 
-func (h hasAnnotations) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h hasAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	for _, annotation := range h.annotations {
 		if _, ok := rule.Annotations[annotation]; !ok {
@@ -72,7 +73,7 @@ func (h doesNotHaveAnnotations) String() string {
 	return fmt.Sprintf("does not have annotations: `%s`", strings.Join(h.annotations, "`,`"))
 }
 
-func (h doesNotHaveAnnotations) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h doesNotHaveAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	for _, annotation := range h.annotations {
 		if _, ok := rule.Annotations[annotation]; ok {
@@ -103,7 +104,7 @@ func (h hasAnyOfAnnotations) String() string {
 	return fmt.Sprintf("has any of these annotations: `%s`", strings.Join(h.annotations, "`,`"))
 }
 
-func (h hasAnyOfAnnotations) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h hasAnyOfAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	for _, annotation := range h.annotations {
 		if _, ok := rule.Annotations[annotation]; ok {
 			return []error{}
@@ -140,7 +141,7 @@ func (h annotationMatchesRegexp) String() string {
 	return fmt.Sprintf("annotation `%s` matches regexp `%s`", h.annotation, h.regexp)
 }
 
-func (h annotationMatchesRegexp) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h annotationMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	value, ok := rule.Annotations[h.annotation]
 	if !ok {
 		return []error{}
@@ -183,7 +184,7 @@ func (h annotationHasAllowedValue) String() string {
 	return fmt.Sprintf("annotation `%s` %s", h.annotation, text)
 }
 
-func (h annotationHasAllowedValue) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h annotationHasAllowedValue) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	ruleValue, ok := rule.Annotations[h.annotation]
 	if !ok {
 		return []error{}
@@ -229,7 +230,7 @@ func (h annotationIsValidURL) String() string {
 	return text
 }
 
-func (h annotationIsValidURL) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h annotationIsValidURL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	value, ok := rule.Annotations[h.annotation]
 	if !ok {
 		return []error{}
@@ -271,7 +272,7 @@ func (h annotationIsValidPromQL) String() string {
 	return fmt.Sprintf("Annotation `%s` is a valid PromQL expression", h.annotation)
 }
 
-func (h annotationIsValidPromQL) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h annotationIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	value, ok := rule.Annotations[h.annotation]
 	if !ok {
 		return []error{}
@@ -296,7 +297,7 @@ func (h validateAnnotationTemplates) String() string {
 	return "Annotations are valid templates"
 }
 
-func (h validateAnnotationTemplates) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h validateAnnotationTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	data := template.AlertTemplateData(map[string]string{}, map[string]string{}, "", 0)
 	defs := []string{

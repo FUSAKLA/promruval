@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
+	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
-	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
@@ -36,7 +36,7 @@ func (h expressionDoesNotUseOlderDataThan) String() string {
 	return fmt.Sprintf("expression does not use data older than `%s`", h.limit)
 }
 
-func (h expressionDoesNotUseOlderDataThan) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h expressionDoesNotUseOlderDataThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
@@ -87,7 +87,7 @@ func (h expressionDoesNotUseLabels) String() string {
 	return fmt.Sprintf("does not use any of the `%s` labels is in its expression", strings.Join(h.labels, "`,`"))
 }
 
-func (h expressionDoesNotUseLabels) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h expressionDoesNotUseLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	usedLabels, err := getExpressionUsedLabels(rule.Expr)
 	if err != nil {
 		return []error{err}
@@ -124,7 +124,7 @@ func (h expressionDoesNotUseRangeShorterThan) String() string {
 	return fmt.Sprintf("expr does not use range selector shorter than `%s`", h.limit)
 }
 
-func (h expressionDoesNotUseRangeShorterThan) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h expressionDoesNotUseRangeShorterThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
@@ -156,7 +156,7 @@ func (h expressionDoesNotUseIrate) String() string {
 	return "expr does not use irate"
 }
 
-func (h expressionDoesNotUseIrate) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
@@ -197,7 +197,7 @@ func (h validFunctionsOnCounters) String() string {
 	return msg
 }
 
-func (h validFunctionsOnCounters) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h validFunctionsOnCounters) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
@@ -237,7 +237,7 @@ func (h rateBeforeAggregation) String() string {
 	return "never use aggregation functions before the `rate` or `increase` functions, see https://www.robustperception.io/rate-then-sum-never-sum-then-rate"
 }
 
-func (h rateBeforeAggregation) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h rateBeforeAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
@@ -289,7 +289,7 @@ func (h expressionCanBeEvaluated) String() string {
 	return msg
 }
 
-func (h expressionCanBeEvaluated) Validate(rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+func (h expressionCanBeEvaluated) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
 	var errs []error
 	if prometheusClient == nil {
 		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
@@ -322,7 +322,7 @@ func (h expressionUsesExistingLabels) String() string {
 	return "expression uses only labels that are actually present in Prometheus"
 }
 
-func (h expressionUsesExistingLabels) Validate(rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+func (h expressionUsesExistingLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
 	if prometheusClient == nil {
 		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
 		return nil
@@ -365,7 +365,7 @@ func (h expressionSelectorsMatchesAnything) String() string {
 	return "expression selectors actually matches any series in Prometheus"
 }
 
-func (h expressionSelectorsMatchesAnything) Validate(rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+func (h expressionSelectorsMatchesAnything) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
 	if prometheusClient == nil {
 		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
 		return nil
@@ -402,15 +402,15 @@ func (e expressionWithNoMetricName) String() string {
 	return "expression with no metric name"
 }
 
-func (e expressionWithNoMetricName) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (e expressionWithNoMetricName) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	vectorsWithNames, err := getExpressionMetricsNames(rule.Expr)
+	metrics, err := getExpressionMetrics(rule.Expr)
 	if err != nil {
 		return []error{err}
 	}
-	for _, v := range vectorsWithNames {
-		if v.MetricName == "" {
-			errs = append(errs, fmt.Errorf("missing metric name for vector `%s`", v.Vector.String()))
+	for _, v := range metrics {
+		if v.Name == "" {
+			errs = append(errs, fmt.Errorf("missing metric name for vector `%s`", v.VectorSelector.String()))
 		}
 	}
 	return errs
@@ -448,30 +448,22 @@ func (h expressionDoesNotUseMetrics) String() string {
 	}(), ",")
 }
 
-func (h expressionDoesNotUseMetrics) Validate(rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h expressionDoesNotUseMetrics) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	expr, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %s", rule.Expr, err)}
 	}
 	var errs []error
-	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
-		switch v := n.(type) {
-		case *parser.VectorSelector:
-			// Do not check the VectorSelector.Name since it is automatically parsed into the __name__ LabelMatcher
-			for _, l := range v.LabelMatchers {
-				// We care just for the special __name__ label containing name of the metric
-				// and since we cannot match regexp on regexp.. lets just check for equality
-				if l.Name != "__name__" || l.Type != labels.MatchEqual {
-					continue
-				}
-				for _, r := range h.metricNameRegexps {
-					if r.MatchString(l.Value) {
-						errs = append(errs, fmt.Errorf("expression uses metric `%s` which is forbidden", l.Value))
-					}
-				}
+	usedMetrics, err := getExpressionMetrics(expr.String())
+	if err != nil {
+		return []error{err}
+	}
+	for _, m := range usedMetrics {
+		for _, r := range h.metricNameRegexps {
+			if r.MatchString(m.Name) {
+				errs = append(errs, fmt.Errorf("expression vector selector `%s` uses metric `%s` which is forbidden", m.VectorSelector.String(), m.Name))
 			}
 		}
-		return nil
-	})
+	}
 	return errs
 }

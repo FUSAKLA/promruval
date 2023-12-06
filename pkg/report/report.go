@@ -12,7 +12,7 @@ import (
 
 type ValidationRule interface {
 	Name() string
-	Scope() string
+	Scope() config.ValidationScope
 	ValidationTexts() []string
 }
 

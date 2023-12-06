@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"regexp"
 )
 
 var htmlTemplate = `
@@ -13,7 +14,7 @@ var htmlTemplate = `
   <h2><a href="#{{.Name}}">{{.Name}}</a></h2>
 	  <ul>
 	  {{- range .Validations }}
-		<li>{{$currentRule.Scope}} {{.}}</li>
+		<li>{{$currentRule.Scope}} {{. | backticksToCodeTag }}</li>
 	  {{- end }}
 	  </ul>
 {{- end }}
@@ -40,6 +41,12 @@ Validation rules:
 {{- end }}
 `
 
+var customFuncs = template.FuncMap{
+	"backticksToCodeTag": func(s string) template.HTML {
+		return template.HTML(regexp.MustCompile("`([^`]+)`").ReplaceAllString(s, "<code>$1</code>"))
+	},
+}
+
 type templateRule struct {
 	Name        string
 	Scope       string
@@ -55,7 +62,7 @@ func ValidationDocs(validationRules []ValidationRule, format string) (string, er
 	for _, rule := range validationRules {
 		data.Rules = append(data.Rules, templateRule{
 			Name:        rule.Name(),
-			Scope:       rule.Scope(),
+			Scope:       string(rule.Scope()),
 			Validations: rule.ValidationTexts(),
 		})
 	}
@@ -72,7 +79,7 @@ func ValidationDocs(validationRules []ValidationRule, format string) (string, er
 		return "", fmt.Errorf("unsupported format type %s", format)
 	}
 
-	tmpl, err := template.New("docs").Parse(templateToUse)
+	tmpl, err := template.New("docs").Funcs(customFuncs).Parse(templateToUse)
 	if err != nil {
 		return "", err
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/fusakla/promruval/v2/pkg/report"
 	"github.com/fusakla/promruval/v2/pkg/validate"
+	"github.com/fusakla/promruval/v2/pkg/validationrule"
 	"github.com/fusakla/promruval/v2/pkg/validator"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -55,22 +56,22 @@ func loadConfigFile(configFilePath string) (*config.Config, error) {
 	return validationConfig, nil
 }
 
-func validationRulesFromConfig(config *config.Config) ([]*validate.ValidationRule, error) {
-	var validationRules []*validate.ValidationRule
+func validationRulesFromConfig(config *config.Config) ([]*validationrule.ValidationRule, error) {
+	var validationRules []*validationrule.ValidationRule
 rulesIteration:
-	for _, rule := range config.ValidationRules {
+	for _, validationRule := range config.ValidationRules {
 		for _, disabledRule := range *disabledRules {
-			if disabledRule == rule.Name {
+			if disabledRule == validationRule.Name {
 				continue rulesIteration
 			}
 		}
 		for _, enabledRule := range *enabledRules {
-			if enabledRule != rule.Name {
+			if enabledRule != validationRule.Name {
 				continue rulesIteration
 			}
 		}
-		newRule := validate.NewValidationRule(rule.Name, rule.Scope)
-		for _, validatorConfig := range rule.Validations {
+		newRule := validationrule.New(validationRule.Name, validationRule.Scope)
+		for _, validatorConfig := range validationRule.Validations {
 			newValidator, err := validator.NewFromConfig(validatorConfig)
 			if err != nil {
 				return nil, fmt.Errorf("loading validator config: %w", err)
