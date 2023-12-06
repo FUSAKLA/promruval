@@ -57,20 +57,11 @@ func getExpressionMetricsNames(expr string) ([]string, error) {
 	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.VectorSelector:
-			names = append(names, getMetricNameFromVectorSelector(v))
+			names = append(names, getMetricNameFromLabels(v.LabelMatchers))
 		}
 		return nil
 	})
 	return names, nil
-}
-
-func getMetricNameFromVectorSelector(v *parser.VectorSelector) string {
-	s := &parser.VectorSelector{Name: v.Name}
-	name := s.String()
-	if name == "" {
-		name = getMetricNameFromLabels(v.LabelMatchers)
-	}
-	return name
 }
 
 func getMetricNameFromLabels(labels []*labels.Matcher) string {
