@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alecthomas/kingpin/v2"
 	doublestar "github.com/bmatcuk/doublestar/v4"
 	"github.com/fusakla/promruval/v2/pkg/config"
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
@@ -13,7 +14,6 @@ import (
 	"github.com/fusakla/promruval/v2/pkg/validationrule"
 	"github.com/fusakla/promruval/v2/pkg/validator"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"gopkg.in/yaml.v3"
 )
 
