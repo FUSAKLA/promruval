@@ -25,7 +25,7 @@ var (
 	builtBy = os.Getenv("USER")
 
 	app                 = kingpin.New("promruval", "Prometheus rules validation tool.")
-	validateConfigFiles = app.Flag("config-file", "Path to validation config file. Can be passed multiple times, only validationRules will be reflected from the additional configs.").Short('c').Required().ExistingFiles()
+	validateConfigFiles = app.Flag("config-file", "Path to validation config file. Can be passed multiple times, only validationRules will be reflected from the additional configs.").Short('c').ExistingFiles()
 	debug               = app.Flag("debug", "Enable debug logging.").Bool()
 
 	versionCmd = app.Command("version", "Print version and build information.")
@@ -95,6 +95,15 @@ func main() {
 
 	currentCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
+	if currentCommand == versionCmd.FullCommand() {
+		fmt.Printf("Version: %s\nBuild date: %s\nBuild commit: %s\nBuilt by: %s\n", version, date, commit, builtBy)
+		return
+	}
+
+	if len(*validateConfigFiles) == 0 {
+		app.Fatalf("required flag --config-file not provided, try --help")
+	}
+
 	mainValidationConfig, err := loadConfigFile((*validateConfigFiles)[0])
 	if err != nil {
 		exitWithError(err)
@@ -121,8 +130,6 @@ func main() {
 	}
 
 	switch currentCommand {
-	case versionCmd.FullCommand():
-		fmt.Printf("Version: %s\nBuild date: %s\nBuild commit: %s\nBuilt by: %s\n", version, date, commit, builtBy)
 	case docsCmd.FullCommand():
 		var reportRules []report.ValidationRule
 		for _, r := range validationRules {
