@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Upgrade all dependencies
+- Fix: `promruval version` now works without specifying `--config-file`
 
 ## [v2.7.0] - 2023-12-06
 - Added new validator `expressionDoesNotUseMetrics`, see its [docs](docs/validations.md#expressiondoesnotusemetrics).
