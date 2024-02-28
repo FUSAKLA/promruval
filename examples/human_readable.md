@@ -12,7 +12,7 @@ Validation rules:
 
   check-team-label
     - Alert has labels: `xxx`
-    - Alert label `team` has one of the allowed values: `sre@company.com`
+    - Alert label `team` has one of the allowed values: `sre@company.com` (templated values are ignored)
 
   check-playbook-annotation
     - Alert has any of these annotations: `playbook`,`link`

@@ -143,9 +143,10 @@ func (h hasAnyOfLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *
 
 func newLabelHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Label               string   `yaml:"label"`
-		AllowedValues       []string `yaml:"allowedValues"`
-		CommaSeparatedValue bool     `yaml:"commaSeparatedValue"`
+		Label                 string   `yaml:"label"`
+		AllowedValues         []string `yaml:"allowedValues"`
+		CommaSeparatedValue   bool     `yaml:"commaSeparatedValue"`
+		IgnoreTemplatedValues bool     `yaml:"ignoreTemplatedValues"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -156,13 +157,14 @@ func newLabelHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
 	if len(params.AllowedValues) == 0 {
 		return nil, fmt.Errorf("missing allowedValues")
 	}
-	return &labelHasAllowedValue{label: params.Label, allowedValues: params.AllowedValues, commaSeparatedValue: params.CommaSeparatedValue}, nil
+	return &labelHasAllowedValue{label: params.Label, allowedValues: params.AllowedValues, commaSeparatedValue: params.CommaSeparatedValue, ignoreTemplatedValues: params.IgnoreTemplatedValues}, nil
 }
 
 type labelHasAllowedValue struct {
-	label               string
-	allowedValues       []string
-	commaSeparatedValue bool
+	label                 string
+	allowedValues         []string
+	commaSeparatedValue   bool
+	ignoreTemplatedValues bool
 }
 
 func (h labelHasAllowedValue) String() string {
@@ -170,12 +172,19 @@ func (h labelHasAllowedValue) String() string {
 	if h.commaSeparatedValue {
 		text = "split by comma " + text
 	}
-	return fmt.Sprintf("label `%s` %s", h.label, text)
+	text = fmt.Sprintf("label `%s` %s", h.label, text)
+	if h.ignoreTemplatedValues {
+		text += " (templated values are ignored)"
+	}
+	return text
 }
 
 func (h labelHasAllowedValue) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	ruleValue, ok := rule.Labels[h.label]
 	if !ok {
+		return []error{}
+	}
+	if h.ignoreTemplatedValues && strings.Contains(ruleValue, "{{") {
 		return []error{}
 	}
 	valuesToCheck := []string{ruleValue}

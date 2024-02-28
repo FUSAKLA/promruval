@@ -41,6 +41,19 @@ groups:
             # ignore_validations: expressionSelectorsMatchesAnything, hasLabels
           }
         for: 1m
+        labels:
+          team: "{{ .Labels.team }}"
+        annotations:
+          title: test alert
+          playbook: http://foo.bar/nonexisting/playbook
+
+      - alert: test2
+        expr: up == 0
+        for: 1m
+        labels:
+          team: "{{ .Labels.team }}"
+          xxx: fooo
+          severity: critical
         annotations:
           title: test alert
           playbook: http://foo.bar/nonexisting/playbook

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added new param `ignoreTemplatedValues` to the `labelHasAllowedValue` validator to ignore templated values in the label.
 - Added new validation rule scope `Group` to validate the rule group itself (not the rules in it).
 - Added new `Group` scope validator `hasAllowedEvaluationInterval` to check if the rule group has the `interval` in the configured range and possibility to enforce it to be configured.
 - CHANGED: The validator `allowedSourceTenants` is now allowed only in the `Group` scope validation rules.
