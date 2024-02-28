@@ -27,10 +27,12 @@ Validation rules:
 
   check-source-tenants
     - All rules rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: `k8s`:`^container_.*|kube_.*$`
-    - All rules rule group, the rule belongs to, does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`
 
   check-metric-name
     - Alert expression uses metric name in selectors
+
+  check-groups
+    - Group does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`
 
   another-checks
     - All rules labels does not have empty values

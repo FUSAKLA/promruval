@@ -30,10 +30,11 @@
     - [`expressionUsesExistingLabels`](#expressionusesexistinglabels)
     - [`expressionSelectorsMatchesAnything`](#expressionselectorsmatchesanything)
     - [`expressionWithNoMetricName`](#expressionwithnometricname)
-  - [Alert](#alert)
+  - [Alerts](#alerts)
     - [`forIsNotLongerThan`](#forisnotlongerthan)
   - [Others](#others)
     - [`hasSourceTenantsForMetrics`](#hassourcetenantsformetrics)
+  - [Groups](#groups)
     - [`hasValidSourceTenants`](#hasvalidsourcetenants)
 
 ## Labels
@@ -281,7 +282,7 @@ instance.
 
 Fails if an expression doesn't use an explicit metric name (also if used as `__name__` label) in all its selectors(eg `up{foo="bar"}`).
 
-## Alert
+## Alerts
 
 ### `forIsNotLongerThan`
 
@@ -304,6 +305,9 @@ params:
     # Example:
     # k8s: "kube_.*|container_.*"
 ```
+
+## Groups
+Validators that are designed to validate the group itself. Not the rules within it.
 
 ### `hasValidSourceTenants`
 

@@ -68,6 +68,7 @@ func (r *FileReport) NewGroupReport(name string) *GroupReport {
 		Name:        name,
 		Valid:       true,
 		RuleReports: []*RuleReport{},
+		Errors:      []error{},
 	}
 	r.GroupReports = append(r.GroupReports, &newReport)
 	return &newReport
@@ -92,6 +93,7 @@ type GroupReport struct {
 	Name        string
 	Excluded    bool
 	RuleReports []*RuleReport
+	Errors      []error
 }
 
 func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope) *RuleReport {
@@ -115,6 +117,12 @@ func (r *GroupReport) AsText(output *IndentedOutput) {
 	if r.Excluded {
 		output.AddLine("Skipped")
 		return
+	}
+	if r.Errors != nil {
+		output.AddLine("Group level errors:")
+		output.IncreaseIndentation()
+		output.WriteErrors(r.Errors)
+		output.DecreaseIndentation()
 	}
 	if len(r.RuleReports) == 0 {
 		output.AddLine("No rules")

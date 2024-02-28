@@ -145,7 +145,7 @@ prometheus:
 validationRules:
   # Name of the validation rule.
   - name: example-validation
-    # What Prometheus rules to validate, possible values are: 'Alert', 'Recording rule', 'All rules'.
+    # What Prometheus rules to validate, possible values are: 'Group', 'Alert', 'Recording rule', 'All rules'.
     scope: All rules
     # List of validations to be used.
     validations:

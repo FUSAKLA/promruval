@@ -115,7 +115,7 @@ func TestGetVectorSelectorMetricName(t *testing.T) {
 		promQl, err := parser.ParseExpr(test.vectorSelectorString)
 		assert.NoError(t, err)
 		var selectors []*parser.VectorSelector
-		parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
+		parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
 			switch v := n.(type) {
 			case *parser.VectorSelector:
 				selectors = append(selectors, &parser.VectorSelector{Name: v.Name, LabelMatchers: v.LabelMatchers})

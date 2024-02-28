@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"maps"
 
 	"github.com/fusakla/promruval/v2/pkg/config"
 	"gopkg.in/yaml.v3"
@@ -9,7 +10,7 @@ import (
 
 type validatorCreator func(params yaml.Node) (Validator, error)
 
-var registeredValidators = map[string]validatorCreator{
+var registeredRuleValidators = map[string]validatorCreator{
 	"hasLabels":                            newHasLabels,
 	"hasAnnotations":                       newHasAnnotations,
 	"doesNotHaveLabels":                    newDoesNotHaveLabels,
@@ -38,28 +39,40 @@ var registeredValidators = map[string]validatorCreator{
 	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
 	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
 	"hasSourceTenantsForMetrics":           newHasSourceTenantsForMetrics,
-	"hasAllowedSourceTenants":              newHasAllowedSourceTenants,
 }
 
-func NewFromConfig(config config.ValidatorConfig) (Validator, error) {
-	validatorFactory, ok := registeredValidators[config.ValidatorType]
+var registeredGroupValidators = map[string]validatorCreator{
+	"hasAllowedSourceTenants": newHasAllowedSourceTenants,
+}
+
+var registeredValidators = map[string]validatorCreator{}
+
+func init() {
+	maps.Copy(registeredValidators, registeredRuleValidators)
+	maps.Copy(registeredValidators, registeredGroupValidators)
+}
+
+func NewFromConfig(scope config.ValidationScope, config config.ValidatorConfig) (Validator, error) {
+	factory, ok := creator(scope, config.ValidatorType)
 	if !ok {
 		return nil, fmt.Errorf("unknown validator type `%s`", config.ValidatorType)
 	}
-	return validatorFactory(config.Params)
+	return factory(config.Params)
 }
 
-func KnownValidatorName(name string) bool {
-	if _, ok := registeredValidators[name]; ok {
-		return true
+func creator(scope config.ValidationScope, name string) (validatorCreator, bool) {
+	validators := registeredRuleValidators
+	if scope == config.Group {
+		validators = registeredGroupValidators
 	}
-	return false
+	creator, ok := validators[name]
+	return creator, ok
 }
 
-func KnownValidators(validatorNames []string) error {
+func KnownValidators(scope config.ValidationScope, validatorNames []string) error {
 	for _, validatorName := range validatorNames {
-		if !KnownValidatorName(validatorName) {
-			return fmt.Errorf("unknown validator `%s`", validatorName)
+		if _, ok := creator(scope, validatorName); !ok {
+			return fmt.Errorf("unknown validator `%s` for given validation rule scope %s", validatorName, scope)
 		}
 	}
 	return nil

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added new validation rule scope `Group` to validate the rule group itself (not the rules in it).
+- CHANGED: The validator `allowedSourceTenants` is now allowed only in the `Group` scope validation rules.
+
 ## [v2.7.1] - 2024-02-01
 - Upgrade all dependencies
 - Fix: `promruval version` now works without specifying `--config-file`

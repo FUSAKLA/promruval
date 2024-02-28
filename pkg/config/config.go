@@ -13,9 +13,10 @@ const (
 	AlertScope         ValidationScope = "Alert"
 	RecordingRuleScope ValidationScope = "Recording rule"
 	AllRulesScope      ValidationScope = "All rules"
+	Group              ValidationScope = "Group"
 )
 
-var ValidationScopes = []ValidationScope{AlertScope, RecordingRuleScope, AllRulesScope}
+var ValidationScopes = []ValidationScope{Group, AlertScope, RecordingRuleScope, AllRulesScope}
 
 type Config struct {
 	CustomExcludeAnnotation string           `yaml:"customExcludeAnnotation"`
