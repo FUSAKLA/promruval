@@ -42,7 +42,8 @@ var registeredRuleValidators = map[string]validatorCreator{
 }
 
 var registeredGroupValidators = map[string]validatorCreator{
-	"hasAllowedSourceTenants": newHasAllowedSourceTenants,
+	"hasAllowedSourceTenants":      newHasAllowedSourceTenants,
+	"hasAllowedEvaluationInterval": newHasAllowedEvaluationInterval,
 }
 
 var registeredValidators = map[string]validatorCreator{}

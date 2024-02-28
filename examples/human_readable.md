@@ -33,6 +33,7 @@ Validation rules:
 
   check-groups
     - Group does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`
+    - Group evaluation interval is between `20s` and `10m0s` if set
 
   another-checks
     - All rules labels does not have empty values

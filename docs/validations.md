@@ -36,6 +36,7 @@
     - [`hasSourceTenantsForMetrics`](#hassourcetenantsformetrics)
   - [Groups](#groups)
     - [`hasValidSourceTenants`](#hasvalidsourcetenants)
+    - [`hasAllowedEvaluationInterval`](#hasallowedevaluationinterval)
 
 ## Labels
 
@@ -309,6 +310,8 @@ params:
 ## Groups
 Validators that are designed to validate the group itself. Not the rules within it.
 
+:warning: Can be used only with the `Group` scope.
+
 ### `hasValidSourceTenants`
 
 Fails if the rule group has other than than the configured source tenants.
@@ -316,4 +319,17 @@ Fails if the rule group has other than than the configured source tenants.
 ```yaml
 params:
   allowedSourceTenants: [ "foo", "bar" ]
+```
+
+### `hasAllowedEvaluationInterval`
+
+Fails if the rule group has the `interval` out of the configured range.
+By default it will ignore, if the group does not have the interval configured.
+You can enforce it to be set by setting the `mustBeSet` to true.
+
+```yaml
+params:
+  minimum: <duration> # Optional, default is 0
+  maximum: <duration> # Optional, default is infinity
+  mustBeSet: <bool>   # Optional, default is false
 ```
