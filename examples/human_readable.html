@@ -38,12 +38,16 @@
   <h2><a href="#check-source-tenants">check-source-tenants</a></h2>
 	  <ul>
 		<li>All rules rule group, the rule belongs to, has the required <code>source_tenants</code> configured, according to the mapping of metric names to tenants: <code>k8s</code>:<code>^container_.*|kube_.*$</code></li>
-		<li>All rules rule group, the rule belongs to, does not have other <code>source_tenants</code> than: <code>tenant1</code>, <code>tenant2</code>, <code>k8s</code></li>
 	  </ul>
 
   <h2><a href="#check-metric-name">check-metric-name</a></h2>
 	  <ul>
 		<li>Alert expression uses metric name in selectors</li>
+	  </ul>
+
+  <h2><a href="#check-groups">check-groups</a></h2>
+	  <ul>
+		<li>Group does not have other <code>source_tenants</code> than: <code>tenant1</code>, <code>tenant2</code>, <code>k8s</code></li>
 	  </ul>
 
   <h2><a href="#another-checks">another-checks</a></h2>

@@ -72,7 +72,10 @@ rulesIteration:
 		}
 		newRule := validationrule.New(validationRule.Name, validationRule.Scope)
 		for _, validatorConfig := range validationRule.Validations {
-			newValidator, err := validator.NewFromConfig(validatorConfig)
+			if err := validator.KnownValidators(validationRule.Scope, []string{validatorConfig.ValidatorType}); err != nil {
+				return nil, err
+			}
+			newValidator, err := validator.NewFromConfig(validationRule.Scope, validatorConfig)
 			if err != nil {
 				return nil, fmt.Errorf("loading validator config: %w", err)
 			}

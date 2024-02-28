@@ -13,6 +13,7 @@ import (
 	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
 	"github.com/fusakla/promruval/v2/pkg/validationrule"
 	"github.com/fusakla/promruval/v2/pkg/validator"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -47,6 +48,22 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 		for _, group := range rf.Groups {
 			validationReport.GroupsCount++
 			groupReport := fileReport.NewGroupReport(group.Name)
+			for _, rule := range validationRules {
+				if rule.Scope() != config.Group {
+					continue
+				}
+				for _, v := range rule.Validators() {
+					validatorName := reflect.TypeOf(v).Elem().Name()
+					for _, err := range v.Validate(group, rulefmt.Rule{}, prometheusClient) {
+						groupReport.Errors = append(groupReport.Errors, fmt.Errorf("%s: %w", validatorName, err))
+					}
+				}
+			}
+			if len(groupReport.Errors) > 0 {
+				validationReport.Failed = true
+				fileReport.Valid = false
+				groupReport.Valid = false
+			}
 			for _, ruleNode := range group.Rules {
 				originalRule := ruleNode.OriginalRule()
 				var ruleReport *report.RuleReport
@@ -61,10 +78,13 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 					excludedRules = strings.Split(excludedRulesText, ",")
 				}
 				disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
-				if err := validator.KnownValidators(disabledValidators); err != nil {
+				if err := validator.KnownValidators(config.AllRulesScope, disabledValidators); err != nil {
 					ruleReport.Errors = append(ruleReport.Errors, err)
 				}
 				for _, rule := range validationRules {
+					if rule.Scope() == config.Group {
+						continue
+					}
 					skipRule := false
 					if (rule.Scope() != ruleReport.RuleType) && (rule.Scope() != config.AllRulesScope) {
 						skipRule = true
