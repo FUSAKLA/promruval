@@ -307,7 +307,7 @@ func (h validateAnnotationTemplates) Validate(_ unmarshaler.RuleGroup, rule rule
 		"{{$value := .Value}}",
 	}
 	for k, v := range rule.Annotations {
-		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(ctx context.Context, s string, time time.Time) (promql.Vector, error) { return nil, nil }, &url.URL{}, []string{})
+		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(_ context.Context, _ string, _ time.Time) (promql.Vector, error) { return nil, nil }, &url.URL{}, []string{})
 		if _, err := t.Expand(); err != nil && !strings.Contains(err.Error(), "error executing template") {
 			errs = append(errs, fmt.Errorf("invalid template of annotation %s: %w", k, err))
 		}

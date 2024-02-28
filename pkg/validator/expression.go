@@ -42,7 +42,7 @@ func (h expressionDoesNotUseOlderDataThan) Validate(_ unmarshaler.RuleGroup, rul
 		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
-	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+	parser.Inspect(expr, func(n parser.Node, _ []parser.Node) error {
 		// TODO(FUSAKLA) Having range query in subquery should have the time added.
 		switch n := n.(type) {
 		case *parser.MatrixSelector:
@@ -130,7 +130,7 @@ func (h expressionDoesNotUseRangeShorterThan) Validate(_ unmarshaler.RuleGroup, 
 		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
-	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+	parser.Inspect(expr, func(n parser.Node, _ []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.MatrixSelector:
 			if v.Range < time.Duration(h.limit) {
@@ -162,7 +162,7 @@ func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefm
 		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	var errs []error
-	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+	parser.Inspect(expr, func(n parser.Node, _ []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.Call:
 			if v != nil && v.Func != nil && v.Func.Name == "irate" {
@@ -207,7 +207,7 @@ func (h validFunctionsOnCounters) Validate(_ unmarshaler.RuleGroup, rule rulefmt
 	if h.allowHistograms {
 		match = regexp.MustCompile(`(_total|_count|_bucket|_sum)$`)
 	}
-	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
+	parser.Inspect(expr, func(n parser.Node, _ []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.Call:
 			if v == nil || v.Func == nil || (v.Func.Name != "rate" && v.Func.Name != "increase") {

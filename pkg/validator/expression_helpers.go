@@ -14,7 +14,7 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 		return []string{}, fmt.Errorf("failed to parse expression `%s`: %w", expr, err)
 	}
 	var usedLabels []string
-	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
+	parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.AggregateExpr:
 			usedLabels = append(usedLabels, v.Grouping...)
@@ -40,7 +40,7 @@ func getExpressionVectorSelectors(expr string) ([]*parser.VectorSelector, error)
 		return []*parser.VectorSelector{}, fmt.Errorf("failed to parse expression `%s`: %w", expr, err)
 	}
 	var selectors []*parser.VectorSelector
-	parser.Inspect(promQl, func(n parser.Node, ns []parser.Node) error {
+	parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
 		switch v := n.(type) {
 		case *parser.VectorSelector:
 			selectors = append(selectors, &parser.VectorSelector{Name: v.Name, LabelMatchers: v.LabelMatchers})
