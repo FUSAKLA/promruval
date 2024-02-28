@@ -207,6 +207,13 @@ var testCases = []struct {
 	{name: "allowedSourceTenantsAndGroupSourceTenantsWithOneTenant", validator: hasAllowedSourceTenants{allowedSourceTenants: []string{"tenant1"}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant1"}}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
 	{name: "allowedSourceTenantsAndGroupSourceTenantsWithMultipleTenants", validator: hasAllowedSourceTenants{allowedSourceTenants: []string{"tenant1", "tenant2"}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant1", "tenant2"}}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
 	{name: "allowedSourceTenantsAndGroupSourceTenantsWithMultipleTenantsAndOneIsMissing", validator: hasAllowedSourceTenants{allowedSourceTenants: []string{"tenant1", "tenant2"}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant1", "tenant3"}}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 1},
+
+	// hasAllowedEvaluationInterval
+	{name: "validInterval", validator: hasAllowedEvaluationInterval{minimum: time.Second, maximum: time.Minute, mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Minute)}, expectedErrors: 0},
+	{name: "unsetRequiredInterval", validator: hasAllowedEvaluationInterval{minimum: time.Second, maximum: time.Minute, mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: 0}, expectedErrors: 1},
+	{name: "unsetNotRequiredInterval", validator: hasAllowedEvaluationInterval{minimum: time.Second, maximum: time.Minute, mustBeSet: false}, group: unmarshaler.RuleGroup{Interval: 0}, expectedErrors: 0},
+	{name: "tooShortInterval", validator: hasAllowedEvaluationInterval{minimum: time.Minute, maximum: time.Hour, mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Second)}, expectedErrors: 1},
+	{name: "tooHighInterval", validator: hasAllowedEvaluationInterval{minimum: time.Minute, maximum: time.Hour, mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Hour * 2)}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

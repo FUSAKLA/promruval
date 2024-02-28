@@ -1,6 +1,7 @@
 groups:
   - name: group1
     partial_response_strategy: abort
+    interval: 1m
     rules:
       # foo bar
       - record: recorded_metrics

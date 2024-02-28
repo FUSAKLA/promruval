@@ -89,3 +89,8 @@ validationRules:
       - type: hasAllowedSourceTenants
         params:
           allowedSourceTenants: ["tenant1", "tenant2", "k8s"]
+      - type: hasAllowedEvaluationInterval
+        params:
+          minimum: "20s"
+          maximum: "10m"
+          intervalMustBeSet: false
