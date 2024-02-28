@@ -46,7 +46,6 @@ func loadConfigFile(configFilePath string) (*config.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open config file: %w", err)
 	}
-
 	validationConfig := &config.Config{}
 	decoder := yaml.NewDecoder(configFile)
 	decoder.KnownFields(true)
