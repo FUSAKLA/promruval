@@ -89,6 +89,9 @@ params:
 
 Fails if rule label value is not one of the allowed values. If the `commaSeparatedValue` is set to true, the label value
 to true, the label value is split by a comma, and the distinct values are checked if valid.
+Since the labels can be templated, but Promruval cannot tell if the resulting value will be valid,
+there is the `ignoreTemplatedValues` option, that allows you to ignore the templated values.
+
 > It's quite common to have well known severities for alerts which can be important even in the
 > Alertmanager routing tree. Ths is how you can make sure only the well-known severities are used.
 
@@ -97,6 +100,7 @@ params:
   label: "foo"
   allowedValues: [ "foo", "bar" ]
   commaSeparatedValue: true
+  ignoreTemplatedValues: false
 ```
 
 ### `nonEmptyLabels`

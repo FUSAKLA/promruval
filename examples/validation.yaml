@@ -41,6 +41,7 @@ validationRules:
           label: "team"
           allowedValues:
             - "sre@company.com"
+          ignoreTemplatedValues: true
 
   - name: check-playbook-annotation
     scope: Alert
