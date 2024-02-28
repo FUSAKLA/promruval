@@ -1,7 +1,9 @@
 package validate
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -40,6 +42,9 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 		decoder := yaml.NewDecoder(f)
 		err = decoder.Decode(&rf)
 		if err != nil {
+			if errors.Is(err, io.EOF) {
+				continue
+			}
 			validationReport.Failed = true
 			fileReport.Valid = false
 			fileReport.Errors = []error{fmt.Errorf("invalid file %s: %w", fileName, err)}
