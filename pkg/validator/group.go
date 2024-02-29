@@ -52,15 +52,14 @@ func newHasAllowedEvaluationInterval(paramsConfig yaml.Node) (Validator, error) 
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
+	if params.MaximumEvaluationInterval == 0 {
+		params.MaximumEvaluationInterval = time.Duration(1<<63 - 1)
+	}
 	if params.MinimumEvaluationInterval > params.MaximumEvaluationInterval {
 		return nil, fmt.Errorf("minimum is greater than maximum")
 	}
 	if params.MaximumEvaluationInterval == 0 && params.MinimumEvaluationInterval == 0 {
 		return nil, fmt.Errorf("at least one of the `minimum` or `maximum` must be set")
-	}
-	if params.MaximumEvaluationInterval == 0 {
-		params.MaximumEvaluationInterval = time.Duration(1<<63 - 1)
-
 	}
 	return &hasAllowedEvaluationInterval{minimum: params.MinimumEvaluationInterval, maximum: params.MaximumEvaluationInterval, mustBeSet: params.MustBeSet}, nil
 }
