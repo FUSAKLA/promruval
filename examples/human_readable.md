@@ -33,7 +33,7 @@ Validation rules:
 
   check-groups
     - Group does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`
-    - Group evaluation interval is between `20s` and `10m0s` if set
+    - Group evaluation interval is between `20s` and `106751d23h47m16s854ms` if set
     - Group has valid partial_response_strategy (one of `warn` or `abort`) if set
 
   another-checks

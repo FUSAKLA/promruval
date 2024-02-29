@@ -93,6 +93,5 @@ validationRules:
       - type: hasAllowedEvaluationInterval
         params:
           minimum: "20s"
-          maximum: "10m"
           intervalMustBeSet: false
       - type: hasValidPartialStrategy
