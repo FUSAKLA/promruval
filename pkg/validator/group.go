@@ -3,10 +3,10 @@ package validator
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
@@ -45,28 +45,28 @@ func (h hasAllowedSourceTenants) Validate(group unmarshaler.RuleGroup, _ rulefmt
 
 func newHasAllowedEvaluationInterval(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		MinimumEvaluationInterval time.Duration `yaml:"minimum"`
-		MaximumEvaluationInterval time.Duration `yaml:"maximum"`
-		MustBeSet                 bool          `yaml:"intervalMustBeSet"`
+		Minimum   model.Duration `yaml:"minimum"`
+		Maximum   model.Duration `yaml:"maximum"`
+		MustBeSet bool           `yaml:"intervalMustBeSet"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.MaximumEvaluationInterval == 0 {
-		params.MaximumEvaluationInterval = time.Duration(1<<63 - 1)
+	if params.Maximum == 0 {
+		params.Maximum = model.Duration(1<<63 - 1)
 	}
-	if params.MinimumEvaluationInterval > params.MaximumEvaluationInterval {
+	if params.Minimum > params.Maximum {
 		return nil, fmt.Errorf("minimum is greater than maximum")
 	}
-	if params.MaximumEvaluationInterval == 0 && params.MinimumEvaluationInterval == 0 {
+	if params.Maximum == 0 && params.Minimum == 0 {
 		return nil, fmt.Errorf("at least one of the `minimum` or `maximum` must be set")
 	}
-	return &hasAllowedEvaluationInterval{minimum: params.MinimumEvaluationInterval, maximum: params.MaximumEvaluationInterval, mustBeSet: params.MustBeSet}, nil
+	return &hasAllowedEvaluationInterval{minimum: params.Minimum, maximum: params.Maximum, mustBeSet: params.MustBeSet}, nil
 }
 
 type hasAllowedEvaluationInterval struct {
-	minimum   time.Duration
-	maximum   time.Duration
+	minimum   model.Duration
+	maximum   model.Duration
 	mustBeSet bool
 }
 
@@ -87,10 +87,10 @@ func (h hasAllowedEvaluationInterval) Validate(group unmarshaler.RuleGroup, _ ru
 		}
 		return []error{}
 	}
-	if h.minimum != 0 && time.Duration(group.Interval) < h.minimum {
+	if h.minimum != 0 && group.Interval < h.minimum {
 		return []error{fmt.Errorf("evaluation interval %s is less than `%s`", group.Interval, h.minimum)}
 	}
-	if h.maximum != 0 && time.Duration(group.Interval) > h.maximum {
+	if h.maximum != 0 && group.Interval > h.maximum {
 		return []error{fmt.Errorf("evaluation interval %s is greater than `%s`", group.Interval, h.maximum)}
 	}
 	return []error{}
