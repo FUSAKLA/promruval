@@ -216,6 +216,13 @@ var testCases = []struct {
 	{name: "unsetNotRequiredInterval", validator: hasAllowedEvaluationInterval{minimum: time.Second, maximum: time.Minute, mustBeSet: false}, group: unmarshaler.RuleGroup{Interval: 0}, expectedErrors: 0},
 	{name: "tooShortInterval", validator: hasAllowedEvaluationInterval{minimum: time.Minute, maximum: time.Hour, mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Second)}, expectedErrors: 1},
 	{name: "tooHighInterval", validator: hasAllowedEvaluationInterval{minimum: time.Minute, maximum: time.Hour, mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Hour * 2)}, expectedErrors: 1},
+
+	// hasValidPartialStrategy
+	{name: "validPartialStrategy", validator: hasValidPartialStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "warn"}, expectedErrors: 0},
+	{name: "validPartialStrategy", validator: hasValidPartialStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "abort"}, expectedErrors: 0},
+	{name: "invalidPartialStrategy", validator: hasValidPartialStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "foo"}, expectedErrors: 1},
+	{name: "unsetPartialStrategyAllowed", validator: hasValidPartialStrategy{mustBeSet: false}, group: unmarshaler.RuleGroup{}, expectedErrors: 0},
+	{name: "unsetPartialStrategyDisallowed", validator: hasValidPartialStrategy{mustBeSet: true}, group: unmarshaler.RuleGroup{}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

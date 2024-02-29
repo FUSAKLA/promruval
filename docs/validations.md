@@ -37,6 +37,7 @@
   - [Groups](#groups)
     - [`hasValidSourceTenants`](#hasvalidsourcetenants)
     - [`hasAllowedEvaluationInterval`](#hasallowedevaluationinterval)
+    - [`hasValidPartialResponseStrategy`](#hasvalidpartialresponsestrategy)
 
 ## Labels
 
@@ -333,7 +334,17 @@ You can enforce it to be set by setting the `mustBeSet` to true.
 
 ```yaml
 params:
-  minimum: <duration> # Optional, default is 0
+  minimum: "0s"
   maximum: <duration> # Optional, default is infinity
-  mustBeSet: <bool>   # Optional, default is false
+  mustBeSet: false
+```
+
+### `hasValidPartialResponseStrategy`
+
+Fails if the rule group has invalid value of the `partial_response_strategy` option, if set.
+To enforce the `partial_response_strategy` to be set, set the `mustBeSet` to true.
+
+```yaml
+params:
+  mustBeSet: false
 ```

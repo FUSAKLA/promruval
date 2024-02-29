@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new param `ignoreTemplatedValues` to the `labelHasAllowedValue` validator to ignore templated values in the label.
 - Added new validation rule scope `Group` to validate the rule group itself (not the rules in it).
 - Added new `Group` scope validator `hasAllowedEvaluationInterval` to check if the rule group has the `interval` in the configured range and possibility to enforce it to be configured.
+- Added new `Group` scope validator `hasValidPartialResponseStrategy` to check if the rule group has valid `partial_response_strategy` and possibility to enforce it to be configured.
 - CHANGED: The validator `allowedSourceTenants` is now allowed only in the `Group` scope validation rules.
 - Fixed marking empty rule files((or those with all the content commented out) with an error saying EOF, from now on such files are ignored.
 
