@@ -96,3 +96,40 @@ func (h hasAllowedEvaluationInterval) Validate(group unmarshaler.RuleGroup, _ ru
 	}
 	return []error{}
 }
+
+func newHasValidPartialStrategy(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		MustBeSet bool `yaml:"mustBeSet"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &hasValidPartialStrategy{mustBeSet: params.MustBeSet}, nil
+}
+
+type hasValidPartialStrategy struct {
+	mustBeSet bool
+}
+
+func (h hasValidPartialStrategy) String() string {
+	text := "has valid partial_response_strategy (one of `warn` or `abort`)"
+	if h.mustBeSet {
+		text += " and must be set"
+	} else {
+		text += " if set"
+	}
+	return text
+}
+
+func (h hasValidPartialStrategy) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
+	if group.PartialResponseStrategy == "" {
+		if h.mustBeSet {
+			return []error{fmt.Errorf("partial_response_strategy must be set")}
+		}
+		return []error{}
+	}
+	if group.PartialResponseStrategy != "warn" && group.PartialResponseStrategy != "abort" {
+		return []error{fmt.Errorf("invalid partial_response_strategy `%s`, valid options are `warn` and `abort`", group.PartialResponseStrategy)}
+	}
+	return []error{}
+}
