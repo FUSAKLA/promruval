@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Added new validator `expressionIsWellFormatted` to check if rules are well formatted as `promtool promql format` would do.
 - Added new validator `maxRulesPerGroup` to check if the number of rules in the group is not exceeding the limit.
+- Updated all deps to the latest versions.
 
 ## [v2.8.1] - 2024-02-29
 - Fixed param validation of the `hasAllowedEvaluationInterval` validator, if the `maximum` was not set.
