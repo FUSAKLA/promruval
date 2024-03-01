@@ -39,6 +39,7 @@
     - [`hasValidSourceTenants`](#hasvalidsourcetenants)
     - [`hasAllowedEvaluationInterval`](#hasallowedevaluationinterval)
     - [`hasValidPartialResponseStrategy`](#hasvalidpartialresponsestrategy)
+    - [`maxRulesPerGroup`](#maxrulespergroup)
 
 ## Labels
 
@@ -360,4 +361,13 @@ To enforce the `partial_response_strategy` to be set, set the `mustBeSet` to tru
 ```yaml
 params:
   mustBeSet: false
+```
+
+### `maxRulesPerGroup`
+
+Fails if the rule group has more rules than the specified limit.
+
+```yaml
+params:
+  limit: 10
 ```
