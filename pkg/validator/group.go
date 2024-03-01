@@ -132,3 +132,28 @@ func (h hasValidPartialStrategy) Validate(group unmarshaler.RuleGroup, _ rulefmt
 	}
 	return []error{}
 }
+
+func newMaxRulesPerGroup(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Limit int `yaml:"limit"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &maxRulesPerGroup{limit: params.Limit}, nil
+}
+
+type maxRulesPerGroup struct {
+	limit int
+}
+
+func (h maxRulesPerGroup) String() string {
+	return fmt.Sprintf("has at most %d rules", h.limit)
+}
+
+func (h maxRulesPerGroup) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
+	if len(group.Rules) > h.limit {
+		return []error{fmt.Errorf("group has %d rules, maximum is %d", len(group.Rules), h.limit)}
+	}
+	return []error{}
+}

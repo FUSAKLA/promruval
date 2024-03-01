@@ -229,6 +229,10 @@ var testCases = []struct {
 	{name: "invalidExpression", validator: expressionIsWellFormatted{showFormatted: true}, rule: rulefmt.Rule{Expr: `up     == 1`}, expectedErrors: 1},
 	{name: "validWithCommentThatShouldBeIgnored", validator: expressionIsWellFormatted{showFormatted: true}, rule: rulefmt.Rule{Expr: `up == 1 # fooo`}, expectedErrors: 0},
 	{name: "invalidButWithCommentAndShouldBeSkipped", validator: expressionIsWellFormatted{showFormatted: true, skipExpressionsWithComments: true}, rule: rulefmt.Rule{Expr: `up           == 1 # fooo`}, expectedErrors: 0},
+
+	// maxRulesPerGroup
+	{name: "allowedNumberOfGroups", validator: maxRulesPerGroup{limit: 2}, group: unmarshaler.RuleGroup{Rules: []unmarshaler.RuleWithComment{{}, {}}}, expectedErrors: 0},
+	{name: "tooManyRules", validator: maxRulesPerGroup{limit: 1}, group: unmarshaler.RuleGroup{Rules: []unmarshaler.RuleWithComment{{}, {}}}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

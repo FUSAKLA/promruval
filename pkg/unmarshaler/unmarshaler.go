@@ -25,15 +25,15 @@ type RuleGroup struct {
 	Interval                model.Duration    `yaml:"interval,omitempty"`
 	PartialResponseStrategy string            `yaml:"partial_response_strategy,omitempty"`
 	SourceTenants           []string          `yaml:"source_tenants,omitempty"`
-	Rules                   []ruleWithComment `yaml:"rules"`
+	Rules                   []RuleWithComment `yaml:"rules"`
 }
 
-type ruleWithComment struct {
+type RuleWithComment struct {
 	node yaml.Node
 	rule rulefmt.RuleNode
 }
 
-func (r *ruleWithComment) OriginalRule() rulefmt.Rule {
+func (r *RuleWithComment) OriginalRule() rulefmt.Rule {
 	return rulefmt.Rule{
 		Record:      r.rule.Record.Value,
 		Alert:       r.rule.Alert.Value,
@@ -44,7 +44,7 @@ func (r *ruleWithComment) OriginalRule() rulefmt.Rule {
 	}
 }
 
-func (r *ruleWithComment) UnmarshalYAML(value *yaml.Node) error {
+func (r *RuleWithComment) UnmarshalYAML(value *yaml.Node) error {
 	err := value.Decode(&r.node)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (r *ruleWithComment) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
-func (r *ruleWithComment) DisabledValidators(commentPrefix string) []string {
+func (r *RuleWithComment) DisabledValidators(commentPrefix string) []string {
 	commentPrefix += ":"
 	var disabledValidators []string
 	allComments := strings.Split(r.node.HeadComment, "\n")

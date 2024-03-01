@@ -95,6 +95,9 @@ validationRules:
           minimum: "20s"
           intervalMustBeSet: false
       - type: hasValidPartialStrategy
+      - type: maxRulesPerGroup
+        params:
+          limit: 10
 
   - name: check-formatting
     scope: All rules
