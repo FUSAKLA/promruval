@@ -467,3 +467,49 @@ func (h expressionDoesNotUseMetrics) Validate(_ unmarshaler.RuleGroup, rule rule
 	}
 	return errs
 }
+
+func newExpressionIsWellFormatted(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		SkipExpressionsWithComments bool `yaml:"skipExpressionsWithComments"`
+		ShowFormatted               bool `yaml:"showExpectedForm"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &expressionIsWellFormatted{showFormatted: params.ShowFormatted, skipExpressionsWithComments: params.SkipExpressionsWithComments}, nil
+}
+
+type expressionIsWellFormatted struct {
+	skipExpressionsWithComments bool
+	showFormatted               bool
+}
+
+func (h expressionIsWellFormatted) String() string {
+	text := "expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/"
+	return text
+}
+
+var commentRegexp = regexp.MustCompile(`\s*#.*`)
+
+func (h expressionIsWellFormatted) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	if h.skipExpressionsWithComments && commentRegexp.MatchString(rule.Expr) {
+		return nil
+	}
+	originalExpr := commentRegexp.ReplaceAllString(strings.TrimSpace(rule.Expr), "")
+	fmt.Println(rule.Expr)
+	fmt.Println(originalExpr)
+	expr, err := parser.ParseExpr(originalExpr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
+	}
+	prettified := expr.Pretty(0)
+	if originalExpr == prettified {
+		return []error{}
+	}
+	errorText := "expression is not well formatted, use `promtool promql format`, Prometheus UI or some online tool such as https://o11y.tools/promqlparser/"
+	if h.showFormatted {
+		errorText += fmt.Sprintf(", the expected form is:\n%s", prettified)
+	}
+	return []error{fmt.Errorf(errorText)}
+
+}

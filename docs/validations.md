@@ -30,6 +30,7 @@
     - [`expressionUsesExistingLabels`](#expressionusesexistinglabels)
     - [`expressionSelectorsMatchesAnything`](#expressionselectorsmatchesanything)
     - [`expressionWithNoMetricName`](#expressionwithnometricname)
+    - [`expressionIsWellFormatted`](#expressioniswellformatted)
   - [Alerts](#alerts)
     - [`forIsNotLongerThan`](#forisnotlongerthan)
   - [Others](#others)
@@ -287,6 +288,18 @@ instance.
 ### `expressionWithNoMetricName`
 
 Fails if an expression doesn't use an explicit metric name (also if used as `__name__` label) in all its selectors(eg `up{foo="bar"}`).
+
+### `expressionIsWellFormatted`
+
+Fails if the expression is not well formatted PromQL as would `promtool promql format` do.
+It does remove the comments from the expression before the validation, since the PromQL prettifier drops them, so this should avoid false positive diffs.
+But if you want to ignore the expressions with comments, you can set the `ignoreComments` to true.
+
+```yaml
+params:
+  showExpectedForm: true # Optional, will show how the query should be formatted
+  skipExpressionsWithComments: true # Optional, will skip the expressions with comments
+```
 
 ## Alerts
 

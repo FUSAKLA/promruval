@@ -95,3 +95,11 @@ validationRules:
           minimum: "20s"
           intervalMustBeSet: false
       - type: hasValidPartialStrategy
+
+  - name: check-formatting
+    scope: All rules
+    validations:
+      - type: expressionIsWellFormatted
+        params:
+          showExpectedForm: true
+          skipExpressionsWithComments: true
