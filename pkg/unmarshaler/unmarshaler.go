@@ -26,6 +26,7 @@ type RuleGroup struct {
 	PartialResponseStrategy string            `yaml:"partial_response_strategy,omitempty"`
 	SourceTenants           []string          `yaml:"source_tenants,omitempty"`
 	Rules                   []RuleWithComment `yaml:"rules"`
+	Limit                   int               `yaml:"limit,omitempty"`
 }
 
 type RuleWithComment struct {

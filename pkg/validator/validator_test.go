@@ -233,6 +233,11 @@ var testCases = []struct {
 	// maxRulesPerGroup
 	{name: "allowedNumberOfGroups", validator: maxRulesPerGroup{limit: 2}, group: unmarshaler.RuleGroup{Rules: []unmarshaler.RuleWithComment{{}, {}}}, expectedErrors: 0},
 	{name: "tooManyRules", validator: maxRulesPerGroup{limit: 1}, group: unmarshaler.RuleGroup{Rules: []unmarshaler.RuleWithComment{{}, {}}}, expectedErrors: 1},
+
+	// hasAllowedLimit
+	{name: "limitOK", validator: hasAllowedLimit{limit: 2, mustBeSet: false}, group: unmarshaler.RuleGroup{Limit: 1}, expectedErrors: 0},
+	{name: "limitNotSet", validator: hasAllowedLimit{limit: 2, mustBeSet: false}, group: unmarshaler.RuleGroup{Limit: 0}, expectedErrors: 1},
+	{name: "limitSetButHigh", validator: hasAllowedLimit{limit: 2, mustBeSet: false}, group: unmarshaler.RuleGroup{Limit: 5}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

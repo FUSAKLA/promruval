@@ -2,6 +2,7 @@ groups:
   - name: group1
     partial_response_strategy: abort
     interval: 1m
+    limit: 10
     rules:
       # foo bar
       - record: recorded_metrics
@@ -12,6 +13,7 @@ groups:
   - name: testGroup
     partial_response_strategy: "warn"
     source_tenants: ["tenant1", "tenant2"]
+    limit: 100
     rules:
       # Comment before.
       # Comment on the same line. ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
@@ -31,6 +33,7 @@ groups:
 
   - name: testIgnoreValidationsInExpr
     source_tenants: ["k8s"]
+    limit: 10
     rules:
       - alert: test
         expr: |
