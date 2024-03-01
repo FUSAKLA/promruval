@@ -38,7 +38,8 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 var registeredRecordingRuleValidators = map[string]validatorCreator{}
 
 var registeredAlertValidators = map[string]validatorCreator{
-	"forIsNotLongerThan": newForIsNotLongerThan,
+	"forIsNotLongerThan":           newForIsNotLongerThan,
+	"keepFiringForIsNotLongerThan": newKeepFiringForIsNotLongerThan,
 
 	"validateAnnotationTemplates": newValidateAnnotationTemplates,
 	"annotationIsValidPromQL":     newAnnotationIsValidPromQL,

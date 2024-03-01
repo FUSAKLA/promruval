@@ -84,6 +84,9 @@ validationRules:
     validations:
       - type: expressionWithNoMetricName
       - type: validateLabelTemplates
+      - type: keepFiringForIsNotLongerThan
+        params:
+          limit: "1h"
 
   - name: check-groups
     scope: Group

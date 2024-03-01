@@ -44,6 +44,31 @@ func (h forIsNotLongerThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule,
 	return nil
 }
 
+func newKeepFiringForIsNotLongerThan(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Limit model.Duration `yaml:"limit"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &keepFiringForIsNotLongerThan{limit: params.Limit}, nil
+}
+
+type keepFiringForIsNotLongerThan struct {
+	limit model.Duration
+}
+
+func (h keepFiringForIsNotLongerThan) String() string {
+	return fmt.Sprintf("`keep_firing_for` is not longer than `%s`", h.limit)
+}
+
+func (h keepFiringForIsNotLongerThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	if rule.KeepFiringFor > h.limit {
+		return []error{fmt.Errorf("alert has `keep_firing_for: %s` which is longer than the specified limit of %s", rule.KeepFiringFor, h.limit)}
+	}
+	return nil
+}
+
 func newValidateLabelTemplates(paramsConfig yaml.Node) (Validator, error) {
 	params := struct{}{}
 	if err := paramsConfig.Decode(&params); err != nil {
