@@ -39,6 +39,7 @@ var registeredRuleValidators = map[string]validatorCreator{
 	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
 	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
 	"hasSourceTenantsForMetrics":           newHasSourceTenantsForMetrics,
+	"expressionIsWellFormatted":            newExpressionIsWellFormatted,
 }
 
 var registeredGroupValidators = map[string]validatorCreator{

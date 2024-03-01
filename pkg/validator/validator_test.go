@@ -223,6 +223,12 @@ var testCases = []struct {
 	{name: "invalidPartialStrategy", validator: hasValidPartialStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "foo"}, expectedErrors: 1},
 	{name: "unsetPartialStrategyAllowed", validator: hasValidPartialStrategy{mustBeSet: false}, group: unmarshaler.RuleGroup{}, expectedErrors: 0},
 	{name: "unsetPartialStrategyDisallowed", validator: hasValidPartialStrategy{mustBeSet: true}, group: unmarshaler.RuleGroup{}, expectedErrors: 1},
+
+	// expressionIsWellFormatted
+	{name: "validExpression", validator: expressionIsWellFormatted{showFormatted: true}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
+	{name: "invalidExpression", validator: expressionIsWellFormatted{showFormatted: true}, rule: rulefmt.Rule{Expr: `up     == 1`}, expectedErrors: 1},
+	{name: "validWithCommentThatShouldBeIgnored", validator: expressionIsWellFormatted{showFormatted: true}, rule: rulefmt.Rule{Expr: `up == 1 # fooo`}, expectedErrors: 0},
+	{name: "invalidButWithCommentAndShouldBeSkipped", validator: expressionIsWellFormatted{showFormatted: true, skipExpressionsWithComments: true}, rule: rulefmt.Rule{Expr: `up           == 1 # fooo`}, expectedErrors: 0},
 }
 
 func Test(t *testing.T) {

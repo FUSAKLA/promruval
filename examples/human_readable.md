@@ -36,6 +36,9 @@ Validation rules:
     - Group evaluation interval is between `20s` and `106751d23h47m16s854ms` if set
     - Group has valid partial_response_strategy (one of `warn` or `abort`) if set
 
+  check-formatting
+    - All rules expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/
+
   another-checks
     - All rules labels does not have empty values
 
