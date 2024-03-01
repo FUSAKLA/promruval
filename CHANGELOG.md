@@ -6,10 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Added new validator `expressionIsWellFormatted` to check if rules are well formatted as `promtool promql format` would do.
-- Added new validator `maxRulesPerGroup` to check if the number of rules in the group is not exceeding the limit.
-- Added new validator `hasAllowedLimit` to check if the rule group has the `limit` lower than the limit and possibility to enforce it to be configured.
+- Added new `All rules` validator `expressionIsWellFormatted` to check if rules are well formatted as `promtool promql format` would do.
+- Added new `Group` validator `maxRulesPerGroup` to check if the number of rules in the group is not exceeding the limit.
+- Added new `Group` validator `hasAllowedLimit` to check if the rule group has the `limit` lower than the limit and possibility to enforce it to be configured.
+- Added new `Alert` validator `validateLabelTemplates` to check if the alert labels are valid Go templates.
 - Updated all deps to the latest versions.
+
+### :warning: CHANGED validator scopes
+  From now on each validator has restricted scopes it can be used with since they may not make sense in some contexts.
+  The documentation in [docs/validations.md](docs/validations.md) was updated and is structured based on the scopes.
+  > If you were using the `All rules` scope, you may need to update your configuration and split the rules by the scopes.
 
 ## [v2.8.1] - 2024-02-29
 - Fixed param validation of the `hasAllowedEvaluationInterval` validator, if the `maximum` was not set.

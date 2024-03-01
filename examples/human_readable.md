@@ -30,6 +30,7 @@ Validation rules:
 
   check-metric-name
     - Alert expression uses metric name in selectors
+    - Alert labels are valid templates
 
   check-groups
     - Group does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`

@@ -83,6 +83,7 @@ validationRules:
     scope: Alert
     validations:
       - type: expressionWithNoMetricName
+      - type: validateLabelTemplates
 
   - name: check-groups
     scope: Group

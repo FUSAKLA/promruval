@@ -26,6 +26,7 @@ groups:
           severity: critical
           team: sre@mail.com
           page: true
+          foo: "{{ $labels.foo }}"
         annotations:
           title: test alert
           playbook: http://foo.bar/nonexisting/playbook

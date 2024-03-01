@@ -238,6 +238,11 @@ var testCases = []struct {
 	{name: "limitOK", validator: hasAllowedLimit{limit: 2, mustBeSet: false}, group: unmarshaler.RuleGroup{Limit: 1}, expectedErrors: 0},
 	{name: "limitNotSet", validator: hasAllowedLimit{limit: 2, mustBeSet: false}, group: unmarshaler.RuleGroup{Limit: 0}, expectedErrors: 1},
 	{name: "limitSetButHigh", validator: hasAllowedLimit{limit: 2, mustBeSet: false}, group: unmarshaler.RuleGroup{Limit: 5}, expectedErrors: 1},
+
+	// validateLabelTemplates
+	{name: "noTemplate", validator: validateLabelTemplates{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
+	{name: "validLabelTemplate", validator: validateLabelTemplates{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "foo {{ $value | humanizeDuration }} bar"}}, expectedErrors: 0},
+	{name: "invalidLabelTemplate", validator: validateLabelTemplates{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "foo {{ $value | huuuuumanizeDuration }} bar"}}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

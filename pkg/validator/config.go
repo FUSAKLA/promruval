@@ -10,36 +10,45 @@ import (
 
 type validatorCreator func(params yaml.Node) (Validator, error)
 
-var registeredRuleValidators = map[string]validatorCreator{
-	"hasLabels":                            newHasLabels,
-	"hasAnnotations":                       newHasAnnotations,
-	"doesNotHaveLabels":                    newDoesNotHaveLabels,
-	"doesNotHaveAnnotations":               newDoesNotHaveAnnotations,
-	"hasAnyOfLabels":                       newHasAnyOfLabels,
-	"hasAnyOfAnnotations":                  newHasAnyOfAnnotations,
-	"labelMatchesRegexp":                   newLabelMatchesRegexp,
-	"annotationMatchesRegexp":              newAnnotationMatchesRegexp,
-	"labelHasAllowedValue":                 newLabelHasAllowedValue,
-	"annotationHasAllowedValue":            newAnnotationHasAllowedValue,
-	"annotationIsValidURL":                 newAnnotationIsValidURL,
+var registeredUniversalRuleValidators = map[string]validatorCreator{
+	"hasLabels":            newHasLabels,
+	"doesNotHaveLabels":    newDoesNotHaveLabels,
+	"hasAnyOfLabels":       newHasAnyOfLabels,
+	"labelMatchesRegexp":   newLabelMatchesRegexp,
+	"labelHasAllowedValue": newLabelHasAllowedValue,
+	"nonEmptyLabels":       newNonEmptyLabels,
+	"exclusiveLabels":      newExclusiveLabels,
+
+	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
+	"rateBeforeAggregation":                newRateBeforeAggregation,
 	"expressionDoesNotUseLabels":           newExpressionDoesNotUseLabels,
 	"expressionDoesNotUseOlderDataThan":    newExpressionDoesNotUseOlderDataThan,
 	"expressionDoesNotUseRangeShorterThan": newExpressionDoesNotUseRangeShorterThan,
 	"expressionDoesNotUseMetrics":          newExpressionDoesNotUseMetrics,
-	"annotationIsValidPromQL":              newAnnotationIsValidPromQL,
-	"validateAnnotationTemplates":          newValidateAnnotationTemplates,
-	"forIsNotLongerThan":                   newForIsNotLongerThan,
 	"expressionDoesNotUseIrate":            newExpressionDoesNotUseIrate,
-	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
-	"rateBeforeAggregation":                newRateBeforeAggregation,
-	"nonEmptyLabels":                       newNonEmptyLabels,
-	"exclusiveLabels":                      newExclusiveLabels,
 	"expressionCanBeEvaluated":             newExpressionCanBeEvaluated,
 	"expressionUsesExistingLabels":         newExpressionUsesExistingLabels,
 	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
 	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
-	"hasSourceTenantsForMetrics":           newHasSourceTenantsForMetrics,
 	"expressionIsWellFormatted":            newExpressionIsWellFormatted,
+
+	"hasSourceTenantsForMetrics": newHasSourceTenantsForMetrics,
+}
+
+var registeredRecordingRuleValidators = map[string]validatorCreator{}
+
+var registeredAlertValidators = map[string]validatorCreator{
+	"forIsNotLongerThan": newForIsNotLongerThan,
+
+	"validateAnnotationTemplates": newValidateAnnotationTemplates,
+	"annotationIsValidPromQL":     newAnnotationIsValidPromQL,
+	"annotationHasAllowedValue":   newAnnotationHasAllowedValue,
+	"annotationIsValidURL":        newAnnotationIsValidURL,
+	"hasAnnotations":              newHasAnnotations,
+	"doesNotHaveAnnotations":      newDoesNotHaveAnnotations,
+	"annotationMatchesRegexp":     newAnnotationMatchesRegexp,
+	"hasAnyOfAnnotations":         newHasAnyOfAnnotations,
+	"validateLabelTemplates":      newValidateLabelTemplates,
 }
 
 var registeredGroupValidators = map[string]validatorCreator{
@@ -50,11 +59,17 @@ var registeredGroupValidators = map[string]validatorCreator{
 	"hasAllowedLimit":              newHasAllowedLimit,
 }
 
-var registeredValidators = map[string]validatorCreator{}
+var (
+	alertValidators         = map[string]validatorCreator{}
+	recordingRuleValidators = map[string]validatorCreator{}
+)
 
 func init() {
-	maps.Copy(registeredValidators, registeredRuleValidators)
-	maps.Copy(registeredValidators, registeredGroupValidators)
+	maps.Copy(alertValidators, registeredUniversalRuleValidators)
+	maps.Copy(alertValidators, registeredAlertValidators)
+
+	maps.Copy(recordingRuleValidators, registeredUniversalRuleValidators)
+	maps.Copy(recordingRuleValidators, registeredRecordingRuleValidators)
 }
 
 func NewFromConfig(scope config.ValidationScope, config config.ValidatorConfig) (Validator, error) {
@@ -66,9 +81,16 @@ func NewFromConfig(scope config.ValidationScope, config config.ValidatorConfig) 
 }
 
 func creator(scope config.ValidationScope, name string) (validatorCreator, bool) {
-	validators := registeredRuleValidators
-	if scope == config.Group {
+	var validators map[string]validatorCreator
+	switch scope {
+	case config.AlertScope:
+		validators = alertValidators
+	case config.RecordingRuleScope:
+		validators = recordingRuleValidators
+	case config.Group:
 		validators = registeredGroupValidators
+	case config.AllRulesScope:
+		validators = registeredUniversalRuleValidators
 	}
 	creator, ok := validators[name]
 	return creator, ok
@@ -77,7 +99,7 @@ func creator(scope config.ValidationScope, name string) (validatorCreator, bool)
 func KnownValidators(scope config.ValidationScope, validatorNames []string) error {
 	for _, validatorName := range validatorNames {
 		if _, ok := creator(scope, validatorName); !ok {
-			return fmt.Errorf("unknown validator `%s` for given validation rule scope %s", validatorName, scope)
+			return fmt.Errorf("unknown validator `%s` for given validation rule scope %s, see the docs/validations.md for the complete list and allowed scopes", validatorName, scope)
 		}
 	}
 	return nil
