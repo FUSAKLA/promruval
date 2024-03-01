@@ -157,3 +157,31 @@ func (h maxRulesPerGroup) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, 
 	}
 	return []error{}
 }
+
+func newHasAllowedLimit(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Limit int `yaml:"limit"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &hasAllowedLimit{limit: params.Limit}, nil
+}
+
+type hasAllowedLimit struct {
+	limit     int
+	mustBeSet bool
+}
+
+func (h hasAllowedLimit) String() string {
+	return fmt.Sprintf("does not have higher `limit` configured then %d", h.limit)
+}
+
+func (h hasAllowedLimit) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
+	if group.Limit > h.limit {
+		return []error{fmt.Errorf("group has limit %d, allowed maximum is %d", group.Limit, h.limit)}
+	} else if group.Limit == 0 {
+		return []error{fmt.Errorf("limit must be set, the default value 0 means it is unlimited and maximum allowed limit is %d", h.limit)}
+	}
+	return []error{}
+}

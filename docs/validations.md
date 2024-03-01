@@ -40,6 +40,7 @@
     - [`hasAllowedEvaluationInterval`](#hasallowedevaluationinterval)
     - [`hasValidPartialResponseStrategy`](#hasvalidpartialresponsestrategy)
     - [`maxRulesPerGroup`](#maxrulespergroup)
+    - [`hasValidLimit`](#hasvalidlimit)
 
 ## Labels
 
@@ -251,14 +252,18 @@ params:
 
 Fails if the rule `expr` uses the `irate` function as discouraged
 in https://prometheus.io/docs/prometheus/latest/querying/functions/#irate.
+> It's not recommended to use `irate` function in the rules.
 
 ### `validFunctionsOnCounters`
 
 Fails if the expression uses a `rate` or `increase` function on a metric that does not end with the `_total` suffix.
+> It's a common mistake to use the `rate` or `increase` function on a metric that is not a counter.
+> This validation can help to avoid it.
 
 ### `rateBeforeAggregation`
 
 Fails if aggregation function is used before the `rate` or `increase` functions.
+> Avoid common mistake of using aggregation function before the `rate` or `increase` function.
 
 ### `expressionCanBeEvaluated`
 
@@ -289,12 +294,14 @@ instance.
 ### `expressionWithNoMetricName`
 
 Fails if an expression doesn't use an explicit metric name (also if used as `__name__` label) in all its selectors(eg `up{foo="bar"}`).
+> Such queries may be very expensive and can lead to performance issues.
 
 ### `expressionIsWellFormatted`
 
 Fails if the expression is not well formatted PromQL as would `promtool promql format` do.
 It does remove the comments from the expression before the validation, since the PromQL prettifier drops them, so this should avoid false positive diffs.
 But if you want to ignore the expressions with comments, you can set the `ignoreComments` to true.
+> Useful to make sure the expressions are formatted in a consistent way.
 
 ```yaml
 params:
@@ -307,6 +314,7 @@ params:
 ### `forIsNotLongerThan`
 
 Fails if the alert uses longer `for` than the specified limit.
+> Too long `for` makes the alerts more fragile.
 
 ```yaml
 params:
@@ -317,6 +325,7 @@ params:
 ### `hasSourceTenantsForMetrics`
 
 Fails, if the rule uses metric, that matches the specified regular expression for any tenant, but does not have the tenant configured in the  `source_tenants` of the rule group option the rule belongs to.
+> If you use Mimir, and know, that the metrics are coming from specific tenants, you can make sure the tenants are configured in the rule group `source_tenants` option.
 
 ```yaml
 params:
@@ -334,6 +343,7 @@ Validators that are designed to validate the group itself. Not the rules within 
 ### `hasValidSourceTenants`
 
 Fails if the rule group has other than than the configured source tenants.
+> If using Mimir, you may want to check that only the known tenants are used to avoid typos for example.
 
 ```yaml
 params:
@@ -345,6 +355,8 @@ params:
 Fails if the rule group has the `interval` out of the configured range.
 By default it will ignore, if the group does not have the interval configured.
 You can enforce it to be set by setting the `mustBeSet` to true.
+> Useful to avoid using too short or too long evaluation intervals such as `1s` which would most certainly lead to missed evaluation intervals.
+> Enforcint the interval to be configured per group can force the user to think about how often they really need the rules to be evaluated.
 
 ```yaml
 params:
@@ -366,6 +378,20 @@ params:
 ### `maxRulesPerGroup`
 
 Fails if the rule group has more rules than the specified limit.
+> Since the rules in one rule group are evaluated sequentially, it's a good practice to split the rules to smaller groups.
+> This way the evaluation will be parallelized and the evaluation time will be shorter.
+
+```yaml
+params:
+  limit: 10
+```
+
+### `hasValidLimit`
+
+Fails if the rule group has the `limit` option set higher, then the specified limit.
+If not set at all, it will fail also, since the default limit is 0 meaning unlimited.
+> It's a good practice to limit the number of alerts in the group to avoid overloading the Alertmanager of event receivers, which can rate-limit.
+> In case of recording rules, can help to avoid generating huge amount of time series.
 
 ```yaml
 params:

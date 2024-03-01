@@ -47,6 +47,7 @@ var registeredGroupValidators = map[string]validatorCreator{
 	"hasAllowedEvaluationInterval": newHasAllowedEvaluationInterval,
 	"hasValidPartialStrategy":      newHasValidPartialStrategy,
 	"maxRulesPerGroup":             newMaxRulesPerGroup,
+	"hasAllowedLimit":              newHasAllowedLimit,
 }
 
 var registeredValidators = map[string]validatorCreator{}

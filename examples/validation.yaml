@@ -98,6 +98,9 @@ validationRules:
       - type: maxRulesPerGroup
         params:
           limit: 10
+      - type: hasAllowedLimit
+        params:
+          limit: 100
 
   - name: check-formatting
     scope: All rules
