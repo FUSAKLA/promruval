@@ -35,6 +35,7 @@ Validation rules:
     - Group does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`
     - Group evaluation interval is between `20s` and `106751d23h47m16s854ms` if set
     - Group has valid partial_response_strategy (one of `warn` or `abort`) if set
+    - Group has at most 10 rules
 
   check-formatting
     - All rules expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/
