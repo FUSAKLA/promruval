@@ -243,6 +243,10 @@ var testCases = []struct {
 	{name: "noTemplate", validator: validateLabelTemplates{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
 	{name: "validLabelTemplate", validator: validateLabelTemplates{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "foo {{ $value | humanizeDuration }} bar"}}, expectedErrors: 0},
 	{name: "invalidLabelTemplate", validator: validateLabelTemplates{}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "foo {{ $value | huuuuumanizeDuration }} bar"}}, expectedErrors: 1},
+
+	// keepFiringForIsNotLongerThan
+	{name: "keepFiringForIsNotLongerThanOK", validator: keepFiringForIsNotLongerThan{limit: model.Duration(time.Minute)}, rule: rulefmt.Rule{KeepFiringFor: model.Duration(time.Second)}, expectedErrors: 0},
+	{name: "keepFiringForIsNotLongerThanWrong", validator: keepFiringForIsNotLongerThan{limit: model.Duration(time.Minute)}, rule: rulefmt.Rule{KeepFiringFor: model.Duration(time.Minute * 2)}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

@@ -46,6 +46,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`validateAnnotationTemplates`](#validateannotationtemplates)
     - [Other](#other-1)
       - [`forIsNotLongerThan`](#forisnotlongerthan)
+      - [`keepFiringForIsNotLongerThan`](#keepfiringforisnotlongerthan)
   - [Recording rules validators](#recording-rules-validators)
 
 
@@ -413,6 +414,15 @@ Fails if the annotation contains invalid Go template.
 
 Fails if the alert uses longer `for` than the specified limit.
 > Too long `for` makes the alerts more fragile.
+
+```yaml
+params:
+  limit: "1h"
+```
+
+#### `keepFiringForIsNotLongerThan`
+
+Fails if the alert uses longer `keep_firing_for` than the specified limit.
 
 ```yaml
 params:

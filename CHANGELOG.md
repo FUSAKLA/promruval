@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new `Group` validator `maxRulesPerGroup` to check if the number of rules in the group is not exceeding the limit.
 - Added new `Group` validator `hasAllowedLimit` to check if the rule group has the `limit` lower than the limit and possibility to enforce it to be configured.
 - Added new `Alert` validator `validateLabelTemplates` to check if the alert labels are valid Go templates.
+- Added new `Alert` validator `keepFiringForIsNotLongerThan` to check if the alert does not have `keep_firing_for` longer then limit.
 - Updated all deps to the latest versions.
 
 ### :warning: CHANGED validator scopes
