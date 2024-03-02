@@ -41,8 +41,7 @@ func getExpressionVectorSelectors(expr string) ([]*parser.VectorSelector, error)
 	}
 	var selectors []*parser.VectorSelector
 	parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
-		switch v := n.(type) {
-		case *parser.VectorSelector:
+		if v, ok := n.(*parser.VectorSelector); ok {
 			selectors = append(selectors, &parser.VectorSelector{Name: v.Name, LabelMatchers: v.LabelMatchers})
 		}
 		return nil
@@ -84,7 +83,7 @@ func getExpressionSelectors(expr string) ([]string, error) {
 	if err != nil {
 		return []string{}, err
 	}
-	var selectors []string
+	selectors := make([]string, 0, len(vectorSelectors))
 	for _, s := range vectorSelectors {
 		selectors = append(selectors, s.String())
 	}

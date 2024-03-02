@@ -55,10 +55,10 @@ func loadConfigFile(configFilePath string) (*config.Config, error) {
 	return validationConfig, nil
 }
 
-func validationRulesFromConfig(config *config.Config) ([]*validationrule.ValidationRule, error) {
+func validationRulesFromConfig(validationConfig *config.Config) ([]*validationrule.ValidationRule, error) {
 	var validationRules []*validationrule.ValidationRule
 rulesIteration:
-	for _, validationRule := range config.ValidationRules {
+	for _, validationRule := range validationConfig.ValidationRules {
 		for _, disabledRule := range *disabledRules {
 			if disabledRule == validationRule.Name {
 				continue rulesIteration
@@ -94,7 +94,6 @@ func exitWithError(err error) {
 }
 
 func main() {
-
 	currentCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if currentCommand == versionCmd.FullCommand() {
@@ -180,14 +179,19 @@ func main() {
 			prometheusClient.DumpCache()
 		}
 
+		var output string
 		switch *validationOutputFormat {
 		case "text":
-			fmt.Println(validationReport.AsText(2, *color))
+			output, err = validationReport.AsText(2, *color)
 		case "json":
-			fmt.Println(validationReport.AsJSON())
+			output, err = validationReport.AsJSON()
 		case "yaml":
-			fmt.Println(validationReport.AsYaml())
+			output, err = validationReport.AsYaml()
 		}
+		if err != nil {
+			exitWithError(err)
+		}
+		fmt.Println(output)
 		if validationReport.Failed {
 			os.Exit(1)
 		}

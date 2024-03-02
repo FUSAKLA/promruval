@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -163,8 +164,7 @@ func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	}
 	var errs []error
 	parser.Inspect(expr, func(n parser.Node, _ []parser.Node) error {
-		switch v := n.(type) {
-		case *parser.Call:
+		if v, ok := n.(*parser.Call); ok {
 			if v != nil && v.Func != nil && v.Func.Name == "irate" {
 				errs = []error{fmt.Errorf("you should not use the `irate` function in rules, for more info see https://prometheus.io/docs/prometheus/latest/querying/functions/#irate")}
 			}
@@ -208,14 +208,12 @@ func (h validFunctionsOnCounters) Validate(_ unmarshaler.RuleGroup, rule rulefmt
 		match = regexp.MustCompile(`(_total|_count|_bucket|_sum)$`)
 	}
 	parser.Inspect(expr, func(n parser.Node, _ []parser.Node) error {
-		switch v := n.(type) {
-		case *parser.Call:
+		if v, ok := n.(*parser.Call); ok {
 			if v == nil || v.Func == nil || (v.Func.Name != "rate" && v.Func.Name != "increase") {
 				return nil
 			}
 			for _, ch := range parser.Children(n) {
-				switch m := ch.(type) {
-				case *parser.MatrixSelector:
+				if m, ok := ch.(*parser.MatrixSelector); ok {
 					if !match.MatchString(m.VectorSelector.(*parser.VectorSelector).Name) {
 						errs = append(errs, fmt.Errorf("`%s` function should be used only on counters and those should end with the `_total` suffix, which is not this case `%s`", v.Func.Name, n.String()))
 					}
@@ -244,15 +242,13 @@ func (h rateBeforeAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Ru
 		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
 	parser.Inspect(expr, func(n parser.Node, ns []parser.Node) error {
-		switch n := n.(type) {
-		case *parser.AggregateExpr:
+		if n, ok := n.(*parser.AggregateExpr); ok {
 			agg := n.Op
 			if !agg.IsAggregator() {
 				return nil
 			}
 			for _, p := range ns {
-				switch p := p.(type) {
-				case *parser.Call:
+				if p, ok := p.(*parser.Call); ok {
 					funcName := p.Func.Name
 					if funcName == "increase" || funcName == "rate" {
 						errs = append(errs, fmt.Errorf("you should not use aggregation functions before calling the `rate` or `increase` functions as in: %s", funcName))
@@ -485,8 +481,7 @@ type expressionIsWellFormatted struct {
 }
 
 func (h expressionIsWellFormatted) String() string {
-	text := "expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/"
-	return text
+	return "expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/"
 }
 
 var commentRegexp = regexp.MustCompile(`\s*#.*`)
@@ -496,8 +491,6 @@ func (h expressionIsWellFormatted) Validate(_ unmarshaler.RuleGroup, rule rulefm
 		return nil
 	}
 	originalExpr := commentRegexp.ReplaceAllString(strings.TrimSpace(rule.Expr), "")
-	fmt.Println(rule.Expr)
-	fmt.Println(originalExpr)
 	expr, err := parser.ParseExpr(originalExpr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
@@ -510,6 +503,5 @@ func (h expressionIsWellFormatted) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	if h.showFormatted {
 		errorText += fmt.Sprintf(", the expected form is:\n%s", prettified)
 	}
-	return []error{fmt.Errorf(errorText)}
-
+	return []error{errors.New(errorText)}
 }

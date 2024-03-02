@@ -36,7 +36,7 @@ func (r *ValidationRule) Scope() config.ValidationScope {
 }
 
 func (r *ValidationRule) ValidationTexts() []string {
-	var validationTexts []string
+	validationTexts := make([]string, 0, len(r.validators))
 	for _, v := range r.validators {
 		validationTexts = append(validationTexts, v.String())
 	}

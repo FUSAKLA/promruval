@@ -155,7 +155,7 @@ func (r *RuleReport) AsText(output *IndentedOutput) {
 	output.WriteErrors(r.Errors)
 }
 
-func (r *ValidationReport) AsText(indentationStep int, color bool) string {
+func (r *ValidationReport) AsText(indentationStep int, color bool) (string, error) {
 	output := NewIndentedOutput(indentationStep, color)
 	output.AddLine("Validation rules used:")
 	output.IncreaseIndentation()
@@ -191,21 +191,27 @@ func (r *ValidationReport) AsText(indentationStep int, color bool) string {
 	output.AddLine(renderStatistic("Files", r.FilesCount, r.FilesExcludedCount))
 	output.AddLine(renderStatistic("Groups", r.GroupsCount, r.GroupsExcludedCount))
 	output.AddLine(renderStatistic("Rules", r.RulesCount, r.RulesExcludedCount))
-	return output.Text()
+	return output.Text(), nil
 }
 
-func renderStatistic(objectType string, total int, excluded int) string {
+func renderStatistic(objectType string, total, excluded int) string {
 	return fmt.Sprintf("%s: %d and %d of them excluded", objectType, total, excluded)
 }
 
-func (r *ValidationReport) AsJSON() string {
-	b, _ := json.MarshalIndent(r, "", "  ")
+func (r *ValidationReport) AsJSON() (string, error) {
+	b, err := json.MarshalIndent(r, "", "  ")
+	if err != nil {
+		return "", err
+	}
 	buffer := bytes.NewBuffer(b)
-	return buffer.String()
+	return buffer.String(), nil
 }
 
-func (r *ValidationReport) AsYaml() string {
-	b, _ := yaml.Marshal(r)
+func (r *ValidationReport) AsYaml() (string, error) {
+	b, err := yaml.Marshal(r)
+	if err != nil {
+		return "", err
+	}
 	buffer := bytes.NewBuffer(b)
-	return buffer.String()
+	return buffer.String(), nil
 }

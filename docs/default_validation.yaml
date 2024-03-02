@@ -1,0 +1,39 @@
+validationRules:
+  - name: check-groups
+    scope: Group
+    validations:
+      - type: hasAllowedEvaluationInterval
+        params:
+          minimum: "20s"
+      - type: hasValidPartialResponseStrategy
+      - type: maxRulesPerGroup
+        params:
+          limit: 20
+  - name: check-alerts
+    scope: Alert
+    validations:
+      - type: validateLabelTemplates
+      - type: validateAnnotationTemplates
+      - type: forIsNotLongerThan
+        params:
+          limit: "1d"
+      - type: keepFiringForIsNotLongerThan
+        params:
+          limit: "1d"
+  - name: check-all-rules
+    scope: All rules
+    validations:
+      - type: nonEmptyLabels
+      - type: expressionDoesNotUseIrate
+      - type: validFunctionsOnCounters
+      - type: rateBeforeAggregation
+      - type: expressionWithNoMetricName
+      - type: expressionIsWellFormatted
+        params:
+          showExpectedForm: true
+      - type: expressionDoesNotUseRangeShorterThan
+        params:
+          limit: "1m"
+      - type: expressionDoesNotUseOlderDataThan
+        params:
+          limit: "4w"

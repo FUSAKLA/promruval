@@ -95,6 +95,7 @@ func TestGetExpressionSelectors(t *testing.T) {
 		}
 	}
 }
+
 func TestGetVectorSelectorMetricName(t *testing.T) {
 	tests := []struct {
 		vectorSelectorString string
@@ -116,8 +117,7 @@ func TestGetVectorSelectorMetricName(t *testing.T) {
 		assert.NoError(t, err)
 		var selectors []*parser.VectorSelector
 		parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
-			switch v := n.(type) {
-			case *parser.VectorSelector:
+			if v, ok := n.(*parser.VectorSelector); ok {
 				selectors = append(selectors, &parser.VectorSelector{Name: v.Name, LabelMatchers: v.LabelMatchers})
 			}
 			return nil

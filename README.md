@@ -12,7 +12,7 @@ _Prometheus Rule Validator_
 Promtool allows users to verify syntactic correctness and test PromQL expressions.
 Promruval aims to validate the rules' metadata and expression properties
 to match requirements and constraints of the particular Prometheus cluster setup.
-User defines his validation rules in simple yaml configuration and passes them to
+User defines his validation rules in a simple yaml configuration and passes them to
 the promruval which validates specified files with Prometheus rules same way promtool does.
 Usually it would be used in the CI pipeline.
 You can read a blog post about the motivation and
@@ -20,7 +20,7 @@ usage [here](https://fusakla.medium.com/promruval-validating-prometheus-rules-9a
 or [watch a lightning talk about it from PromCon](https://www.youtube.com/watch?v=YYSJ--KhlIo&list=PLj6h78yzYM2PZb0QuIkm6ZY-xTuNA5zRO&index=16)
 .
 
-### Examples of usage
+### Example use-cases
 
 - Make sure the playbook, linked by an alert, is a valid URL and really exists.
 - Ensure the range selectors in the `expr` are not lower than three
@@ -35,11 +35,14 @@ or [watch a lightning talk about it from PromCon](https://www.youtube.com/watch?
 - Forbid usage of some labels or annotations if it got deprecated.
 - and many more...
 
+> As a good starting point you can use the [`docs/default_validation.yaml`](docs/default_validation.yaml) which contains
+some basic validations that are useful for most of the users.
+
 Validations are quite variable, so you can use them as you fit.
 
 **👉 Full list of supported validations can be found [here](docs/validations.md).**
 
-In case of any missing, please create a feature request!
+In case you would like to add some, please create a feature request!
 
 ### Installation
 
