@@ -64,7 +64,7 @@ func (o *IndentedOutput) AddSuccessLine(line string) {
 	}
 }
 
-func (o *IndentedOutput) addColoredLine(line string, color string) {
+func (o *IndentedOutput) addColoredLine(line, color string) {
 	o.output += color + o.currentIndentation() + line + colorReset + "\n"
 }
 

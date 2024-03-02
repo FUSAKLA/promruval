@@ -20,7 +20,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Files(fileNames []string, validationRules []*validationrule.ValidationRule, excludeAnnotationName string, disableValidationsComment string, prometheusClient *prometheus.Client) *report.ValidationReport {
+func Files(fileNames []string, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client) *report.ValidationReport {
 	validationReport := report.NewValidationReport()
 	for _, r := range validationRules {
 		validationReport.ValidationRules = append(validationReport.ValidationRules, r)

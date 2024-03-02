@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -316,11 +317,11 @@ func (h exclusiveLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ 
 	}
 	errMsg += fmt.Sprintf(", it cannot have label `%s`", h.label2)
 	if h.label2Value == "" {
-		return []error{fmt.Errorf(errMsg)}
+		return []error{errors.New(errMsg)}
 	}
 	if h.label2Value != "" && h.label2Value == label2Value {
 		errMsg += fmt.Sprintf(" with value `%s`", h.label2Value)
-		return []error{fmt.Errorf(errMsg)}
+		return []error{errors.New(errMsg)}
 	}
 	return []error{}
 }

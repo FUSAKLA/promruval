@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new `Alert` validator `validateLabelTemplates` to check if the alert labels are valid Go templates.
 - Added new `Alert` validator `keepFiringForIsNotLongerThan` to check if the alert does not have `keep_firing_for` longer then limit.
 - Updated all deps to the latest versions.
+- Upgraded go to 1.22
+- Update all Github actions in CI
+- Made lint more strict and fixed all the issues
 
 ### :warning: CHANGED validator scopes
   From now on each validator has restricted scopes it can be used with since they may not make sense in some contexts.

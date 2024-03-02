@@ -1,6 +1,8 @@
 # Supported validations by scopes
 All the supported validations are listed here. The validations are grouped by the scope they can be used with.
 
+> If you want some sane default validations, you can look at the [default_validation.yaml](./default_validation.yaml). Those should be a good starting point for your own configuration and applicable to most of the use cases.
+
 - [Supported validations by scopes](#supported-validations-by-scopes)
   - [Groups](#groups)
     - [`hasValidSourceTenants`](#hasvalidsourcetenants)

@@ -80,10 +80,10 @@ func (m mockV1Client) RoundTrip(_ *http.Request) (*http.Response, error) {
 	return m.newResponseMock(), nil
 }
 
-func NewClientMock(data interface{}, duration time.Duration, warning bool, error bool) *Client {
+func NewClientMock(data interface{}, duration time.Duration, warning, returnError bool) *Client {
 	cli, err := NewClientWithRoundTripper(config.PrometheusConfig{}, mockV1Client{
 		warning:  warning,
-		error:    error,
+		error:    returnError,
 		data:     data,
 		duration: duration,
 	})

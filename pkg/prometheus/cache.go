@@ -63,5 +63,5 @@ func (c *cache) Dump() {
 		log.Warnf("failed to write cache data: %s", err)
 		return
 	}
-	log.Infof("successfully dump cache to file %s\n", c.file)
+	log.Infof("successfully dumped cache to file %s", c.file)
 }

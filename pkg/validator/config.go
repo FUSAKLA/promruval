@@ -73,12 +73,12 @@ func init() {
 	maps.Copy(recordingRuleValidators, registeredRecordingRuleValidators)
 }
 
-func NewFromConfig(scope config.ValidationScope, config config.ValidatorConfig) (Validator, error) {
-	factory, ok := creator(scope, config.ValidatorType)
+func NewFromConfig(scope config.ValidationScope, validatorConfig config.ValidatorConfig) (Validator, error) {
+	factory, ok := creator(scope, validatorConfig.ValidatorType)
 	if !ok {
-		return nil, fmt.Errorf("unknown validator type `%s`", config.ValidatorType)
+		return nil, fmt.Errorf("unknown validator type `%s`", validatorConfig.ValidatorType)
 	}
-	return factory(config.Params)
+	return factory(validatorConfig.Params)
 }
 
 func creator(scope config.ValidationScope, name string) (validatorCreator, bool) {

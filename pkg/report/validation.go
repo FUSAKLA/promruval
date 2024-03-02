@@ -19,6 +19,7 @@ var htmlTemplate = `
 	  </ul>
 {{- end }}
 `
+
 var markdownTemplate = `
 # Validation rules
 {{- range .Rules }}

@@ -14,13 +14,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewClient(config config.PrometheusConfig) (*Client, error) {
-	return NewClientWithRoundTripper(config, &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: config.InsecureSkipTLSVerify}})
+func NewClient(promConfig config.PrometheusConfig) (*Client, error) {
+	return NewClientWithRoundTripper(promConfig, &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: promConfig.InsecureSkipTLSVerify}})
 }
 
-func NewClientWithRoundTripper(config config.PrometheusConfig, tripper http.RoundTripper) (*Client, error) {
+func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.RoundTripper) (*Client, error) {
 	cli, err := api.NewClient(api.Config{
-		Address:      config.URL,
+		Address:      promConfig.URL,
 		RoundTripper: tripper,
 	})
 	if err != nil {
@@ -29,9 +29,9 @@ func NewClientWithRoundTripper(config config.PrometheusConfig, tripper http.Roun
 	v1cli := v1.NewAPI(cli)
 	promClient := Client{
 		apiClient: v1cli,
-		url:       config.URL,
-		timeout:   config.Timeout,
-		cache:     newCache(config.CacheFile, config.MaxCacheAge),
+		url:       promConfig.URL,
+		timeout:   promConfig.Timeout,
+		cache:     newCache(promConfig.CacheFile, promConfig.MaxCacheAge),
 	}
 	return &promClient, nil
 }
@@ -110,7 +110,11 @@ func (s *Client) Query(query string) ([]*model.Sample, int, time.Duration, error
 		}
 		switch result.Type() {
 		case model.ValVector:
-			s.cache.Queries[query] = result.(model.Vector)
+			vectorResult, ok := result.(model.Vector)
+			if !ok {
+				return nil, 0, 0, fmt.Errorf("failed to convert result to model.Vector")
+			}
+			s.cache.Queries[query] = vectorResult
 		default:
 			return nil, 0, 0, fmt.Errorf("unknown prometheus response type: %s", result)
 		}
