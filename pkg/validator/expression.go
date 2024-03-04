@@ -166,7 +166,7 @@ func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	parser.Inspect(expr, func(n parser.Node, _ []parser.Node) error {
 		if v, ok := n.(*parser.Call); ok {
 			if v != nil && v.Func != nil && v.Func.Name == "irate" {
-				errs = []error{fmt.Errorf("you should not use the `irate` function in rules, for more info see https://prometheus.io/docs/prometheus/latest/querying/functions/#irate")}
+				errs = []error{fmt.Errorf("you should not use the `irate` function in rules, for more info see https://www.robustperception.io/avoid-irate-in-alerts/")}
 			}
 		}
 		return nil

@@ -5,7 +5,7 @@ All the supported validations are listed here. The validations are grouped by th
 
 - [Supported validations by scopes](#supported-validations-by-scopes)
   - [Groups](#groups)
-    - [`hasValidSourceTenants`](#hasvalidsourcetenants)
+    - [`hasAllowedSourceTenants`](#hasallowedsourcetenants)
     - [`hasAllowedEvaluationInterval`](#hasallowedevaluationinterval)
     - [`hasValidPartialResponseStrategy`](#hasvalidpartialresponsestrategy)
     - [`maxRulesPerGroup`](#maxrulespergroup)
@@ -58,7 +58,7 @@ Usage of the following validations is limited to the `Group` scope.
 
 :warning: Can be used only with the `Group` scope.
 
-### `hasValidSourceTenants`
+### `hasAllowedSourceTenants`
 
 Fails if the rule group has other than than the configured source tenants.
 > If using Mimir, you may want to check that only the known tenants are used to avoid typos for example.
