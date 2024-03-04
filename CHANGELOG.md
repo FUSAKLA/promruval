@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Fixed error messages for the `hasSourceTenantsForMetrics` and `expressionDoesNotUseIrate` validators.
+
+- Added new option `paramsFromFile` to the validators, so the params can be loaded from a YAML file.
+  Example promruval config:
+  ```yaml
+  - type: labelHasAllowedValue
+    paramsFromFile: ./examples/allowed_values_params.yaml
+  ```
+
+  Content of `./examples/allowed_values_params.yaml`:
+  ```yaml
+  label: "severity"
+  allowedValues: ["info", "warning", "critical"]
+  ```
+
 - Added new config option `additionalDetails` to all validators providing  possibility to add custom details about the error and how to solve it.
   Those will be appended to the validator error message in a parenthesis if provided.
   Example configuration:

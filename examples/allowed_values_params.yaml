@@ -1,0 +1,2 @@
+label: "severity"
+allowedValues: ["info", "warning", "critical"]

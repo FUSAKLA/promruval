@@ -12,9 +12,7 @@ validationRules:
         params:
           labels: ["severity"]
       - type: labelHasAllowedValue
-        params:
-          label: "severity"
-          allowedValues: ["info", "warning", "critical"]
+        paramsFromFile: ./examples/allowed_values_params.yaml
       - type: exclusiveLabels
         params:
           firstLabel: severity

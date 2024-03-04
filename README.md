@@ -156,9 +156,13 @@ validationRules:
       - type: hasLabels
         # Additional detaild that will be appended to the default error message. Useful to customize the error message.
         additionalDetails: "We do this because ..."
-        # Parameters of the validation.
+        # Parameters of the validation. See the /docs/validations.md for details on params of each validation.
         params:
           labels: [ "severity" ]
+        # OPTIONAL If you want to load the parameters from a separate file, you can use this option.
+        # The content of the file must be in the exact form as the expected params would be.
+        # The option is mutually exclusive with the `params` option.
+        # paramsFromFile: /path/to/file.yaml
       ...
 ```
 

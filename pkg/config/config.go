@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -57,6 +58,29 @@ type ValidatorConfig struct {
 	ValidatorType     string    `yaml:"type"`
 	AdditionalDetails string    `yaml:"additionalDetails"`
 	Params            yaml.Node `yaml:"params"`
+	ParamsFromFile    string    `yaml:"paramsFromFile"`
+}
+
+func (c *ValidatorConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type plain ValidatorConfig
+	err := unmarshal((*plain)(c))
+	if err != nil {
+		return err
+	}
+	if c.ParamsFromFile != "" {
+		if !c.Params.IsZero() {
+			return fmt.Errorf("cannot use both `params` and `paramsFromFile`")
+		}
+		fileData, err := os.ReadFile(c.ParamsFromFile)
+		if err != nil {
+			return fmt.Errorf("cannot read params from file %s: %w", c.ParamsFromFile, err)
+		}
+		err = yaml.Unmarshal(fileData, &c.Params)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type ValidationScope string
