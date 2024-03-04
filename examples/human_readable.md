@@ -27,7 +27,9 @@ Validation rules:
     - All rules does not use any of the `cluster`,`locality`,`prometheus-type`,`replica` labels is in its expression
 
   check-source-tenants
-    - All rules rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: `k8s`:`^container_.*|kube_.*$`
+    - All rules rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: 
+        `mysql`:   `^mysql_.*$` (MySQL metrics from the MySQL team)
+        `k8s`:   `^container_.*|kube_.*$` (Kubernetes metrics from KSM and cAdvisor provided by the k8s infrastructure team)
 
   check-metric-name
     - Alert expression uses metric name in selectors

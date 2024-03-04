@@ -77,7 +77,12 @@ validationRules:
       - type: hasSourceTenantsForMetrics
         params:
           sourceTenants:
-            k8s: "container_.*|kube_.*"
+            "k8s":
+              regexp: "container_.*|kube_.*"
+              description: "Kubernetes metrics from KSM and cAdvisor provided by the k8s infrastructure team"
+            "mysql":
+              regexp: "mysql_.*"
+              description: "MySQL metrics from the MySQL team"
 
   - name: check-metric-name
     scope: Alert

@@ -14,7 +14,7 @@ var htmlTemplate = `
   <h2><a href="#{{.Name}}">{{.Name}}</a></h2>
 	  <ul>
 	  {{- range .Validations }}
-		<li>{{$currentRule.Scope}} {{. | backticksToCodeTag }}</li>
+		<li>{{$currentRule.Scope}} {{. | backticksToCodeTag | indentedToNewLines | escape }}</li>
 	  {{- end }}
 	  </ul>
 {{- end }}
@@ -43,8 +43,14 @@ Validation rules:
 `
 
 var customFuncs = template.FuncMap{
-	"backticksToCodeTag": func(s string) template.HTML {
-		return template.HTML(regexp.MustCompile("`([^`]+)`").ReplaceAllString(s, "<code>$1</code>"))
+	"backticksToCodeTag": func(s string) string {
+		return regexp.MustCompile("`([^`]+)`").ReplaceAllString(s, "<code>$1</code>")
+	},
+	"indentedToNewLines": func(s string) string {
+		return regexp.MustCompile(`( {4,})`).ReplaceAllString(s, "<br/>$1")
+	},
+	"escape": func(s string) template.HTML {
+		return template.HTML(s)
 	},
 }
 

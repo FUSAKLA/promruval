@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   expressionDoesNotUseIrate: you should not use the `irate` function in rules, for more info see https://www.robustperception.io/avoid-irate-in-alerts/ (Just do as I say!)
   ```
 
+- :warning: CHANGED: Params of the `hasSourceTenantsForMetrics` validator. See its [docs](docs/validations.md#hassourcetenantsformetrics).
+
 ## [v2.9.0] - 2024-03-02
 - Added new `All rules` validator `expressionIsWellFormatted` to check if rules are well formatted as `promtool promql format` would do.
 - Added new `Group` validator `maxRulesPerGroup` to check if the number of rules in the group is not exceeding the limit.

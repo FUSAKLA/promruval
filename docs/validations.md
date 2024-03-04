@@ -318,9 +318,13 @@ Fails, if the rule uses metric, that matches the specified regular expression fo
 ```yaml
 params:
   sourceTenants:
-    <tenant_name>: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
+    <tenant_name>:
+      regexp: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
+      description: <description> # Optional, will be shown in the validator output human-readable description
     # Example:
-    # k8s: "kube_.*|container_.*"
+    # k8s:
+    #   regexp: "kube_.*|container_.*"
+    #   description: "Kubernetes metrics from KSM and cAdvisor provided by the k8s infrastructure team"
 ```
 
 ## Alert validators
