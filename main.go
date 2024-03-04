@@ -81,7 +81,7 @@ rulesIteration:
 			if newValidator == nil {
 				continue
 			}
-			newRule.AddValidator(newValidator)
+			newRule.AddValidator(newValidator, validatorConfig.AdditionalDetails)
 		}
 		validationRules = append(validationRules, newRule)
 	}

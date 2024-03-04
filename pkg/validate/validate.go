@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -19,6 +19,23 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
+
+func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+	var reportedError error
+	validatorName := v.Name()
+	additionalDetails := v.AdditionalDetails()
+	validationErrors := v.Validate(group, rule, prometheusClient)
+	errs := make([]error, 0, len(validationErrors))
+	for _, err := range validationErrors {
+		if additionalDetails != "" {
+			reportedError = fmt.Errorf("%s: %w (%s)", validatorName, err, additionalDetails)
+		} else {
+			reportedError = fmt.Errorf("%s: %w", validatorName, err)
+		}
+		errs = append(errs, reportedError)
+	}
+	return errs
+}
 
 func Files(fileNames []string, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client) *report.ValidationReport {
 	validationReport := report.NewValidationReport()
@@ -58,10 +75,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 					continue
 				}
 				for _, v := range rule.Validators() {
-					validatorName := reflect.TypeOf(v).Elem().Name()
-					for _, err := range v.Validate(group, rulefmt.Rule{}, prometheusClient) {
-						groupReport.Errors = append(groupReport.Errors, fmt.Errorf("%s: %w", validatorName, err))
-					}
+					groupReport.Errors = append(groupReport.Errors, validateWithDetails(v, group, rulefmt.Rule{}, prometheusClient)...)
 				}
 			}
 			if len(groupReport.Errors) > 0 {
@@ -103,19 +117,11 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 						continue
 					}
 					for _, v := range rule.Validators() {
-						skipValidator := false
-						validatorName := reflect.TypeOf(v).Elem().Name()
-						for _, dv := range disabledValidators {
-							if validatorName == dv {
-								skipValidator = true
-							}
-						}
-						if skipValidator {
+						validatorName := v.Name()
+						if slices.Contains(disabledValidators, validatorName) {
 							continue
 						}
-						for _, err := range v.Validate(group, originalRule, prometheusClient) {
-							ruleReport.Errors = append(ruleReport.Errors, fmt.Errorf("%s: %w", validatorName, err))
-						}
+						ruleReport.Errors = append(ruleReport.Errors, validateWithDetails(v, group, originalRule, prometheusClient)...)
 						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, v, time.Since(start))
 					}
 					if len(ruleReport.Errors) > 0 {

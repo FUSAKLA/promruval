@@ -154,6 +154,8 @@ validationRules:
     validations:
       # Name of the validation type. See the /docs/validations.md.
       - type: hasLabels
+        # Additional detaild that will be appended to the default error message. Useful to customize the error message.
+        additionalDetails: "We do this because ..."
         # Parameters of the validation.
         params:
           labels: [ "severity" ]

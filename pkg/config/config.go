@@ -54,8 +54,9 @@ type ValidationRule struct {
 }
 
 type ValidatorConfig struct {
-	ValidatorType string    `yaml:"type"`
-	Params        yaml.Node `yaml:"params"`
+	ValidatorType     string    `yaml:"type"`
+	AdditionalDetails string    `yaml:"additionalDetails"`
+	Params            yaml.Node `yaml:"params"`
 }
 
 type ValidationScope string

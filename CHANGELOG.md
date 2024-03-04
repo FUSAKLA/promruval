@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Fixed error messages for the `hasSourceTenantsForMetrics` and `expressionDoesNotUseIrate` validators.
+- Added new config option `additionalDetails` to all validators providing  possibility to add custom details about the error and how to solve it.
+  Those will be appended to the validator error message in a parenthesis if provided.
+  Example configuration:
+  ```yaml
+  - name: expressionDoesNotUseIrate
+    additionalDetails: "Just do as I say!"
+  ```
+  Example output:
+  ```yaml
+  expressionDoesNotUseIrate: you should not use the `irate` function in rules, for more info see https://www.robustperception.io/avoid-irate-in-alerts/ (Just do as I say!)
+  ```
 
 ## [v2.9.0] - 2024-03-02
 - Added new `All rules` validator `expressionIsWellFormatted` to check if rules are well formatted as `promtool promql format` would do.
