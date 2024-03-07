@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.12.0] - 2024-03-07
 - Fixed resolving of the path in `paramsFromFile`. Formerly it was resolved from the current working directory, now it must be a relative path, that will be resolved from the config file location.
+- Fixed: tenants in the `hasSourceTenantsForMetrics` validator are now sorted in the human readable output.
 
 ## [2.11.0] - 2024-03-07
 - :warning: CHANGED: Params of the `hasSourceTenantsForMetrics` validator (again FACEPALM). Now the tenant can have multiple regexp matchers.

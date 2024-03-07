@@ -56,9 +56,14 @@ type hasSourceTenantsForMetrics struct {
 
 func (h hasSourceTenantsForMetrics) String() string {
 	tenantStrings := []string{}
-	for tenant, metrics := range h.sourceTenants {
-		for _, m := range metrics {
-			tenantStrings = append(tenantStrings, fmt.Sprintf("`%s`:   `%s` (%s)", tenant, m.regexp.String(), m.description))
+	tenants := make([]string, 0, len(h.sourceTenants))
+	for tenant := range h.sourceTenants {
+		tenants = append(tenants, tenant)
+	}
+	slices.Sort(tenants)
+	for _, t := range tenants {
+		for _, m := range h.sourceTenants[t] {
+			tenantStrings = append(tenantStrings, fmt.Sprintf("`%s`:   `%s` (%s)", t, m.regexp.String(), m.description))
 		}
 	}
 	return fmt.Sprintf("rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: \n        %s", strings.Join(tenantStrings, "\n        "))
