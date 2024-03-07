@@ -160,6 +160,7 @@ validationRules:
         params:
           labels: [ "severity" ]
         # OPTIONAL If you want to load the parameters from a separate file, you can use this option.
+        # Its value must be a relative path to the file from the location of the config file.
         # The content of the file must be in the exact form as the expected params would be.
         # The option is mutually exclusive with the `params` option.
         # paramsFromFile: /path/to/file.yaml

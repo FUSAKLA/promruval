@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+	"path"
+	"sync"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -18,6 +20,45 @@ const (
 )
 
 var ValidationScopes = []ValidationScope{Group, AlertScope, RecordingRuleScope, AllRulesScope}
+
+// Ugly hack with a global variable to be able to use it in UnmarshalYAML.
+// Not sure how to better propagate some context to the UnmarshalYAML function.
+var (
+	configDir    string
+	configDirMtx sync.Mutex
+)
+
+func init() {
+	configDirMtx = sync.Mutex{}
+}
+
+func NewLoader(cfgPath string) Loader {
+	return Loader{ConfigPath: cfgPath}
+}
+
+type Loader struct {
+	ConfigPath string
+}
+
+func (l *Loader) Load() (*Config, error) {
+	configFile, err := os.Open(l.ConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("open config file: %w", err)
+	}
+	configDirMtx.Lock()
+	configDir = path.Dir(l.ConfigPath)
+	defer func() {
+		configDir = ""
+		configDirMtx.Unlock()
+	}()
+	validationConfig := Config{}
+	decoder := yaml.NewDecoder(configFile)
+	decoder.KnownFields(true)
+	if err := decoder.Decode(&validationConfig); err != nil {
+		return nil, fmt.Errorf("loading config file: %w", err)
+	}
+	return &validationConfig, nil
+}
 
 type Config struct {
 	CustomExcludeAnnotation string           `yaml:"customExcludeAnnotation"`
@@ -71,7 +112,10 @@ func (c *ValidatorConfig) UnmarshalYAML(unmarshal func(interface{}) error) error
 		if !c.Params.IsZero() {
 			return fmt.Errorf("cannot use both `params` and `paramsFromFile`")
 		}
-		fileData, err := os.ReadFile(c.ParamsFromFile)
+		if path.IsAbs(c.ParamsFromFile) {
+			return fmt.Errorf("`paramsFromFile` must be a relative path to the config file")
+		}
+		fileData, err := os.ReadFile(path.Join(configDir, c.ParamsFromFile))
 		if err != nil {
 			return fmt.Errorf("cannot read params from file %s: %w", c.ParamsFromFile, err)
 		}

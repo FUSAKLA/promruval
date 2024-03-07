@@ -14,7 +14,6 @@ import (
 	"github.com/fusakla/promruval/v2/pkg/validationrule"
 	"github.com/fusakla/promruval/v2/pkg/validator"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -42,17 +41,8 @@ var (
 )
 
 func loadConfigFile(configFilePath string) (*config.Config, error) {
-	configFile, err := os.Open(configFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("open config file: %w", err)
-	}
-	validationConfig := &config.Config{}
-	decoder := yaml.NewDecoder(configFile)
-	decoder.KnownFields(true)
-	if err := decoder.Decode(validationConfig); err != nil {
-		return nil, fmt.Errorf("loading config file: %w", err)
-	}
-	return validationConfig, nil
+	configLoader := config.NewLoader(configFilePath)
+	return configLoader.Load()
 }
 
 func validationRulesFromConfig(validationConfig *config.Config) ([]*validationrule.ValidationRule, error) {
