@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] - 2024-03-07
+- :warning: CHANGED: Params of the `hasSourceTenantsForMetrics` validator (again FACEPALM). Now the tenant can have multiple regexp matchers.
+  See its [docs](docs/validations.md#hassourcetenantsformetrics).
+
 ## [2.10.0] - 2024-03-05
 - Fixed error messages for the `hasSourceTenantsForMetrics` and `expressionDoesNotUseIrate` validators.
 

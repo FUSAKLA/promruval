@@ -28,8 +28,9 @@ Validation rules:
 
   check-source-tenants
     - All rules rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: 
+        `k8s`:   `^container_.*$` (Metrics from cAdvisor)
+        `k8s`:   `^kube_.*$` (Metrics from KSM)
         `mysql`:   `^mysql_.*$` (MySQL metrics from the MySQL team)
-        `k8s`:   `^container_.*|kube_.*$` (Kubernetes metrics from KSM and cAdvisor provided by the k8s infrastructure team)
 
   check-metric-name
     - Alert expression uses metric name in selectors

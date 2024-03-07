@@ -319,12 +319,16 @@ Fails, if the rule uses metric, that matches the specified regular expression fo
 params:
   sourceTenants:
     <tenant_name>:
-      regexp: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
-      description: <description> # Optional, will be shown in the validator output human-readable description
-    # Example:
-    # k8s:
-    #   regexp: "kube_.*|container_.*"
-    #   description: "Kubernetes metrics from KSM and cAdvisor provided by the k8s infrastructure team"
+      - regexp: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
+        description: <description> # Optional, will be shown in the validator output human-readable description
+  # Example:
+  # k8s:
+  #   - regexp: "kube_.*|container_.*"
+  #     description: "Metrics from KSM"
+  #   - regexp: "container_.*"
+  #     description: "Metrics from cAdvisor "
+  #   - regexp: "node_.*"
+  #     description: "Node exporter metrics provided by the k8s infrastructure team"
 ```
 
 ## Alert validators

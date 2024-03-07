@@ -19,7 +19,7 @@ type SourceTenantMetrics struct {
 
 func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		SourceTenants map[string]SourceTenantMetrics `yaml:"sourceTenants"`
+		SourceTenants map[string][]SourceTenantMetrics `yaml:"sourceTenants"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -27,16 +27,20 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	if params.SourceTenants == nil || len(params.SourceTenants) == 0 {
 		return nil, fmt.Errorf("sourceTenants metrics mapping needs to be set")
 	}
-	validator := hasSourceTenantsForMetrics{sourceTenants: map[string]tenantMetrics{}}
+	validator := hasSourceTenantsForMetrics{sourceTenants: map[string][]tenantMetrics{}}
 	for tenant, metrics := range params.SourceTenants {
-		compiledRegexp, err := regexp.Compile("^" + metrics.Regexp + "$")
-		if err != nil {
-			return nil, fmt.Errorf("invalid metric name regexp: %s", metrics.Regexp)
+		m := make([]tenantMetrics, len(metrics))
+		for i, metric := range metrics {
+			compiledRegexp, err := regexp.Compile("^" + metric.Regexp + "$")
+			if err != nil {
+				return nil, fmt.Errorf("invalid metric name regexp: %s", metric.Regexp)
+			}
+			m[i] = tenantMetrics{
+				regexp:      compiledRegexp,
+				description: metric.Description,
+			}
 		}
-		validator.sourceTenants[tenant] = tenantMetrics{
-			regexp:      compiledRegexp,
-			description: metrics.Description,
-		}
+		validator.sourceTenants[tenant] = m
 	}
 	return &validator, nil
 }
@@ -47,13 +51,15 @@ type tenantMetrics struct {
 }
 
 type hasSourceTenantsForMetrics struct {
-	sourceTenants map[string]tenantMetrics
+	sourceTenants map[string][]tenantMetrics
 }
 
 func (h hasSourceTenantsForMetrics) String() string {
 	tenantStrings := []string{}
-	for tenant, metricsRegexp := range h.sourceTenants {
-		tenantStrings = append(tenantStrings, fmt.Sprintf("`%s`:   `%s` (%s)", tenant, metricsRegexp.regexp.String(), metricsRegexp.description))
+	for tenant, metrics := range h.sourceTenants {
+		for _, m := range metrics {
+			tenantStrings = append(tenantStrings, fmt.Sprintf("`%s`:   `%s` (%s)", tenant, m.regexp.String(), m.description))
+		}
 	}
 	return fmt.Sprintf("rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: \n        %s", strings.Join(tenantStrings, "\n        "))
 }
@@ -66,9 +72,11 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 		return errs
 	}
 	for _, usedMetric := range usedMetrics {
-		for tenant, metricsRegexp := range h.sourceTenants {
-			if metricsRegexp.regexp.MatchString(usedMetric.Name) && !slices.Contains(group.SourceTenants, tenant) {
-				errs = append(errs, fmt.Errorf("rule uses metric `%s` of the tenant `%s` tenant, you should set the tenant in the groups source_tenants settings", tenant, usedMetric.Name))
+		for tenant, metrics := range h.sourceTenants {
+			for _, metric := range metrics {
+				if metric.regexp.MatchString(usedMetric.Name) && !slices.Contains(group.SourceTenants, tenant) {
+					errs = append(errs, fmt.Errorf("rule uses metric `%s` of the tenant `%s` tenant, you should set the tenant in the groups source_tenants settings", tenant, usedMetric.Name))
+				}
 			}
 		}
 	}
