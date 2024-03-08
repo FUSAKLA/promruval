@@ -185,7 +185,7 @@ Or using [Docker image](https://hub.docker.com/r/fusakla/promruval)
 docker run -it -v $PWD:/rules fusakla/promruval validate --config-file=/rules/examples/validation.yaml /rules/examples/rules.yaml
 ```
 
-#### Validation using live Prometheus instance
+### Validation using live Prometheus instance
 
 Event though these validations are useful, they may be flaky and dangerous for the Prometheus instance.
 If you have large number of rules and run the check often the number of queries can be huge or the instance might go
@@ -193,63 +193,114 @@ down and your validation
 would be flaky.
 
 Therefore, it's recommended to use these check as a warning and do not fail if it does not succeed.
+Also consider running it rather periodically (for example once per day) instead of running it on every commit in CI.
 
-### Disabling validations per rule
+### Disabling validations
+There are three ways you can disable certain validation:
+ - Using cmd line flag `--disable-rule`
+ - Using YAML comments
+ - Using comments in the PromQL expression
+ - Using alert annotation
 
-If you want to disable particular validation for a certain rule, you can add a comment above it with a list of
-validation names to ignore. Alternatively, the comment can be put on its own line _inside_ the `expr` of the rule.
-The in-expression comment can be present multiple times.
+> The later two are useful if you yse for example jsonnet to generate the rules.
+> Then you can't use the YAML comments, but you can set the comments in the expression or alert annotations.
+> Unfortunately those have limited scope of usage (recording rules cannot have annotations, cannot be disabled on the group or file level).
 
-By default, the comment prefix is `ignore_validations` but can be changed using the `customDisableComment` config option
-in [config](#configuration).
-Value of the comment should be comma separated list of [validation names](./docs/validations.md)
+#### Using cmd line flag
+If you want to temporarily disable any of the validation rules for all the tested files,
+you can use the `--disable-rule` flag with value corresponding to the `name`
+of the validation rule you want to disable. Can be passed multiple times.
+
+Example:
+```yaml
+# Promruval validation configuration
+validationRules:
+  - name: check-irate
+    scope: Alert
+    validations:
+      - type: expressionDoesNotUseIrate
+```
+
+```bash
+promruval validate --config-file examples/validation.yaml --disable-rule check-irate examples/rules.yaml
+```
+
+#### Using YAML comments
+You can use comments in YAML to disable certain validations. This can be done on the file, group or rule level.
+The comment should be in format `# ignore_validations: validationName1, validationName2, ...` where the `validationName`
+is the name of the validation as defined in the [docs/validations.md](./docs/validations.md).
+
+> The `ignore_validations` prefix can be changed using the `customDisableComment` config option in the [config](#configuration).
+
+Example:
+```yaml
+# Disable for the whole file
+# ignore_validations: expressionDoesNotUseIrate
+groups:
+  # Disable only for the following rule group
+  # ignore_validations: expressionDoesNotUseIrate
+  - name: group1
+    partial_response_strategy: abort
+    interval: 1m
+    limit: 10
+    rules:
+      # Disable only for the following rule
+      # ignore_validations: expressionDoesNotUseIrate
+      - record: recorded_metrics
+        expr: 1
+        labels:
+          foo: bar
+```
+
+#### Using PromQL expression comments
+Same way as in the YAML comments, you can use comments in the PromQL expression to disable certain validations.
+The comment should be in the same format `# ignore_validations: validationName1, validationName2, ...` where the `validationName`
+is the name of the validation as defined in the [docs/validations.md](./docs/validations.md).
+The comment can be present multiple times in the expression and can be anywhere in the expression.
+
+> The `ignore_validations` prefix can be changed using the `customDisableComment` config option in the [config](#configuration).
+
+Example:
+```yaml
+groups:
+  - name: test-group
+    rules:
+      - alert: test-alert
+        expr: |
+          # ignore_validations: expressionDoesNotUseIrate
+          irate(http_requests_total[5m]) # ignore_validations: expressionDoesNotUseIrate
+```
+
+#### Using alert annotation
+If you can't(or don't want to) use the comments to disable validations, you can use the special annotation
+`disabled_validation_rules`. It represents comma separated list of **validation rule names** to be skipped for the particular alert.
+Since annotations are only available for alerts, **this method can be used only for alerts!**
+
+> The `disabled_validation_rules` annotation name can be changed using the `customExcludeAnnotation` config option in the [config](#configuration).
 
 Example:
 
 ```yaml
-groups:
-  - name: foo
-    rules:
-      # The following validations will be ignored in the rule that immediately follows.
-      # ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
-      - record: bar
-        expr: 1
-      # The same validations are disabled for the following rule, but the comments are in the expression.
-      - name: baz
-        expr: |
-          # ignore_validations: expressionSelectorsMatchesAnything
-          up{
-            # ignore_validations: expressionDoesNotUseOlderDataThan
-          }
+# Promruval validation configuration
+validationRules:
+  - name: check-irate
+    scope: Alert
+    validations:
+      - type: expressionDoesNotUseIrate
 ```
-
-### Disabling rules
-
-If you want to temporarily disable any of the rules for all the tested rules,
-you can use the `--disable-rule` flag with value corresponding to the `name`
-of the rule you want to disable. Can be passed multiple times.
-
-```bash
-promruval validate --config-file examples/validation.yaml --disable-rule check-team-label examples/rules.yaml
-```
-
-If you want to disable permanently for some Prometheus rule, you can use the special annotation
-`disabled_validation_rules`(can be changed in the [config](#configuration)) that represents comma separated list of
-rule names to be skipped for the particular rule.
-
-Example Prometheus rule:
 
 ```yaml
+# Prometheus rule file
 groups:
-  - name: ...
+  - name: test-group
     rules:
-      - alert: ...
-        expr: ...
+      - alert: test-alert
+        expr: 1
         annotations:
-          disabled_validation_rules: team-label-check,title-annotation-check
+          disabled_validation_rules: check-irate # Will disable the check-irate validation rule check for this alert
 ```
 
-### Readable validation description
+### Human readable validation description
 
 If you want more human readable validation summary (for a documentation or generating readable git pages)
 you can use the `validation-docs` command, see the [usage](#usage).

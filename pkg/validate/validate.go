@@ -55,8 +55,9 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %w", fileName, err)}
 			continue
 		}
-		var rf unmarshaler.RulesFile
+		var rf unmarshaler.RulesFileWithComment
 		decoder := yaml.NewDecoder(f)
+		decoder.KnownFields(true)
 		err = decoder.Decode(&rf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
@@ -67,15 +68,25 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			fileReport.Errors = []error{fmt.Errorf("invalid file %s: %w", fileName, err)}
 			continue
 		}
-		for _, group := range rf.Groups {
+		fileDisabledValidators := rf.DisabledValidators(disableValidationsComment)
+		allGroupsDisabledValidators := rf.Groups.DisabledValidators(disableValidationsComment)
+		for _, group := range rf.Groups.Groups {
 			validationReport.GroupsCount++
 			groupReport := fileReport.NewGroupReport(group.Name)
+			groupDisabledValidators := group.DisabledValidators(disableValidationsComment)
+			if err := validator.KnownValidators(config.AllScope, groupDisabledValidators); err != nil {
+				groupReport.Errors = append(groupReport.Errors, fmt.Errorf("invalid disabled validators: %w", err))
+			}
+			groupDisabledValidators = slices.Concat(groupDisabledValidators, fileDisabledValidators, allGroupsDisabledValidators)
 			for _, rule := range validationRules {
-				if rule.Scope() != config.Group {
+				if rule.Scope() != config.GroupScope {
 					continue
 				}
 				for _, v := range rule.Validators() {
-					groupReport.Errors = append(groupReport.Errors, validateWithDetails(v, group, rulefmt.Rule{}, prometheusClient)...)
+					if slices.Contains(groupDisabledValidators, v.Name()) {
+						continue
+					}
+					groupReport.Errors = append(groupReport.Errors, validateWithDetails(v, group.RuleGroup, rulefmt.Rule{}, prometheusClient)...)
 				}
 			}
 			if len(groupReport.Errors) > 0 {
@@ -97,11 +108,12 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 					excludedRules = strings.Split(excludedRulesText, ",")
 				}
 				disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
-				if err := validator.KnownValidators(config.AllRulesScope, disabledValidators); err != nil {
-					ruleReport.Errors = append(ruleReport.Errors, err)
+				if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
+					ruleReport.Errors = append(ruleReport.Errors, fmt.Errorf("invalid disabled validators: %w", err))
 				}
+				disabledValidators = append(disabledValidators, groupDisabledValidators...)
 				for _, rule := range validationRules {
-					if rule.Scope() == config.Group {
+					if rule.Scope() == config.GroupScope {
 						continue
 					}
 					skipRule := false
@@ -121,7 +133,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 						if slices.Contains(disabledValidators, validatorName) {
 							continue
 						}
-						ruleReport.Errors = append(ruleReport.Errors, validateWithDetails(v, group, originalRule, prometheusClient)...)
+						ruleReport.Errors = append(ruleReport.Errors, validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient)...)
 						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, v, time.Since(start))
 					}
 					if len(ruleReport.Errors) > 0 {

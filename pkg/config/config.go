@@ -16,10 +16,11 @@ const (
 	AlertScope         ValidationScope = "Alert"
 	RecordingRuleScope ValidationScope = "Recording rule"
 	AllRulesScope      ValidationScope = "All rules"
-	Group              ValidationScope = "Group"
+	GroupScope         ValidationScope = "Group"
+	AllScope           ValidationScope = "All"
 )
 
-var ValidationScopes = []ValidationScope{Group, AlertScope, RecordingRuleScope, AllRulesScope}
+var ValidationScopes = []ValidationScope{GroupScope, AlertScope, RecordingRuleScope, AllRulesScope}
 
 // Ugly hack with a global variable to be able to use it in UnmarshalYAML.
 // Not sure how to better propagate some context to the UnmarshalYAML function.

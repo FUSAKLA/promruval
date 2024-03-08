@@ -63,6 +63,7 @@ var registeredGroupValidators = map[string]validatorCreator{
 var (
 	alertValidators         = map[string]validatorCreator{}
 	recordingRuleValidators = map[string]validatorCreator{}
+	allValidators           = map[string]validatorCreator{}
 )
 
 func init() {
@@ -71,6 +72,10 @@ func init() {
 
 	maps.Copy(recordingRuleValidators, registeredUniversalRuleValidators)
 	maps.Copy(recordingRuleValidators, registeredRecordingRuleValidators)
+
+	maps.Copy(allValidators, alertValidators)
+	maps.Copy(allValidators, recordingRuleValidators)
+	maps.Copy(allValidators, registeredGroupValidators)
 }
 
 func NewFromConfig(scope config.ValidationScope, validatorConfig config.ValidatorConfig) (Validator, error) {
@@ -88,10 +93,12 @@ func creator(scope config.ValidationScope, name string) (validatorCreator, bool)
 		validators = alertValidators
 	case config.RecordingRuleScope:
 		validators = recordingRuleValidators
-	case config.Group:
+	case config.GroupScope:
 		validators = registeredGroupValidators
 	case config.AllRulesScope:
 		validators = registeredUniversalRuleValidators
+	case config.AllScope:
+		validators = allValidators
 	}
 	creator, ok := validators[name]
 	return creator, ok

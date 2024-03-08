@@ -1,3 +1,4 @@
+# ignore_validations: hasAllowedLimit
 groups:
   - name: group1
     partial_response_strategy: abort
@@ -10,10 +11,11 @@ groups:
         labels:
           foo: bar
 
+  # ignore_validations: labelHasAllowedValue
   - name: testGroup
     partial_response_strategy: "warn"
     source_tenants: ["tenant1", "tenant2"]
-    limit: 100
+    limit: 1000
     rules:
       # Comment before.
       # Comment on the same line. ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
@@ -23,7 +25,7 @@ groups:
         for: 4w
         keep_firing_for: 5m
         labels:
-          severity: critical
+          severity: critica
           team: sre@mail.com
           page: true
           foo: "{{ $labels.foo }}"
