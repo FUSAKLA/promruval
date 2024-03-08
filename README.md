@@ -197,10 +197,10 @@ Also consider running it rather periodically (for example once per day) instead 
 
 ### Disabling validations
 There are three ways you can disable certain validation:
- - Using cmd line flag `--disable-rule`
- - Using YAML comments
- - Using comments in the PromQL expression
- - Using alert annotation
+ - [Using cmd line flag](#using-cmd-line-flag)
+ - [Using YAML comments](#using-yaml-comments)
+ - [Using PromQL expression comments](#using-promql-expression-comments)
+ - [Using alert annotation](#using-alert-annotation)
 
 > The later two are useful if you yse for example jsonnet to generate the rules.
 > Then you can't use the YAML comments, but you can set the comments in the expression or alert annotations.
