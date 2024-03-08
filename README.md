@@ -202,7 +202,7 @@ There are three ways you can disable certain validation:
  - [Using PromQL expression comments](#using-promql-expression-comments)
  - [Using alert annotation](#using-alert-annotation)
 
-> The later two are useful if you yse for example jsonnet to generate the rules.
+> The last two are useful if you yse for example jsonnet to generate the rules.
 > Then you can't use the YAML comments, but you can set the comments in the expression or alert annotations.
 > Unfortunately those have limited scope of usage (recording rules cannot have annotations, cannot be disabled on the group or file level).
 
