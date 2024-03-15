@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.0]
+- Added: new param `defaultTenant` to the `hasSourceTenantsForMetrics` validator to set the default tenant for the rule group.
+
 ## [2.13.0] - 2024-03-08
 - Added: support for disabling validation using comments in yaml rules per rule group and for the whole file.
 - Docs: Updated/improved documentation on how to disable validations and validation rules.

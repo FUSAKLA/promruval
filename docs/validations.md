@@ -317,6 +317,7 @@ Fails, if the rule uses metric, that matches the specified regular expression fo
 
 ```yaml
 params:
+  defaultTenant: <tenant_name> # Optional, if set, the tenant that will be assumed if the group does not have the `source_tenants` option set
   sourceTenants:
     <tenant_name>:
       - regexp: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)

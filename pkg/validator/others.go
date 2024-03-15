@@ -20,6 +20,7 @@ type SourceTenantMetrics struct {
 func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		SourceTenants map[string][]SourceTenantMetrics `yaml:"sourceTenants"`
+		DefaultTenant string                           `yaml:"defaultTenant"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -27,7 +28,7 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	if params.SourceTenants == nil || len(params.SourceTenants) == 0 {
 		return nil, fmt.Errorf("sourceTenants metrics mapping needs to be set")
 	}
-	validator := hasSourceTenantsForMetrics{sourceTenants: map[string][]tenantMetrics{}}
+	validator := hasSourceTenantsForMetrics{sourceTenants: map[string][]tenantMetrics{}, defaultTenant: params.DefaultTenant}
 	for tenant, metrics := range params.SourceTenants {
 		m := make([]tenantMetrics, len(metrics))
 		for i, metric := range metrics {
@@ -52,6 +53,7 @@ type tenantMetrics struct {
 
 type hasSourceTenantsForMetrics struct {
 	sourceTenants map[string][]tenantMetrics
+	defaultTenant string
 }
 
 func (h hasSourceTenantsForMetrics) String() string {
@@ -79,7 +81,13 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 	for _, usedMetric := range usedMetrics {
 		for tenant, metrics := range h.sourceTenants {
 			for _, metric := range metrics {
-				if metric.regexp.MatchString(usedMetric.Name) && !slices.Contains(group.SourceTenants, tenant) {
+				if !metric.regexp.MatchString(usedMetric.Name) {
+					continue
+				}
+				if len(group.SourceTenants) == 0 && h.defaultTenant == tenant {
+					continue
+				}
+				if !slices.Contains(group.SourceTenants, tenant) {
 					errs = append(errs, fmt.Errorf("rule uses metric `%s` of the tenant `%s` tenant, you should set the tenant in the groups source_tenants settings", tenant, usedMetric.Name))
 				}
 			}
