@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.1]
+- Fixed: error message in the `hasSourceTenantsForMetrics` validator
+- Updated: indirect Go dependency google.golang.org/protobuf bumped to v1.33.0
+
 ## [2.14.0]
 - Added: new param `defaultTenant` to the `hasSourceTenantsForMetrics` validator to set the default tenant for the rule group.
 
