@@ -88,7 +88,7 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 					continue
 				}
 				if !slices.Contains(group.SourceTenants, tenant) {
-					errs = append(errs, fmt.Errorf("rule uses metric `%s` of the tenant `%s` tenant, you should set the tenant in the groups source_tenants settings", tenant, usedMetric.Name))
+					errs = append(errs, fmt.Errorf("rule uses metric `%s` of the tenant `%s`, you should set the tenant in the group's source_tenants settings", usedMetric.Name, tenant))
 				}
 			}
 		}
