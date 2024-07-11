@@ -52,6 +52,8 @@ func disabledValidatorsFromComments(comments []string, commentPrefix string) []s
 }
 
 func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}, knownFields []string) error {
+	// Since yaml/v3 Node.Decode doesn't support setting decode options like KnownFields (see https://github.com/go-yaml/yaml/issues/460)
+	// we need to check the fields manually, thus the function requires a list of known fields.
 	if value.Kind == yaml.MappingNode {
 		m := map[string]any{}
 		if err := value.Decode(m); err != nil {
@@ -74,6 +76,7 @@ func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}, 
 	return nil
 }
 
+// mustListStructYamlFieldNames returns a list of yaml field names for the given struct.
 func mustListStructYamlFieldNames(s interface{}) []string {
 	y, err := yaml.Marshal(s)
 	if err != nil {
