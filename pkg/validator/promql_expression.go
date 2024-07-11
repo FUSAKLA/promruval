@@ -121,6 +121,51 @@ func (h expressionDoesNotUseLabels) Validate(_ unmarshaler.RuleGroup, rule rulef
 	return errs
 }
 
+type expressionUsesOnlyAllowedLabelsForMetricRegexp struct {
+	allowedLabels    map[string]struct{}
+	metricNameRegexp *regexp.Regexp
+}
+
+func newExpressionUseOnlyWhitelistedLabelsForMetric(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		AllowedLabels    []string `yaml:"allowedLabels"`
+		MetricNameRegexp string   `yaml:"metricNameRegexp"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if len(params.AllowedLabels) == 0 {
+		return nil, fmt.Errorf("missing labels")
+	}
+	compiled, err := compileAnchoredRegexp(params.MetricNameRegexp)
+	if err != nil {
+		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
+	}
+	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap(params.AllowedLabels), metricNameRegexp: compiled}, nil
+}
+
+func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) String() string {
+	allowedLabelsSlice := []string{}
+	for l := range h.allowedLabels {
+		allowedLabelsSlice = append(allowedLabelsSlice, l)
+	}
+	return fmt.Sprintf("expression only uses allowed labels `%s` for metrics matching regexp %s", strings.Join(allowedLabelsSlice, "`,`"), h.metricNameRegexp)
+}
+
+func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	usedLabels, err := getExpressionUsedLabelsForMetric(rule.Expr, h.metricNameRegexp)
+	if err != nil {
+		return []error{err}
+	}
+	var errs []error
+	for _, l := range usedLabels {
+		if _, ok := h.allowedLabels[l]; !ok {
+			errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression in combination with metric %s (regexp)", l, h.metricNameRegexp))
+		}
+	}
+	return errs
+}
+
 func newExpressionDoesNotUseRangeShorterThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
@@ -453,7 +498,7 @@ func newExpressionDoesNotUseMetrics(paramsConfig yaml.Node) (Validator, error) {
 	}
 	v := expressionDoesNotUseMetrics{}
 	for _, r := range params.MetricNameRegexps {
-		compiled, err := regexp.Compile("^" + r + "$")
+		compiled, err := compileAnchoredRegexp(r)
 		if err != nil {
 			return nil, err
 		}
