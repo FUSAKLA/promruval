@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	// Struct fields marked as omitempty MUST be set to non-default value so they appear in marshalled yaml
+	// Struct fields marked as omitempty MUST be set to non-default value so they appear in marshalled yaml.
 	rulesFileKnownFields         = mustListStructYamlFieldNames(RulesFile{})
 	groupsWithCommentKnownFields = mustListStructYamlFieldNames(GroupsWithComment{})
 	ruleGroupKnownFields         = mustListStructYamlFieldNames(RuleGroup{})
