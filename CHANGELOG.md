@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Updated: Prometheus and other dependencies
+- CI: Updated Github actions for golangcilint and goreleaser
+
 ## [2.14.1]
 - Fixed: error message in the `hasSourceTenantsForMetrics` validator
 - Updated: indirect Go dependency google.golang.org/protobuf bumped to v1.33.0

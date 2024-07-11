@@ -299,7 +299,7 @@ func (h validateAnnotationTemplates) String() string {
 
 func (h validateAnnotationTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	data := template.AlertTemplateData(map[string]string{}, map[string]string{}, "", 0)
+	data := template.AlertTemplateData(map[string]string{}, map[string]string{}, "", promql.Sample{})
 	defs := []string{
 		"{{$labels := .Labels}}",
 		"{{$externalLabels := .ExternalLabels}}",
