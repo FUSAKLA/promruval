@@ -9,16 +9,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type fakeTestFile struct {
-	RuleFiles          []yaml.Node `yaml:"rule_files,omitempty"`
-	EvaluationInterval yaml.Node   `yaml:"evaluation_interval,omitempty"`
-	GroupEvalOrder     []yaml.Node `yaml:"group_eval_order,omitempty"`
-	Tests              []yaml.Node `yaml:"tests,omitempty"`
-}
+var (
+	rulesFileKnownFields         = mustListStructYamlFieldNames(RulesFile{})
+	groupsWithCommentKnownFields = mustListStructYamlFieldNames(GroupsWithComment{})
+	ruleGroupKnownFields         = mustListStructYamlFieldNames(RuleGroup{})
+	ruleNodeKnownFields          = mustListStructYamlFieldNames(rulefmt.RuleNode{Record: yaml.Node{Kind: yaml.SequenceNode}, Alert: yaml.Node{Kind: yaml.SequenceNode}, For: model.Duration(1), Labels: map[string]string{"foo": "bar"}, Annotations: map[string]string{"foo": "bar"}, KeepFiringFor: model.Duration(1)})
+)
 
 type RulesFile struct {
-	Groups       GroupsWithComment `yaml:"groups"`
-	fakeTestFile                   // Just so we can unmarshal also PromQL test files but ignore them because it has no Groups
+	Groups GroupsWithComment `yaml:"groups"`
+	// Just so we can unmarshal also PromQL test files but ignore them because it has no Groups
+	RuleFiles          interface{} `yaml:"rule_files"`
+	EvaluationInterval interface{} `yaml:"evaluation_interval"`
+	GroupEvalOrder     interface{} `yaml:"group_eval_order"`
+	Tests              interface{} `yaml:"tests"`
 }
 
 type RulesFileWithComment struct {
@@ -33,7 +37,7 @@ func (r *RulesFileWithComment) UnmarshalYAML(value *yaml.Node) error {
 			r.groupsComments = strings.Split(field.HeadComment, "\n")
 		}
 	}
-	return unmarshalToNodeAndStruct(value, &r.node, &r.RulesFile)
+	return unmarshalToNodeAndStruct(value, &r.node, &r.RulesFile, rulesFileKnownFields)
 }
 
 func (r *RulesFileWithComment) DisabledValidators(commentPrefix string) []string {
@@ -42,11 +46,11 @@ func (r *RulesFileWithComment) DisabledValidators(commentPrefix string) []string
 
 type GroupsWithComment struct {
 	node   yaml.Node
-	Groups []RuleGroupWithComment
+	Groups []RuleGroupWithComment `yaml:"groups"`
 }
 
 func (g *GroupsWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &g.node, &g.Groups)
+	return unmarshalToNodeAndStruct(value, &g.node, &g.Groups, groupsWithCommentKnownFields)
 }
 
 func (g *GroupsWithComment) DisabledValidators(commentPrefix string) []string {
@@ -55,11 +59,12 @@ func (g *GroupsWithComment) DisabledValidators(commentPrefix string) []string {
 
 type RuleGroup struct {
 	Name                    string            `yaml:"name"`
-	Interval                model.Duration    `yaml:"interval,omitempty"`
-	PartialResponseStrategy string            `yaml:"partial_response_strategy,omitempty"`
-	SourceTenants           []string          `yaml:"source_tenants,omitempty"`
+	Interval                model.Duration    `yaml:"interval"`
+	QueryOffset             model.Duration    `yaml:"query_offset"`
+	PartialResponseStrategy string            `yaml:"partial_response_strategy"` // Thanos only
+	SourceTenants           []string          `yaml:"source_tenants"`            // Cortex/Mimir only
 	Rules                   []RuleWithComment `yaml:"rules"`
-	Limit                   int               `yaml:"limit,omitempty"`
+	Limit                   int               `yaml:"limit"`
 }
 
 type RuleGroupWithComment struct {
@@ -68,7 +73,7 @@ type RuleGroupWithComment struct {
 }
 
 func (r *RuleGroupWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup)
+	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup, ruleGroupKnownFields)
 }
 
 func (r *RuleGroupWithComment) DisabledValidators(commentPrefix string) []string {
@@ -82,17 +87,18 @@ type RuleWithComment struct {
 
 func (r *RuleWithComment) OriginalRule() rulefmt.Rule {
 	return rulefmt.Rule{
-		Record:      r.rule.Record.Value,
-		Alert:       r.rule.Alert.Value,
-		Expr:        r.rule.Expr.Value,
-		For:         r.rule.For,
-		Labels:      r.rule.Labels,
-		Annotations: r.rule.Annotations,
+		Record:        r.rule.Record.Value,
+		Alert:         r.rule.Alert.Value,
+		Expr:          r.rule.Expr.Value,
+		For:           r.rule.For,
+		Labels:        r.rule.Labels,
+		Annotations:   r.rule.Annotations,
+		KeepFiringFor: r.rule.KeepFiringFor,
 	}
 }
 
 func (r *RuleWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &r.node, &r.rule)
+	return unmarshalToNodeAndStruct(value, &r.node, &r.rule, ruleNodeKnownFields)
 }
 
 func (r *RuleWithComment) DisabledValidators(commentPrefix string) []string {

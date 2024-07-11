@@ -1,6 +1,8 @@
 package unmarshaler
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -49,7 +51,18 @@ func disabledValidatorsFromComments(comments []string, commentPrefix string) []s
 	return disabledValidators
 }
 
-func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}) error {
+func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}, knownFields []string) error {
+	if value.Kind == yaml.MappingNode {
+		m := map[string]any{}
+		if err := value.Decode(m); err != nil {
+			return err
+		}
+		for k := range m {
+			if !slices.Contains(knownFields, k) {
+				return fmt.Errorf("unknown field %q when unmarshalling the %T, only supported fields are: %s", k, dstStruct, strings.Join(knownFields, ","))
+			}
+		}
+	}
 	err := value.Decode(dstNode)
 	if err != nil {
 		return err
@@ -59,4 +72,22 @@ func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}) 
 		return err
 	}
 	return nil
+}
+
+func mustListStructYamlFieldNames(s interface{}) []string {
+	y, err := yaml.Marshal(s)
+	if err != nil {
+		fmt.Println("failed to marshal", err)
+		panic(err)
+	}
+	m := map[string]any{}
+	if err := yaml.Unmarshal(y, m); err != nil {
+		fmt.Println("failed to marshal", err)
+		panic(err)
+	}
+	names := make([]string, 0, len(m))
+	for k := range m {
+		names = append(names, k)
+	}
+	return names
 }
