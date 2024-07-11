@@ -25,6 +25,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionIsValidPromQL`](#expressionisvalidpromql)
       - [`expressionDoesNotUseMetrics`](#expressiondoesnotusemetrics)
       - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
+      - [`expressionUseOnlyWhitelistedLabelsForMetric`](#expressionUseOnlyWhitelistedLabelsForMetric)
       - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
       - [`expressionDoesNotUseRangeShorterThan`](#expressiondoesnotuserangeshorterthan)
       - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
@@ -255,6 +256,18 @@ Fails if the rule uses any of specified labels in its `expr` label matchers, agg
 ```yaml
 params:
   labels: [ "foo", "bar" ]
+```
+
+#### `expressionUseOnlyWhitelistedLabelsForMetric`
+
+Fails if the rule uses any labels beside those provided in combination with given metric in its `expr` label matchers, aggregations or joins.
+> If using kube-state-metrics for exposing labels information about K8S objects (kube_*_labels) only those labels whitelisted by kube-state-metrics admin will be available.
+> Might be useful to check that users does not use any other in their expressions.
+
+```yaml
+params:
+  metric: "kube_pod_labels"
+  labels: [ "pod", "cluster", "app", "team" ]
 ```
 
 #### `expressionDoesNotUseOlderDataThan`

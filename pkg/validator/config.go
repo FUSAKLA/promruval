@@ -23,6 +23,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
 	"rateBeforeAggregation":                newRateBeforeAggregation,
 	"expressionDoesNotUseLabels":           newExpressionDoesNotUseLabels,
+	"expressionUseOnlyWhitelistedLabelsForMetric": newExpressionUseOnlyWhitelistedLabelsForMetric,
 	"expressionDoesNotUseOlderDataThan":    newExpressionDoesNotUseOlderDataThan,
 	"expressionDoesNotUseRangeShorterThan": newExpressionDoesNotUseRangeShorterThan,
 	"expressionDoesNotUseMetrics":          newExpressionDoesNotUseMetrics,
@@ -32,7 +33,6 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"expressionSelectorsMatchesAnything":   newExpressionSelectorsMatchesAnything,
 	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
 	"expressionIsWellFormatted":            newExpressionIsWellFormatted,
-
 	"expressionIsValidLogQL":              newExpressionIsValidLogQL,
 	"logQlExpressionUsesRangeAggregation": newLogQLExpressionUsesRangeAggregation,
 	"logQlExpressionUsesFiltersFirst":     newlogQlExpressionUsesFiltersFirst,

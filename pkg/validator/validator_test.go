@@ -86,6 +86,17 @@ var testCases = []struct {
 	{name: "ruleExprUsesForbiddenLabelInOn", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up * on(foo) up"}, expectedErrors: 1},
 	{name: "ruleExprUsesForbiddenLabelInGroup", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up * group_left (foo) up"}, expectedErrors: 1},
 
+	//expressionUseOnlyWhitelistedLabelsForMetric
+	{name: "ruleExprDoesNotUseAnyLabels", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{"label_app"}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels"}, expectedErrors: 0},
+	{name: "ruleExprDoesUseForbiddenLabelInSelector", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels{app='foo'}"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInBy", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "sum(kube_pod_labels) by (app)"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInOn", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) up"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInGroup", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "group(kube_pod_labels) by (label_app)"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_left(foo) up"}, expectedErrors: 2},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_right(foo) up"}, expectedErrors: 2},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{"app"}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_left(foo) up"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{"app"}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_right(foo) up"}, expectedErrors: 1},
+
 	// expressionDoesNotUseOlderDataThan
 	{name: "ruleExprDoesNotUseOlderData", validator: expressionDoesNotUseOlderDataThan{limit: time.Hour}, rule: rulefmt.Rule{Expr: "up{xxx='yyy'}"}, expectedErrors: 0},
 	{name: "ruleExprUsesOldDataInRangeSelector", validator: expressionDoesNotUseOlderDataThan{limit: time.Hour}, rule: rulefmt.Rule{Expr: "last_over_time(up{xxx='yyy'}[2h])"}, expectedErrors: 1},

@@ -34,6 +34,32 @@ func TestGetExpressionUsedLabels(t *testing.T) {
 	}
 }
 
+func TestGetExpressionUsedLabelsForMetric(t *testing.T) {
+	tests := []struct {
+		expr        string
+		metric      string
+		expected    []string
+		expectedErr error
+	}{
+		{expr: "up{bar='foo'}", metric: "kube_pod_labels", expected: []string{}},
+		{expr: "kube_pod_labels{label_app='foo'}", metric: "kube_pod_labels", expected: []string{"label_app"}},
+		{expr: "count(kube_pod_labels{label_app='foo'}) by (label_team)", metric: "kube_pod_labels", expected: []string{"label_app", "label_team"}},
+		{expr: "kube_pod_labels{label_app!='foo'}", metric: "kube_pod_labels", expected: []string{"label_app"}},
+		{expr: "kube_pod_labels{label_app='foo'} * on(pod) kube_pod_info{}", metric: "kube_pod_labels", expected: []string{"label_app", "pod"}},
+		{expr: "kube_pod_info{} * on(pod) group_left(label_workload) kube_pod_labels{label_app='foo'}", metric: "kube_pod_labels", expected: []string{"label_app", "label_workload", "pod"}},
+		{expr: "kube_pod_info{} * on(pod) group_right(pod_ip) kube_pod_labels{label_app='foo'}", metric: "kube_pod_labels", expected: []string{"label_app", "pod", "pod_ip"}},
+		{expr: "kube_pod_info{} * on(pod) group_right(pod_ip) kube_pod_labels{label_app='foo'} offset 1h", metric: "kube_pod_labels", expected: []string{"label_app", "pod", "pod_ip"}},
+	}
+
+	for _, test := range tests {
+		labels, err := getExpressionUsedLabelsForMetric(test.expr, test.metric)
+		assert.ElementsMatch(t, labels, test.expected, "Expected labels %v, but got %v", test.expected, labels)
+		if !errors.Is(err, test.expectedErr) {
+			t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
+		}
+	}
+}
+
 func TestGetExpressionMetrics(t *testing.T) {
 	type res struct {
 		Name     string
