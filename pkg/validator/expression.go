@@ -16,6 +16,23 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func newExpressionIsValidPromQL(_ yaml.Node) (Validator, error) {
+	return &expressionIsValidPromQL{}, nil
+}
+
+type expressionIsValidPromQL struct{}
+
+func (h expressionIsValidPromQL) String() string {
+	return "expression is a valid PromQL query"
+}
+
+func (h expressionIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	if _, err := parser.ParseExpr(rule.Expr); err != nil {
+		return []error{fmt.Errorf("expression %s is not a valid PromQL query: %w", rule.Expr, err)}
+	}
+	return []error{}
+}
+
 func newExpressionDoesNotUseOlderDataThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`

@@ -23,6 +23,7 @@ validationRules:
   - name: check-all-rules
     scope: All rules
     validations:
+      - type: expressionIsValidPromQL
       - type: nonEmptyLabels
       - type: expressionDoesNotUseIrate
       - type: validFunctionsOnCounters
