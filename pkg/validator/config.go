@@ -19,6 +19,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"nonEmptyLabels":       newNonEmptyLabels,
 	"exclusiveLabels":      newExclusiveLabels,
 
+	"expressionIsValidPromQL":              newExpressionIsValidPromQL,
 	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
 	"rateBeforeAggregation":                newRateBeforeAggregation,
 	"expressionDoesNotUseLabels":           newExpressionDoesNotUseLabels,

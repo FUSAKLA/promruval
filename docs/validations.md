@@ -20,6 +20,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`nonEmptyLabels`](#nonemptylabels)
       - [`exclusiveLabels`](#exclusivelabels)
     - [PromQL expression validators](#promql-expression-validators)
+      - [`expressionIsValidPromQL`](#expressionisvalidpromql)
       - [`expressionDoesNotUseMetrics`](#expressiondoesnotusemetrics)
       - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
       - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
@@ -204,6 +205,10 @@ params:
   secondLabelValue: "true" # Optional, if set, fails only if also the second label value matches
 ```
 ### PromQL expression validators
+
+#### `expressionIsValidPromQL`
+
+Fails if the expression is not a valid PromQL query.
 
 #### `expressionDoesNotUseMetrics`
 
