@@ -1,13 +1,9 @@
-# Promruval
+# $$\color{red}Prom\color{black}etheus \ \color{red}ru\color{black}le \ \color{red}val\color{black}idator$$
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/fusakla/promruval)](https://goreportcard.com/report/github.com/fusakla/promruval)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/fusakla/promruval/go.yaml)](https://github.com/FUSAKLA/promruval/actions?query=branch%3Amaster)
 [![Docker Pulls](https://img.shields.io/docker/pulls/fusakla/promruval)](https://hub.docker.com/r/fusakla/promruval)
 [![GitHub binaries download](https://img.shields.io/github/downloads/fusakla/promruval/total?label=Prebuilt%20binaries%20downloads)](https://github.com/FUSAKLA/promruval/releases/latest)
-
-![](./promruval.png)
-
-_Prometheus Rule Validator_
 
 Promtool allows users to verify syntactic correctness and test PromQL expressions.
 Promruval aims to validate the rules' metadata and expression properties
@@ -40,7 +36,7 @@ some basic validations that are useful for most of the users.
 
 Validations are quite variable, so you can use them as you fit.
 
-**👉 Full list of supported validations can be found [here](docs/validations.md).**
+### **👉 Full list of supported validations can be found [here](docs/validations.md).**
 
 In case you would like to add some, please create a feature request!
 
