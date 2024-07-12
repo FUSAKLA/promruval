@@ -86,7 +86,7 @@ var testCases = []struct {
 	{name: "ruleExprUsesForbiddenLabelInOn", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up * on(foo) up"}, expectedErrors: 1},
 	{name: "ruleExprUsesForbiddenLabelInGroup", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up * group_left (foo) up"}, expectedErrors: 1},
 
-	//expressionUseOnlyWhitelistedLabelsForMetric
+	// expressionUseOnlyWhitelistedLabelsForMetric
 	{name: "ruleExprDoesNotUseAnyLabels", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{"label_app"}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels"}, expectedErrors: 0},
 	{name: "ruleExprDoesUseForbiddenLabelInSelector", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "kube_pod_labels{app='foo'}"}, expectedErrors: 1},
 	{name: "ruleExprDoesUseForbiddenLabelInBy", validator: expressionUseOnlyWhitelistedLabelsForMetric{labels: []string{}, metric: "kube_pod_labels"}, rule: rulefmt.Rule{Expr: "sum(kube_pod_labels) by (app)"}, expectedErrors: 1},

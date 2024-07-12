@@ -35,9 +35,7 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 }
 
 // Returns true in case selector matches given metric and a list of other labels beside __name__, false and nil otherwise.
-func containsMetric(selector *parser.VectorSelector, metric string) (bool, []string) {
-	var usedLabels []string
-	var metricUsed bool
+func containsMetric(selector *parser.VectorSelector, metric string) (metricUsed bool, usedLabels []string) {
 	for _, m := range selector.LabelMatchers {
 		if m.Name == "__name__" && m.Type == labels.MatchEqual && m.Value == metric {
 			metricUsed = true
@@ -76,23 +74,21 @@ func getExpressionUsedLabelsForMetric(expr, metric string) ([]string, error) {
 	}
 
 	parser.Inspect(promQl, func(n parser.Node, path []parser.Node) error {
-		switch v := n.(type) {
-		case *parser.VectorSelector:
-			containsMetric, labels := containsMetric(v, metric)
+		if v, isVectorSelector := n.(*parser.VectorSelector); isVectorSelector {
+			containsMetric, selectorUsedLabels := containsMetric(v, metric)
 			if containsMetric {
 				metricInExpr = true
-				usedLabels = append(usedLabels, labels...)
+				usedLabels = append(usedLabels, selectorUsedLabels...)
 				usedLabels = append(usedLabels, labelsUpInExpr(path)...)
 			}
 		}
 		return nil
 	})
-	if metricInExpr {
-		slices.Sort(usedLabels)
-		return slices.Compact(usedLabels), nil
-	} else {
+	if !metricInExpr {
 		return []string{}, nil
 	}
+	slices.Sort(usedLabels)
+	return slices.Compact(usedLabels), nil
 }
 
 func getExpressionVectorSelectors(expr string) ([]*parser.VectorSelector, error) {
