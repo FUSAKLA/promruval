@@ -220,11 +220,11 @@ var testCases = []struct {
 	{name: "tooHighInterval", validator: hasAllowedEvaluationInterval{minimum: model.Duration(time.Minute), maximum: model.Duration(time.Hour), mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Hour * 2)}, expectedErrors: 1},
 
 	// hasValidPartialStrategy
-	{name: "validPartialStrategy", validator: hasValidPartialStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "warn"}, expectedErrors: 0},
-	{name: "validPartialStrategy", validator: hasValidPartialStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "abort"}, expectedErrors: 0},
-	{name: "invalidPartialStrategy", validator: hasValidPartialStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "foo"}, expectedErrors: 1},
-	{name: "unsetPartialStrategyAllowed", validator: hasValidPartialStrategy{mustBeSet: false}, group: unmarshaler.RuleGroup{}, expectedErrors: 0},
-	{name: "unsetPartialStrategyDisallowed", validator: hasValidPartialStrategy{mustBeSet: true}, group: unmarshaler.RuleGroup{}, expectedErrors: 1},
+	{name: "validPartialStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "warn"}, expectedErrors: 0},
+	{name: "validPartialStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "abort"}, expectedErrors: 0},
+	{name: "invalidPartialStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "foo"}, expectedErrors: 1},
+	{name: "unsetPartialStrategyAllowed", validator: hasValidPartialResponseStrategy{mustBeSet: false}, group: unmarshaler.RuleGroup{}, expectedErrors: 0},
+	{name: "unsetPartialStrategyDisallowed", validator: hasValidPartialResponseStrategy{mustBeSet: true}, group: unmarshaler.RuleGroup{}, expectedErrors: 1},
 
 	// expressionIsWellFormatted
 	{name: "validExpression", validator: expressionIsWellFormatted{showFormatted: true}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},
@@ -253,6 +253,14 @@ var testCases = []struct {
 	// expressionIsValidPromQL
 	{name: "expressionIsValidPromQL_OK", validator: expressionIsValidPromQL{}, rule: rulefmt.Rule{Expr: "sum(rate(foo{bar='baz'}[1m]))"}, expectedErrors: 0},
 	{name: "expressionIsValidPromQL_Invalid", validator: expressionIsValidPromQL{}, rule: rulefmt.Rule{Expr: "sum(rate(foo{bar='baz'} | ??? [1m]))"}, expectedErrors: 1},
+
+	// expressionIsValidLogQL
+	{name: "expressionIsValidLogQL_OK", validator: expressionIsValidLogQL{}, rule: rulefmt.Rule{Expr: `sum(rate({job="foo"} |= "foo"[1m]))`}, expectedErrors: 0},
+	{name: "expressionIsValidLogQL_Invalid", validator: expressionIsValidLogQL{}, rule: rulefmt.Rule{Expr: "increase(foo_bar{foo='bar'}[5m])"}, expectedErrors: 1},
+
+	// logQlExpressionUsesRangeAggregation
+	{name: "logQlExpressionUsesRangeAggregation_OK", validator: logQLExpressionUsesRangeAggregation{}, rule: rulefmt.Rule{Expr: `sum(rate({job="foo"} |= "foo"[1m]))`}, expectedErrors: 0},
+	{name: "logQlExpressionUsesRangeAggregation_Invalid", validator: logQLExpressionUsesRangeAggregation{}, rule: rulefmt.Rule{Expr: `{job="foo"} |= "foo"`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

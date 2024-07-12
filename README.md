@@ -300,6 +300,21 @@ groups:
           disabled_validation_rules: check-irate # Will disable the check-irate validation rule check for this alert
 ```
 
+### Other monitoring solutions support
+
+#### Thanos
+Thanos has only one special case which is the `partial_response_strategy` setting on the group level which is tolerated
+in the config and can ve validated using the [`hasValidPartialResponseStrategy`](./docs/validations.md#hasvalidpartialresponsestrategy) validation.
+
+#### Mimir/Cortex
+Mimir/Cortex has only one special case which is the `source_tenants` setting on the group level which is tolerated
+and can ve validated using the [`hasSourceTenantsForMetrics`](./docs/validations.md#hassourcetenantsformetrics) or [`hasAllowedSourceTenants`](./docs/validations.md#hasallowedsourcetenants) validations for example.
+
+#### Loki
+Since Loki has almost identical rule config as Prometheus, you can use the same validations for Loki rules.
+Loki has special validations for its expressions since it uses different query language [LogQL](https://grafana.com/docs/loki/latest/query/).
+To see the LogQL specific validations see the [here](./docs/validations.md#logql-expression-validators).
+
 ### Human readable validation description
 
 If you want more human readable validation summary (for a documentation or generating readable git pages)

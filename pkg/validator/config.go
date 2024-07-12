@@ -33,6 +33,9 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"expressionWithNoMetricName":           newExpressionWithNoMetricName,
 	"expressionIsWellFormatted":            newExpressionIsWellFormatted,
 
+	"expressionIsValidLogQL":              newExpressionIsValidLogQL,
+	"logQlExpressionUsesRangeAggregation": newLogQLExpressionUsesRangeAggregation,
+
 	"hasSourceTenantsForMetrics": newHasSourceTenantsForMetrics,
 }
 
@@ -54,11 +57,11 @@ var registeredAlertValidators = map[string]validatorCreator{
 }
 
 var registeredGroupValidators = map[string]validatorCreator{
-	"hasAllowedSourceTenants":      newHasAllowedSourceTenants,
-	"hasAllowedEvaluationInterval": newHasAllowedEvaluationInterval,
-	"hasValidPartialStrategy":      newHasValidPartialStrategy,
-	"maxRulesPerGroup":             newMaxRulesPerGroup,
-	"hasAllowedLimit":              newHasAllowedLimit,
+	"hasAllowedSourceTenants":         newHasAllowedSourceTenants,
+	"hasAllowedEvaluationInterval":    newHasAllowedEvaluationInterval,
+	"hasValidPartialResponseStrategy": newHasValidPartialResponseStrategy,
+	"maxRulesPerGroup":                newMaxRulesPerGroup,
+	"hasAllowedLimit":                 newHasAllowedLimit,
 }
 
 var (

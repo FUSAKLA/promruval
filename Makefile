@@ -6,12 +6,6 @@ CACHE_FILE := .promruval_cache.json
 
 PROMRUVAL_BIN := ./promruval
 
-E2E_TESTS_VALIDATIONS_FILE := examples/validation.yaml
-E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE := examples/additional-validation.yaml
-E2E_TESTS_RULES_FILES := examples/rules/*.yaml
-E2E_TESTS_DOCS_FILE_MD := examples/human_readable.md
-E2E_TESTS_DOCS_FILE_HTML := examples/human_readable.html
-
 all: clean deps lint build test e2e-test
 
 $(TMP_DIR):
@@ -39,8 +33,16 @@ test:
 build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(PROMRUVAL_BIN)
 
+E2E_TESTS_VALIDATIONS_FILE := examples/validation.yaml
+E2E_TESTS_LOKI_VALIDATIONS_FILE := examples/validation_loki.yaml
+E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE := examples/additional-validation.yaml
+E2E_TESTS_LOKI_RULES_FILES := examples/loki_rules/*.yaml
+E2E_TESTS_RULES_FILES := examples/rules/*.yaml
+E2E_TESTS_DOCS_FILE_MD := examples/human_readable.md
+E2E_TESTS_DOCS_FILE_HTML := examples/human_readable.html
 e2e-test: build
 	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) $(E2E_TESTS_RULES_FILES)
+	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_LOKI_VALIDATIONS_FILE) $(E2E_TESTS_LOKI_RULES_FILES)
 	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) > $(E2E_TESTS_DOCS_FILE_MD)
 	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) --output=html > $(E2E_TESTS_DOCS_FILE_HTML)
 

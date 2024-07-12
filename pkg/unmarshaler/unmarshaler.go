@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strings"
 
+	loki "github.com/grafana/loki/v3/pkg/tool/rules/rwrulefmt"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"gopkg.in/yaml.v3"
@@ -24,6 +25,8 @@ type RulesFile struct {
 	EvaluationInterval interface{} `yaml:"evaluation_interval"`
 	GroupEvalOrder     interface{} `yaml:"group_eval_order"`
 	Tests              interface{} `yaml:"tests"`
+	// Loki only
+	Namespace string `yaml:"namespace"`
 }
 
 type RulesFileWithComment struct {
@@ -59,13 +62,18 @@ func (g *GroupsWithComment) DisabledValidators(commentPrefix string) []string {
 }
 
 type RuleGroup struct {
-	Name                    string            `yaml:"name"`
-	Interval                model.Duration    `yaml:"interval"`
-	QueryOffset             model.Duration    `yaml:"query_offset"`
-	PartialResponseStrategy string            `yaml:"partial_response_strategy"` // Thanos only
-	SourceTenants           []string          `yaml:"source_tenants"`            // Cortex/Mimir only
-	Rules                   []RuleWithComment `yaml:"rules"`
-	Limit                   int               `yaml:"limit"`
+	Name        string            `yaml:"name"`
+	Interval    model.Duration    `yaml:"interval"`
+	QueryOffset model.Duration    `yaml:"query_offset"`
+	Rules       []RuleWithComment `yaml:"rules"`
+	Limit       int               `yaml:"limit"`
+
+	// Thanos only
+	PartialResponseStrategy string `yaml:"partial_response_strategy"`
+	// Cortex/Mimir only
+	SourceTenants []string `yaml:"source_tenants"`
+	// Loki only
+	RWConfigs []loki.RemoteWriteConfig `yaml:"remote_write"`
 }
 
 type RuleGroupWithComment struct {
