@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: :tada: **Support for Loki rules!** Now you can validate Loki rules as well. First two validators are:
    - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
    - `logQlExpressionUsesRangeAggregation` to check if the LogQL expression uses range aggregation
+- Changed: :warning: **Renamed `hasValidPartialStrategy` to `hasValidPartialResponseStrategy` as it was documented so it is actually a fix**
 
 ## [2.14.1]
 - Fixed: error message in the `hasSourceTenantsForMetrics` validator

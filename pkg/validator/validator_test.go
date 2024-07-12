@@ -219,12 +219,12 @@ var testCases = []struct {
 	{name: "tooShortInterval", validator: hasAllowedEvaluationInterval{minimum: model.Duration(time.Minute), maximum: model.Duration(time.Hour), mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Second)}, expectedErrors: 1},
 	{name: "tooHighInterval", validator: hasAllowedEvaluationInterval{minimum: model.Duration(time.Minute), maximum: model.Duration(time.Hour), mustBeSet: true}, group: unmarshaler.RuleGroup{Interval: model.Duration(time.Hour * 2)}, expectedErrors: 1},
 
-	// hasValidPartialStrategy
-	{name: "validPartialStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "warn"}, expectedErrors: 0},
-	{name: "validPartialStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "abort"}, expectedErrors: 0},
-	{name: "invalidPartialStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "foo"}, expectedErrors: 1},
-	{name: "unsetPartialStrategyAllowed", validator: hasValidPartialResponseStrategy{mustBeSet: false}, group: unmarshaler.RuleGroup{}, expectedErrors: 0},
-	{name: "unsetPartialStrategyDisallowed", validator: hasValidPartialResponseStrategy{mustBeSet: true}, group: unmarshaler.RuleGroup{}, expectedErrors: 1},
+	// hasValidPartialResponseStrategy
+	{name: "validPartialResponseStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "warn"}, expectedErrors: 0},
+	{name: "validPartialResponseStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "abort"}, expectedErrors: 0},
+	{name: "invalidPartialResponseStrategy", validator: hasValidPartialResponseStrategy{}, group: unmarshaler.RuleGroup{PartialResponseStrategy: "foo"}, expectedErrors: 1},
+	{name: "unsetPartialResponseStrategyAllowed", validator: hasValidPartialResponseStrategy{mustBeSet: false}, group: unmarshaler.RuleGroup{}, expectedErrors: 0},
+	{name: "unsetPartialResponseStrategyDisallowed", validator: hasValidPartialResponseStrategy{mustBeSet: true}, group: unmarshaler.RuleGroup{}, expectedErrors: 1},
 
 	// expressionIsWellFormatted
 	{name: "validExpression", validator: expressionIsWellFormatted{showFormatted: true}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},

@@ -105,7 +105,7 @@ validationRules:
         params:
           minimum: "20s"
           intervalMustBeSet: false
-      - type: hasValidPartialStrategy
+      - type: hasValidPartialResponseStrategy
       - type: maxRulesPerGroup
         params:
           limit: 10
