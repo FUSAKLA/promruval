@@ -1,0 +1,6 @@
+validationRules:
+  - name: basic-loki-test
+    scope: All rules
+    validations:
+      - type: expressionIsValidLogQL
+      - type: logQlExpressionUsesRangeAggregation

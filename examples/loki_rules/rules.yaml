@@ -1,0 +1,14 @@
+# ignore_validations: hasAllowedLimit
+namespace: foo
+groups:
+  - name: group1
+    remote_write:
+      - url: http://localhost:1234
+    interval: 1m
+    limit: 10
+    rules:
+      # foo bar
+      - record: recorded_metrics
+        expr: sum(rate({foo="bar"}[5m])) > 5
+        labels:
+          foo: bar

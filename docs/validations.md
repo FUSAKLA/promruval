@@ -33,6 +33,9 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionSelectorsMatchesAnything`](#expressionselectorsmatchesanything)
       - [`expressionWithNoMetricName`](#expressionwithnometricname)
       - [`expressionIsWellFormatted`](#expressioniswellformatted)
+    - [LogQL expression validators](#logql-expression-validators)
+      - [`expressionIsValidLogQL`](#expressionisvalidlogql)
+      - [`logQlExpressionUsesRangeAggregation`](#logqlexpressionusesrangeaggregation)
     - [Other](#other)
       - [`hasSourceTenantsForMetrics`](#hassourcetenantsformetrics)
   - [Alert validators](#alert-validators)
@@ -312,6 +315,17 @@ params:
   showExpectedForm: true # Optional, will show how the query should be formatted
   skipExpressionsWithComments: true # Optional, will skip the expressions with comments
 ```
+
+### LogQL expression validators
+
+#### `expressionIsValidLogQL`
+
+Fails if the expression is not a valid LogQL query.
+
+#### `logQlExpressionUsesRangeAggregation`
+
+Fails if the LogQL expression does not use any [range aggregation function](https://grafana.com/docs/loki/latest/query/metric_queries/#log-range-aggregations), which is required if used in rules.
+
 
 ### Other
 
