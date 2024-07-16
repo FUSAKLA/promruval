@@ -1,0 +1,3 @@
+groups:
+  - name: group1
+    partial_response_strategy: "warn"

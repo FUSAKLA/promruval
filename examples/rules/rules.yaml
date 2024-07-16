@@ -1,7 +1,6 @@
 # ignore_validations: hasAllowedLimit
 groups:
   - name: group1
-    partial_response_strategy: abort
     interval: 1m
     limit: 10
     rules:
@@ -13,8 +12,6 @@ groups:
 
   # ignore_validations: labelHasAllowedValue
   - name: testGroup
-    partial_response_strategy: "warn"
-    source_tenants: ["tenant1", "tenant2"]
     limit: 1000
     rules:
       # Comment before.
@@ -35,7 +32,6 @@ groups:
           disabled_validation_rules: check-team-label,check-prometheus-limitations
 
   - name: testIgnoreValidationsInExpr
-    source_tenants: ["k8s"]
     limit: 10
     rules:
       - alert: test

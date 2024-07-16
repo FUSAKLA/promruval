@@ -299,14 +299,18 @@ groups:
 ### Other monitoring solutions support
 
 #### Thanos
-Thanos has only one special case which is the `partial_response_strategy` setting on the group level which is tolerated
-in the config and can ve validated using the [`hasValidPartialResponseStrategy`](./docs/validations.md#hasvalidpartialresponsestrategy) validation.
+If you want to validate Thanos rules, use the `promruval validate --support-thanos` flag, otherwise you might get errors on unknown fields such as `partial_response_strategy`.
 
-#### Mimir/Cortex
-Mimir/Cortex has only one special case which is the `source_tenants` setting on the group level which is tolerated
-and can ve validated using the [`hasSourceTenantsForMetrics`](./docs/validations.md#hassourcetenantsformetrics) or [`hasAllowedSourceTenants`](./docs/validations.md#hasallowedsourcetenants) validations for example.
+You can validate it using the [`hasValidPartialResponseStrategy`](./docs/validations.md#hasvalidpartialresponsestrategy) validation.
+
+#### Mimir
+If you want to validate Mimir rules, use the `promruval validate --support-mimir` flag, otherwise you might get errors on unknown fields such as `source_tenants`.
+
+The `source_tenants` can be validated using the [`hasSourceTenantsForMetrics`](./docs/validations.md#hassourcetenantsformetrics) or [`hasAllowedSourceTenants`](./docs/validations.md#hasallowedsourcetenants) validations for example.
 
 #### Loki
+If you want to validate Mimir rules, use the `promruval validate --support-loki` flag, otherwise you might get errors on unknown fields such as `namespace` or `remote_write`.
+
 Since Loki has almost identical rule config as Prometheus, you can use the same validations for Loki rules.
 Loki has special validations for its expressions since it uses different query language [LogQL](https://grafana.com/docs/loki/latest/query/).
 To see the LogQL specific validations see the [here](./docs/validations.md#logql-expression-validators).

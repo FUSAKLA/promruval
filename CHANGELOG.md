@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
    - `logQlExpressionUsesRangeAggregation` to check if the LogQL expression uses range aggregation
 - Changed: :warning: **Renamed `hasValidPartialStrategy` to `hasValidPartialResponseStrategy` as it was documented so it is actually a fix**
+- Changed: :warning: **Disallow special rule file fields of Thanos, Mimir or Loki by default**
+           To enable them, you need to set some of the new flags introduced: `--support-thanos`, `--support-mimir`, `--support-loki`
 
 ## [2.14.1]
 - Fixed: error message in the `hasSourceTenantsForMetrics` validator

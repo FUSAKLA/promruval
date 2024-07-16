@@ -1,0 +1,11 @@
+groups:
+  - name: group1
+    source_tenants: ["k8s", "bar"]
+    rules:
+      - alert: test
+        expr: avg_over_time(max_over_time(container_cpu_seconds_total{job="prometheus"}[10h] offset 10d)[10m:10m])
+        for: 4w
+        keep_firing_for: 5m
+        labels:
+          severity: critica
+          team: foo

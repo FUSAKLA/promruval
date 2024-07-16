@@ -10,6 +10,7 @@ import (
 	"github.com/fusakla/promruval/v2/pkg/config"
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
 	"github.com/fusakla/promruval/v2/pkg/report"
+	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
 	"github.com/fusakla/promruval/v2/pkg/validate"
 	"github.com/fusakla/promruval/v2/pkg/validationrule"
 	"github.com/fusakla/promruval/v2/pkg/validator"
@@ -35,6 +36,9 @@ var (
 	enabledRules           = validateCmd.Flag("enable-rule", "Only enable these validation rules. Can be passed multiple times.").Short('e').Strings()
 	validationOutputFormat = validateCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,json,yaml]").Default("text").Enum("text", "json", "yaml")
 	color                  = validateCmd.Flag("color", "Use color output.").Bool()
+	supportLoki            = validateCmd.Flag("support-loki", "Support Loki rules format.").Bool()
+	supportMimir           = validateCmd.Flag("support-mimir", "Support Mimir rules format.").Bool()
+	supportThanos          = validateCmd.Flag("support-thanos", "Support Thanos rules format.").Bool()
 
 	docsCmd          = app.Command("validation-docs", "Print human readable form of the validation rules from config file.")
 	docsOutputFormat = docsCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,markdown,html]").Default("text").Enum("text", "markdown", "html")
@@ -145,6 +149,18 @@ func main() {
 				exitWithError(err)
 			}
 			filesToBeValidated = append(filesToBeValidated, paths...)
+		}
+
+		if *supportLoki {
+			unmarshaler.SupportLoki(true)
+		}
+
+		if *supportMimir {
+			unmarshaler.SupportMimir(true)
+		}
+
+		if *supportThanos {
+			unmarshaler.SupportThanos(true)
 		}
 
 		var prometheusClient *prometheus.Client

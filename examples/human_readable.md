@@ -26,21 +26,13 @@ Validation rules:
     - All rules expression does not use data older than `6h0m0s`
     - All rules does not use any of the `cluster`,`locality`,`prometheus-type`,`replica` labels is in its expression
 
-  check-source-tenants
-    - All rules rule group, the rule belongs to, has the required `source_tenants` configured, according to the mapping of metric names to tenants: 
-        `k8s`:   `^container_.*$` (Metrics from cAdvisor)
-        `k8s`:   `^kube_.*$` (Metrics from KSM)
-        `mysql`:   `^mysql_.*$` (MySQL metrics from the MySQL team)
-
   check-metric-name
     - Alert expression uses metric name in selectors
     - Alert labels are valid templates
     - Alert `keep_firing_for` is not longer than `1h`
 
   check-groups
-    - Group does not have other `source_tenants` than: `tenant1`, `tenant2`, `k8s`
     - Group evaluation interval is between `20s` and `106751d23h47m16s854ms` if set
-    - Group has valid partial_response_strategy (one of `warn` or `abort`) if set
     - Group has at most 10 rules
     - Group does not have higher `limit` configured then 100
 
