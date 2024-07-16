@@ -1,4 +1,4 @@
-# $$\color{red}Prom\color{black}etheus \ \color{red}ru\color{black}le \ \color{red}val\color{black}idator$$
+![image](https://github.com/user-attachments/assets/86877a06-63dd-46d1-bfde-43bdbfafe42e)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/fusakla/promruval)](https://goreportcard.com/report/github.com/fusakla/promruval)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/fusakla/promruval/go.yaml)](https://github.com/FUSAKLA/promruval/actions?query=branch%3Amaster)
