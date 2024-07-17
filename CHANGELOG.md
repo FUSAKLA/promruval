@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: :tada: **Support for validation of Loki rules!** Now you can validate Loki rules as well. First two validators are:
    - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
    - `logQlExpressionUsesRangeAggregation` to check if the LogQL expression uses range aggregation
+   - `logQlExpressionUsesFiltersFirst` to check if the LogQL expression uses filters first in the query since it is more efficient
 - Added: support for alert field `keep_firing_for`
 - Added: support for the `query_offset` field in the rule group
 - Added: new validator `expressionIsValidPromQL` to check if the expression is a valid PromQL query

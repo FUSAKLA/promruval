@@ -4,3 +4,4 @@ validationRules:
     validations:
       - type: expressionIsValidLogQL
       - type: logQlExpressionUsesRangeAggregation
+      - type: logQlExpressionUsesFiltersFirst

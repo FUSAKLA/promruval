@@ -261,6 +261,11 @@ var testCases = []struct {
 	// logQlExpressionUsesRangeAggregation
 	{name: "logQlExpressionUsesRangeAggregation_OK", validator: logQLExpressionUsesRangeAggregation{}, rule: rulefmt.Rule{Expr: `sum(rate({job="foo"} |= "foo"[1m]))`}, expectedErrors: 0},
 	{name: "logQlExpressionUsesRangeAggregation_Invalid", validator: logQLExpressionUsesRangeAggregation{}, rule: rulefmt.Rule{Expr: `{job="foo"} |= "foo"`}, expectedErrors: 1},
+
+	// logQlExpressionUsesFiltersFirst
+	{name: "logQlExpressionUsesFiltersFirst_OK", validator: logQlExpressionUsesFiltersFirst{}, rule: rulefmt.Rule{Expr: `{job="foo"} |= "foo" | logfmt`}, expectedErrors: 0},
+	{name: "logQlExpressionUsesFiltersFirst_Invalid", validator: logQlExpressionUsesFiltersFirst{}, rule: rulefmt.Rule{Expr: `{job="foo"} | logfmt |= "foo"`}, expectedErrors: 1},
+	{name: "logQlExpressionUsesFiltersFirst_Invalid", validator: logQlExpressionUsesFiltersFirst{}, rule: rulefmt.Rule{Expr: `{job="foo"} |= "foo" | logfmt |= "bar"`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {
