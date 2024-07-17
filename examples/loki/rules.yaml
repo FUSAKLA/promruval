@@ -4,3 +4,11 @@ groups:
   - name: group1
     remote_write:
       - url: http://localhost:1234
+    rules:
+      - alert: HighRequestLatency
+        expr: 'sum(rate({job="myjob"} |= "error" | logfmt [5m])) > 0.1'
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: High error rate in logs
