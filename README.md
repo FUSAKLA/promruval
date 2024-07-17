@@ -59,26 +59,26 @@ make build
 
 ```bash
 $ ./promruval --help-long
-usage: promruval --config-file=CONFIG-FILE [<flags>] <command> [<args> ...]
+usage: promruval [<flags>] <command> [<args> ...]
 
 Prometheus rules validation tool.
 
 Flags:
-      --help   Show context-sensitive help (also try --help-long and --help-man).
+      --[no-]help   Show context-sensitive help (also try --help-long and --help-man).
   -c, --config-file=CONFIG-FILE ...
-               Path to validation config file. Can be passed multiple times, only validationRules will be reflected from the additional configs.
-      --debug  Enable debug logging.
+                    Path to validation config file. Can be passed multiple times, only validationRules will be reflected from the additional configs.
+      --[no-]debug  Enable debug logging.
 
 Commands:
-  help [<command>...]
+help [<command>...]
     Show help.
 
 
-  version
+version
     Print version and build information.
 
 
-  validate [<flags>] <path>...
+validate [<flags>] <path>...
     Validate Prometheus rule files using validation rules from config file.
 
     -d, --disable-rule=DISABLE-RULE ...
@@ -86,9 +86,12 @@ Commands:
     -e, --enable-rule=ENABLE-RULE ...
                                    Only enable these validation rules. Can be passed multiple times.
     -o, --output=[text,json,yaml]  Format of the output.
-        --color                    Use color output.
+        --[no-]color               Use color output.
+        --[no-]support-loki        Support Loki rules format.
+        --[no-]support-mimir       Support Mimir rules format.
+        --[no-]support-thanos      Support Thanos rules format.
 
-  validation-docs [<flags>]
+validation-docs [<flags>]
     Print human readable form of the validation rules from config file.
 
     -o, --output=[text,markdown,html]
@@ -299,14 +302,18 @@ groups:
 ### Other monitoring solutions support
 
 #### Thanos
-Thanos has only one special case which is the `partial_response_strategy` setting on the group level which is tolerated
-in the config and can ve validated using the [`hasValidPartialResponseStrategy`](./docs/validations.md#hasvalidpartialresponsestrategy) validation.
+If you want to validate Thanos rules, use the `promruval validate --support-thanos` flag, otherwise you might get errors on unknown fields such as `partial_response_strategy`.
 
-#### Mimir/Cortex
-Mimir/Cortex has only one special case which is the `source_tenants` setting on the group level which is tolerated
-and can ve validated using the [`hasSourceTenantsForMetrics`](./docs/validations.md#hassourcetenantsformetrics) or [`hasAllowedSourceTenants`](./docs/validations.md#hasallowedsourcetenants) validations for example.
+You can validate it using the [`hasValidPartialResponseStrategy`](./docs/validations.md#hasvalidpartialresponsestrategy) validation.
+
+#### Mimir
+If you want to validate Mimir rules, use the `promruval validate --support-mimir` flag, otherwise you might get errors on unknown fields such as `source_tenants`.
+
+The `source_tenants` can be validated using the [`hasSourceTenantsForMetrics`](./docs/validations.md#hassourcetenantsformetrics) or [`hasAllowedSourceTenants`](./docs/validations.md#hasallowedsourcetenants) validations for example.
 
 #### Loki
+If you want to validate Mimir rules, use the `promruval validate --support-loki` flag, otherwise you might get errors on unknown fields such as `namespace` or `remote_write`.
+
 Since Loki has almost identical rule config as Prometheus, you can use the same validations for Loki rules.
 Loki has special validations for its expressions since it uses different query language [LogQL](https://grafana.com/docs/loki/latest/query/).
 To see the LogQL specific validations see the [here](./docs/validations.md#logql-expression-validators).

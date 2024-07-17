@@ -1,0 +1,16 @@
+validationRules:
+  - name: check-mimir
+    scope: Group
+    validations:
+      - type: hasAllowedSourceTenants
+        params:
+          allowedSourceTenants: ["k8s", "bar"]
+  - name: check-source-tenants
+    scope: All rules
+    validations:
+      - type: hasSourceTenantsForMetrics
+        params:
+          sourceTenants:
+            "k8s":
+              - regexp: "container_.*"
+                description: "Metrics from cAdvisor"

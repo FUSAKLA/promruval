@@ -77,7 +77,7 @@ func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}, 
 }
 
 // mustListStructYamlFieldNames returns a list of yaml field names for the given struct.
-func mustListStructYamlFieldNames(s interface{}) []string {
+func mustListStructYamlFieldNames(s interface{}, ignoreFields []string) []string {
 	y, err := yaml.Marshal(s)
 	if err != nil {
 		fmt.Println("failed to marshal", err)
@@ -88,8 +88,11 @@ func mustListStructYamlFieldNames(s interface{}) []string {
 		fmt.Println("failed to marshal", err)
 		panic(err)
 	}
-	names := make([]string, 0, len(m))
+	names := []string{}
 	for k := range m {
+		if slices.Contains(ignoreFields, k) {
+			continue
+		}
 		names = append(names, k)
 	}
 	return names

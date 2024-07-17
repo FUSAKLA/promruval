@@ -71,21 +71,6 @@ validationRules:
         params:
           labels: ["cluster", "locality", "prometheus-type", "replica"]
 
-  - name: check-source-tenants
-    scope: All rules
-    validations:
-      - type: hasSourceTenantsForMetrics
-        params:
-          sourceTenants:
-            "k8s":
-              - regexp: "container_.*"
-                description: "Metrics from cAdvisor"
-              - regexp: "kube_.*"
-                description: "Metrics from KSM"
-            "mysql":
-              - regexp: "mysql_.*"
-                description: "MySQL metrics from the MySQL team"
-
   - name: check-metric-name
     scope: Alert
     validations:
@@ -98,14 +83,10 @@ validationRules:
   - name: check-groups
     scope: Group
     validations:
-      - type: hasAllowedSourceTenants
-        params:
-          allowedSourceTenants: ["tenant1", "tenant2", "k8s"]
       - type: hasAllowedEvaluationInterval
         params:
           minimum: "20s"
           intervalMustBeSet: false
-      - type: hasValidPartialResponseStrategy
       - type: maxRulesPerGroup
         params:
           limit: 10

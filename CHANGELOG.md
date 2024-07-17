@@ -7,16 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Updated: Prometheus and other dependencies
-- CI: Updated Github actions for golangcilint and goreleaser
 - Fixed: :warning: **Unmarshalling of the rule files is strict again**, this behavior was unintentionally brought when adding support for yaml comments.
+- Changed: :warning: **Renamed `hasValidPartialStrategy` to `hasValidPartialResponseStrategy`** as it was documented so it is actually a fix
+- Changed: :warning: **Disallow special rule file fields of Thanos, Mimir or Loki by default**
+           To enable them, you need to set some of the new flags described below
+- Added: New flags `--support-thanos`, `--support-mimir`, `--support-loki` to enable special rule file fields of Thanos, Mimir or Loki
+- Added: :tada: **Support for validation of Loki rules!** Now you can validate Loki rules as well. First two validators are:
+   - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
+   - `logQlExpressionUsesRangeAggregation` to check if the LogQL expression uses range aggregation
 - Added: support for alert field `keep_firing_for`
 - Added: support for the `query_offset` field in the rule group
 - Added: new validator `expressionIsValidPromQL` to check if the expression is a valid PromQL query
-- Added: :tada: **Support for Loki rules!** Now you can validate Loki rules as well. First two validators are:
-   - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
-   - `logQlExpressionUsesRangeAggregation` to check if the LogQL expression uses range aggregation
-- Changed: :warning: **Renamed `hasValidPartialStrategy` to `hasValidPartialResponseStrategy` as it was documented so it is actually a fix**
+- Updated: Prometheus and other dependencies
+- CI: Updated Github actions for golangcilint and goreleaser
 
 ## [2.14.1]
 - Fixed: error message in the `hasSourceTenantsForMetrics` validator

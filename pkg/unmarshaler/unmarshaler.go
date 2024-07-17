@@ -11,12 +11,22 @@ import (
 )
 
 var (
-	// Struct fields marked as omitempty MUST be set to non-default value so they appear in marshalled yaml.
-	rulesFileKnownFields         = mustListStructYamlFieldNames(RulesFile{})
-	groupsWithCommentKnownFields = mustListStructYamlFieldNames(GroupsWithComment{})
-	ruleGroupKnownFields         = mustListStructYamlFieldNames(RuleGroup{})
-	ruleNodeKnownFields          = mustListStructYamlFieldNames(rulefmt.RuleNode{Record: yaml.Node{Kind: yaml.SequenceNode}, Alert: yaml.Node{Kind: yaml.SequenceNode}, For: model.Duration(1), Labels: map[string]string{"foo": "bar"}, Annotations: map[string]string{"foo": "bar"}, KeepFiringFor: model.Duration(1)})
+	supportLoki   = false
+	supportMimir  = false
+	supportThanos = false
 )
+
+func SupportLoki(support bool) {
+	supportLoki = support
+}
+
+func SupportMimir(support bool) {
+	supportMimir = support
+}
+
+func SupportThanos(support bool) {
+	supportThanos = support
+}
 
 type RulesFile struct {
 	Groups GroupsWithComment `yaml:"groups"`
@@ -27,6 +37,14 @@ type RulesFile struct {
 	Tests              interface{} `yaml:"tests"`
 	// Loki only
 	Namespace string `yaml:"namespace"`
+}
+
+func (r *RulesFile) knownFields() []string {
+	ignoredFileds := []string{}
+	if !supportLoki {
+		ignoredFileds = append(ignoredFileds, "namespace")
+	}
+	return mustListStructYamlFieldNames(r, ignoredFileds)
 }
 
 type RulesFileWithComment struct {
@@ -41,7 +59,7 @@ func (r *RulesFileWithComment) UnmarshalYAML(value *yaml.Node) error {
 			r.groupsComments = strings.Split(field.HeadComment, "\n")
 		}
 	}
-	return unmarshalToNodeAndStruct(value, &r.node, &r.RulesFile, rulesFileKnownFields)
+	return unmarshalToNodeAndStruct(value, &r.node, &r.RulesFile, r.RulesFile.knownFields())
 }
 
 func (r *RulesFileWithComment) DisabledValidators(commentPrefix string) []string {
@@ -54,7 +72,7 @@ type GroupsWithComment struct {
 }
 
 func (g *GroupsWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &g.node, &g.Groups, groupsWithCommentKnownFields)
+	return unmarshalToNodeAndStruct(value, &g.node, &g.Groups, mustListStructYamlFieldNames(g, []string{}))
 }
 
 func (g *GroupsWithComment) DisabledValidators(commentPrefix string) []string {
@@ -76,13 +94,27 @@ type RuleGroup struct {
 	RWConfigs []loki.RemoteWriteConfig `yaml:"remote_write"`
 }
 
+func (r *RuleGroup) knownFields() []string {
+	ignoredFileds := []string{}
+	if !supportLoki {
+		ignoredFileds = append(ignoredFileds, "remote_write")
+	}
+	if !supportThanos {
+		ignoredFileds = append(ignoredFileds, "partial_response_strategy")
+	}
+	if !supportMimir {
+		ignoredFileds = append(ignoredFileds, "source_tenants")
+	}
+	return mustListStructYamlFieldNames(r, ignoredFileds)
+}
+
 type RuleGroupWithComment struct {
 	node yaml.Node
 	RuleGroup
 }
 
 func (r *RuleGroupWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup, ruleGroupKnownFields)
+	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup, r.RuleGroup.knownFields())
 }
 
 func (r *RuleGroupWithComment) DisabledValidators(commentPrefix string) []string {
@@ -92,6 +124,11 @@ func (r *RuleGroupWithComment) DisabledValidators(commentPrefix string) []string
 type RuleWithComment struct {
 	node yaml.Node
 	rule rulefmt.RuleNode
+}
+
+func (r *RuleWithComment) knownFields() []string {
+	// Struct fields marked as omitempty MUST be set to non-default value so they appear in marshalled yaml.
+	return mustListStructYamlFieldNames(rulefmt.RuleNode{Record: yaml.Node{Kind: yaml.SequenceNode}, Alert: yaml.Node{Kind: yaml.SequenceNode}, For: model.Duration(1), Labels: map[string]string{"foo": "bar"}, Annotations: map[string]string{"foo": "bar"}, KeepFiringFor: model.Duration(1)}, []string{})
 }
 
 func (r *RuleWithComment) OriginalRule() rulefmt.Rule {
@@ -107,7 +144,7 @@ func (r *RuleWithComment) OriginalRule() rulefmt.Rule {
 }
 
 func (r *RuleWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &r.node, &r.rule, ruleNodeKnownFields)
+	return unmarshalToNodeAndStruct(value, &r.node, &r.rule, r.knownFields())
 }
 
 func (r *RuleWithComment) DisabledValidators(commentPrefix string) []string {

@@ -1,0 +1,5 @@
+validationRules:
+  - name: check-thanos-rules
+    scope: Group
+    validations:
+      - type: hasValidPartialResponseStrategy
