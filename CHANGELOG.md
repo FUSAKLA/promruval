@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed: :warning: **Renamed `hasValidPartialStrategy` to `hasValidPartialResponseStrategy`** as it was documented so it is actually a fix
 - Changed: :warning: **Disallow special rule file fields of Thanos, Mimir or Loki by default**
            To enable them, you need to set some of the new flags described below
+- Changed: The Prometheus results cache now contains new fields used to tell the age (not use the mtime as before) and the Prometheus URL used to fetch the data.
+           If the cache is older or the URL is different, the cache is invalidated and the data is fetched again.
 - Added: New flags `--support-thanos`, `--support-mimir`, `--support-loki` to enable special rule file fields of Thanos, Mimir or Loki
 - Added: :tada: **Support for validation of Loki rules!** Now you can validate Loki rules as well. First two validators are:
    - `expressionIsValidLogQL` to check if the expression is a valid LogQL query

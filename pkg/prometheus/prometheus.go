@@ -67,7 +67,7 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 		apiClient: v1cli,
 		url:       promConfig.URL,
 		timeout:   promConfig.Timeout,
-		cache:     newCache(promConfig.CacheFile, promConfig.MaxCacheAge),
+		cache:     newCache(promConfig.CacheFile, promConfig.URL, promConfig.MaxCacheAge),
 	}
 	return &promClient, nil
 }
