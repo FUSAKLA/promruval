@@ -137,7 +137,7 @@ prometheus:
   url: https://foo.bar/
   # OPTIONAL Skip TLS verification
   insecureSkipTlsVerify: false
-  # OPTIONAL Path to a file containing a bearer token to be used for authentication (Bearer token can by set also using the PROMETHEUS_BEARER_TOKEN env variable, which has higher priority)
+  # OPTIONAL Relative path to a file containing a bearer token to be used for authentication (Bearer token can by set also using the PROMETHEUS_BEARER_TOKEN env variable, which has higher priority)
   # NOTE: The value will have whitespace trimmed from the beginning and end.
   bearerTokenFile: bearer_token.txt
   # OPTIONAL Timeout for any request on the Prometheus instance
