@@ -33,6 +33,12 @@ func init() {
 	configDirMtx = sync.Mutex{}
 }
 
+func BaseDirPath() string {
+	configDirMtx.Lock()
+	defer configDirMtx.Unlock()
+	return configDir
+}
+
 func NewLoader(cfgPath string) Loader {
 	return Loader{ConfigPath: cfgPath}
 }
@@ -49,7 +55,6 @@ func (l *Loader) Load() (*Config, error) {
 	configDirMtx.Lock()
 	configDir = path.Dir(l.ConfigPath)
 	defer func() {
-		configDir = ""
 		configDirMtx.Unlock()
 	}()
 	validationConfig := Config{}
@@ -74,6 +79,7 @@ type PrometheusConfig struct {
 	InsecureSkipTLSVerify bool          `yaml:"insecureSkipTlsVerify"`
 	CacheFile             string        `yaml:"cacheFile,omitempty" default:".promruval_cache.json"`
 	MaxCacheAge           time.Duration `yaml:"maxCacheAge,omitempty" default:"1h"`
+	BearerTokenFile       string        `yaml:"bearerTokenFile,omitempty"`
 }
 
 func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
