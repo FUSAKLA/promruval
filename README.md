@@ -137,6 +137,9 @@ prometheus:
   url: https://foo.bar/
   # OPTIONAL Skip TLS verification
   insecureSkipTlsVerify: false
+  # OPTIONAL Relative path to a file containing a bearer token to be used for authentication (Bearer token can by set also using the PROMETHEUS_BEARER_TOKEN env variable, which has higher priority)
+  # NOTE: The value will have whitespace trimmed from the beginning and end.
+  bearerTokenFile: bearer_token.txt
   # OPTIONAL Timeout for any request on the Prometheus instance
   timeout: 30s
   # OPTIONAL: name of the file to save cache of the Prometheus calls for speedup
@@ -191,7 +194,7 @@ If you have large number of rules and run the check often the number of queries 
 down and your validation
 would be flaky.
 
-Therefore, it's recommended to use these check as a warning and do not fail if it does not succeed.
+Therefore, it's recommended to use this check as a warning and do not fail if it does not succeed.
 Also consider running it rather periodically (for example once per day) instead of running it on every commit in CI.
 
 ### Disabling validations

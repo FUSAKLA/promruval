@@ -16,9 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
    - `logQlExpressionUsesRangeAggregation` to check if the LogQL expression uses range aggregation
    - `logQlExpressionUsesFiltersFirst` to check if the LogQL expression uses filters first in the query since it is more efficient
-- Added: support for alert field `keep_firing_for`
-- Added: support for the `query_offset` field in the rule group
-- Added: new validator `expressionIsValidPromQL` to check if the expression is a valid PromQL query
+- Added: Support for alert field `keep_firing_for`
+- Added: Support for the `query_offset` field in the rule group
+- Added: New validator `expressionIsValidPromQL` to check if the expression is a valid PromQL query
+- Added: Support for bearer token authentication in the `prometheus` section of the config using the `bearerTokenFile` field or by specifying the `PROMETHEUS_BEARER_TOKEN` env variable.
 - Updated: Prometheus and other dependencies
 - CI: Updated Github actions for golangcilint and goreleaser
 

@@ -3,6 +3,7 @@
 
 prometheus:
   url: http://demo.robustperception.io:9090
+  bearerTokenFile: ./bearer.token
 
 validationRules:
   - name: check-severity-label

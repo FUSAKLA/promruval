@@ -5,17 +5,53 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/fusakla/promruval/v2/pkg/config"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
+	prom_config "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	bearerTokenEnvVar = "PROMETHEUS_BEARER_TOKEN"
+)
+
+func loadBearerToken(promConfig config.PrometheusConfig) (string, error) {
+	bearerToken := ""
+	if promConfig.BearerTokenFile != "" {
+		if path.IsAbs(promConfig.BearerTokenFile) {
+			return "", fmt.Errorf("`bearerTokenFile` must be a relative path to the config file")
+		}
+		p := path.Join(config.BaseDirPath(), promConfig.BearerTokenFile)
+		token, err := os.ReadFile(p)
+		if err != nil {
+			return "", fmt.Errorf("failed to read file %s: %w", p, err)
+		}
+		bearerToken = string(token)
+	}
+	tokenFromEnv := os.Getenv(bearerTokenEnvVar)
+	if tokenFromEnv != "" {
+		bearerToken = tokenFromEnv
+	}
+	return strings.TrimSpace(bearerToken), nil
+}
+
 func NewClient(promConfig config.PrometheusConfig) (*Client, error) {
-	return NewClientWithRoundTripper(promConfig, &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: promConfig.InsecureSkipTLSVerify}})
+	var tripper http.RoundTripper = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: promConfig.InsecureSkipTLSVerify}}
+	bearerToken, err := loadBearerToken(promConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load bearer token: %w", err)
+	}
+	if bearerToken != "" {
+		tripper = prom_config.NewAuthorizationCredentialsRoundTripper("Bearer", prom_config.NewInlineSecret(bearerToken), tripper)
+	}
+	return NewClientWithRoundTripper(promConfig, tripper)
 }
 
 func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.RoundTripper) (*Client, error) {
