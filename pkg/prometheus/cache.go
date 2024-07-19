@@ -5,21 +5,19 @@ import (
 	"os"
 	"time"
 
-	"github.com/prometheus/common/model"
-
 	log "github.com/sirupsen/logrus"
 )
 
 func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 	emptyCache := cache{
-		file:          file,
-		PrometheusURL: prometheusURL,
-		Created:       time.Now(),
-		Queries:       make(map[string][]*model.Sample),
-		Labels:        []string{},
-		Series:        make(map[string][]model.LabelSet),
+		file:                   file,
+		PrometheusURL:          prometheusURL,
+		Created:                time.Now(),
+		QueriesStats:           make(map[string]queryStats),
+		KnownLabels:            []string{},
+		SelectorMatchingSeries: make(map[string]int),
 	}
-	newCache := emptyCache
+	previousCache := emptyCache
 	f, err := os.Open(file)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -33,33 +31,39 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 			return &emptyCache
 		}
 	}
-	if err := json.NewDecoder(f).Decode(&newCache); err != nil {
+	if err := json.NewDecoder(f).Decode(&previousCache); err != nil {
 		log.Warnf("invalid cache file `%s` format: %s", file, err)
 		return &emptyCache
 	}
 	pruneCache := false
-	cacheAge := time.Since(newCache.Created)
+	cacheAge := time.Since(previousCache.Created)
 	if maxAge != 0 && cacheAge > maxAge {
-		log.Warnf("%s old cache %s is outdated, limit is %s. Using empty", cacheAge, file, maxAge)
+		log.Infof("%s old cache %s is outdated, limit is %s", cacheAge, file, maxAge)
 		pruneCache = true
 	}
-	if newCache.PrometheusURL != prometheusURL {
-		log.Warnf("cache %s is for different Prometheus URL %s, expected %s. Using empty", file, newCache.PrometheusURL, prometheusURL)
+	if previousCache.PrometheusURL != prometheusURL {
+		log.Infof("data in cache file %s are from different Prometheus on URL %s, cannot be used for the instance on %s URL", file, previousCache.PrometheusURL, prometheusURL)
 		pruneCache = true
 	}
 	if pruneCache {
+		log.Warnf("Pruning cache file %s", file)
 		return &emptyCache
 	}
-	return &newCache
+	return &previousCache
 }
 
+type queryStats struct {
+	Error    error         `json:"error,omitempty"`
+	Series   int           `json:"series"`
+	Duration time.Duration `json:"duration"`
+}
 type cache struct {
-	file          string
-	PrometheusURL string                      `json:"prometheus_url"`
-	Created       time.Time                   `json:"created"`
-	Queries       map[string][]*model.Sample  `json:"queries"`
-	Labels        []string                    `json:"labels"`
-	Series        map[string][]model.LabelSet `json:"series"`
+	file                   string
+	PrometheusURL          string                `json:"prometheus_url"`
+	Created                time.Time             `json:"created"`
+	QueriesStats           map[string]queryStats `json:"queries_stats"`
+	KnownLabels            []string              `json:"known_labels"`
+	SelectorMatchingSeries map[string]int        `json:"selector_matching_series"`
 }
 
 func (c *cache) Dump() {

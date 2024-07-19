@@ -142,10 +142,14 @@ prometheus:
   bearerTokenFile: bearer_token.txt
   # OPTIONAL Timeout for any request on the Prometheus instance
   timeout: 30s
-  # OPTIONAL: name of the file to save cache of the Prometheus calls for speedup
+  # OPTIONAL name of the file to save cache of the Prometheus calls for speedup
   cacheFile: .promruval_cache.json
-  # OPTIONAL: maximum age how old the cache can be to be used
+  # OPTIONAL maximum age how old the cache can be to be used
   maxCacheAge: 1h
+  # OPTIONAL offset(delay) of the query evaluation time (useful for consistency if using remote write for example).
+  queryOffset: 1m
+  # OPTIONAL how long into the past to look in queries supporting time range (just metadata queries for now).
+  queryLookback: 20m
 
 validationRules:
   # Name of the validation rule.

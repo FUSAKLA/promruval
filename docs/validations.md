@@ -281,8 +281,8 @@ Possibly you can set maximum allowed query execution time and maximum number of 
 
 ```yaml
 params:
-  timeSeriesLimit: 100
-  evaluationDurationLimit: 1m
+  timeSeriesLimit: 100 # Optional, maximum series returned by the query
+  evaluationDurationLimit: 1m # Optional, maximum duration of the query evaluation
 ```
 
 #### `expressionUsesExistingLabels`
@@ -297,6 +297,11 @@ Fails if any used label is not present in the configured Prometheus instance.
 
 Verifies if any of the selectors in the expression (eg `up{foo="bar"}`) matches actual data in the configured Prometheus
 instance.
+
+```yaml
+params:
+  maximumMatchingSeries: 1000 # Optional, maximum number of matching series for single selector used in expression
+```
 
 #### `expressionWithNoMetricName`
 
