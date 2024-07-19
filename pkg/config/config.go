@@ -80,6 +80,8 @@ type PrometheusConfig struct {
 	CacheFile             string        `yaml:"cacheFile,omitempty" default:".promruval_cache.json"`
 	MaxCacheAge           time.Duration `yaml:"maxCacheAge,omitempty" default:"1h"`
 	BearerTokenFile       string        `yaml:"bearerTokenFile,omitempty"`
+	QueryOffset           time.Duration `yaml:"queryOffset,omitempty" default:"1m"`
+	QueryLookback         time.Duration `yaml:"queryLookback,omitempty" default:"20m"`
 }
 
 func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed: :warning: **Renamed `hasValidPartialStrategy` to `hasValidPartialResponseStrategy`** as it was documented so it is actually a fix
 - Changed: :warning: **Disallow special rule file fields of Thanos, Mimir or Loki by default**
            To enable them, you need to set some of the new flags described below
+- Changed: The Prometheus results cache format has changed to reduce it's size and improve performance. **Delete the old cache file** before upgrade.
+           Also now if the cache contains time of creation and URL of the Prometheus it has data for. From now on, if the URL does not match, the case is pruned.
 - Added: New flags `--support-thanos`, `--support-mimir`, `--support-loki` to enable special rule file fields of Thanos, Mimir or Loki
 - Added: :tada: **Support for validation of Loki rules!** Now you can validate Loki rules as well. First two validators are:
    - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
@@ -20,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: Support for the `query_offset` field in the rule group
 - Added: New validator `expressionIsValidPromQL` to check if the expression is a valid PromQL query
 - Added: Support for bearer token authentication in the `prometheus` section of the config using the `bearerTokenFile` field or by specifying the `PROMETHEUS_BEARER_TOKEN` env variable.
+- Added: `maximumMatchingSeries` option to the `expressionSelectorsMatchesAnything` validator to check maximum number of series any selector can match.
+- Added: new config options to the prometheus section of config:
+  - `queryOffset`: Specify offset(delay) of the query (useful for consistency if using remote write for example).
+  - `queryLookback`: How long into the past to look in queries supporting time range (just metadata queries for now).
+- Fixed: Loading glob patterns in the file paths to rules
+- Fixed: Params of the `expressionCanBeEvaluated` validator were ignored, this is now fixed.
 - Updated: Prometheus and other dependencies
 - CI: Updated Github actions for golangcilint and goreleaser
 

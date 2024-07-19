@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -31,7 +33,7 @@ var (
 	versionCmd = app.Command("version", "Print version and build information.")
 
 	validateCmd            = app.Command("validate", "Validate Prometheus rule files using validation rules from config file.")
-	filePaths              = validateCmd.Arg("path", "File paths to be validated, can be passed as a glob.").Required().Strings()
+	filePaths              = validateCmd.Arg("path", "File paths to be validated, can use even double star globs or ~. Will be expanded if not done by bash.").Required().Strings()
 	disabledRules          = validateCmd.Flag("disable-rule", "Allows to disable any validation rules by it's name. Can be passed multiple times.").Short('d').Strings()
 	enabledRules           = validateCmd.Flag("enable-rule", "Only enable these validation rules. Can be passed multiple times.").Short('e').Strings()
 	validationOutputFormat = validateCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,json,yaml]").Default("text").Enum("text", "json", "yaml")
@@ -144,11 +146,22 @@ func main() {
 		}
 		var filesToBeValidated []string
 		for _, path := range *filePaths {
-			paths, err := doublestar.Glob(os.DirFS("."), path)
-			if err != nil {
-				exitWithError(err)
+			if strings.HasPrefix(path, "~/") {
+				home, err := os.UserHomeDir()
+				if err != nil {
+					exitWithError(fmt.Errorf("failed to get user home directory: %w", err))
+				}
+				path = filepath.Join(home, path[2:])
 			}
-			filesToBeValidated = append(filesToBeValidated, paths...)
+
+			base, pattern := doublestar.SplitPattern(path)
+			paths, err := doublestar.Glob(os.DirFS(base), pattern, doublestar.WithFilesOnly(), doublestar.WithFailOnIOErrors(), doublestar.WithFailOnPatternNotExist())
+			if err != nil {
+				exitWithError(fmt.Errorf("failed expanding glob pattern `%s`: %w", path, err))
+			}
+			for _, p := range paths {
+				filesToBeValidated = append(filesToBeValidated, filepath.Join(base, p))
+			}
 		}
 
 		if *supportLoki {

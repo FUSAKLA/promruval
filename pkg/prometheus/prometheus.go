@@ -64,19 +64,29 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 	}
 	v1cli := v1.NewAPI(cli)
 	promClient := Client{
-		apiClient: v1cli,
-		url:       promConfig.URL,
-		timeout:   promConfig.Timeout,
-		cache:     newCache(promConfig.CacheFile, promConfig.MaxCacheAge),
+		apiClient:     v1cli,
+		url:           promConfig.URL,
+		timeout:       promConfig.Timeout,
+		queryOffset:   promConfig.QueryOffset,
+		queryLookback: promConfig.QueryLookback,
+		cache:         newCache(promConfig.CacheFile, promConfig.URL, promConfig.MaxCacheAge),
 	}
 	return &promClient, nil
 }
 
 type Client struct {
-	apiClient v1.API
-	url       string
-	timeout   time.Duration
-	cache     *cache
+	apiClient     v1.API
+	url           string
+	timeout       time.Duration
+	queryOffset   time.Duration
+	queryLookback time.Duration
+	cache         *cache
+}
+
+func (s *Client) queryTimeRange() (start, end time.Time) {
+	end = time.Now().Add(-s.queryOffset)
+	start = end.Add(-s.queryLookback)
+	return start, end
 }
 
 func (s *Client) DumpCache() {
@@ -94,69 +104,90 @@ func (s *Client) newContext() (context.Context, context.CancelFunc) {
 }
 
 func (s *Client) SelectorMatch(selector string) ([]model.LabelSet, error) {
-	if _, ok := s.cache.Series[selector]; !ok {
-		ctx, cancel := s.newContext()
-		defer cancel()
-		result, warnings, err := s.apiClient.Series(ctx, []string{selector}, time.Now().Add(-time.Minute), time.Now())
-		if err != nil {
-			return nil, fmt.Errorf("failed to query series: %w", err)
-		}
-		if len(warnings) > 0 {
-			log.Warnf("Warning querying Prometheus: %s\n", warnings)
-		}
-		s.cache.Series[selector] = result
-	} else {
-		log.Debugf("using cached series match result for `%s`", selector)
+	ctx, cancel := s.newContext()
+	defer cancel()
+	start := time.Now()
+	queryStart, queryEnd := s.queryTimeRange()
+	result, warnings, err := s.apiClient.Series(ctx, []string{selector}, queryStart, queryEnd)
+	log.Debugf("queried series matching selector `%s` on %s prometheus in %s", selector, s.url, time.Since(start))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query series: %w", err)
 	}
-	return s.cache.Series[selector], nil
+	if len(warnings) > 0 {
+		log.Warnf("Warning querying Prometheus: %s\n", warnings)
+	}
+	return result, nil
+}
+
+func (s *Client) SelectorMatchingSeries(selector string) (int, error) {
+	if count, found := s.cache.SelectorMatchingSeries[selector]; found {
+		return count, nil
+	}
+	series, err := s.SelectorMatch(selector)
+	if err != nil {
+		return 0, err
+	}
+	s.cache.SelectorMatchingSeries[selector] = len(series)
+	return len(series), nil
 }
 
 func (s *Client) Labels() ([]string, error) {
-	if len(s.cache.Labels) == 0 {
+	if len(s.cache.KnownLabels) == 0 {
 		ctx, cancel := s.newContext()
 		defer cancel()
 		start := time.Now()
-		result, warnings, err := s.apiClient.LabelNames(ctx, []string{}, time.Now().Add(-time.Minute), time.Now())
-		log.Infof("loaded all prometheus label names from %s in %s", s.url, time.Since(start))
+		queryStart, queryEnd := s.queryTimeRange()
+		result, warnings, err := s.apiClient.LabelNames(ctx, []string{}, queryStart, queryEnd)
+		log.Debugf("loaded all prometheus label names from %s in %s", s.url, time.Since(start))
 		if err != nil {
 			return nil, err
 		}
 		if len(warnings) > 0 {
 			log.Warnf("Warning querying Prometheus: %s\n", warnings)
 		}
-		s.cache.Labels = result
+		s.cache.KnownLabels = result
 	}
-	return s.cache.Labels, nil
+	return s.cache.KnownLabels, nil
 }
 
 func (s *Client) Query(query string) ([]*model.Sample, int, time.Duration, error) {
 	var duration time.Duration
-	if _, ok := s.cache.Queries[query]; !ok {
-		ctx, cancel := s.newContext()
-		defer cancel()
-		start := time.Now()
-		result, warnings, err := s.apiClient.Query(ctx, query, time.Now())
-		duration = time.Since(start)
-		log.Infof("query `%s` on %s prometheus took %s", query, s.url, duration)
-		if err != nil {
-			return nil, 0, 0, fmt.Errorf("error querying prometheus: %w", err)
-		}
-		if len(warnings) > 0 {
-			log.Warnf("Warning querying Prometheus: %s\n", warnings)
-		}
-		switch result.Type() {
-		case model.ValVector:
-			vectorResult, ok := result.(model.Vector)
-			if !ok {
-				return nil, 0, 0, fmt.Errorf("failed to convert result to model.Vector")
-			}
-			s.cache.Queries[query] = vectorResult
-		default:
-			return nil, 0, 0, fmt.Errorf("unknown prometheus response type: %s", result)
-		}
-	} else {
-		log.Debugf("using cached query result for `%s`", query)
+	ctx, cancel := s.newContext()
+	defer cancel()
+	start := time.Now()
+	_, queryEnd := s.queryTimeRange()
+	result, warnings, err := s.apiClient.Query(ctx, query, queryEnd)
+	duration = time.Since(start)
+	log.Debugf("query `%s` on %s prometheus took %s", query, s.url, duration)
+	if err != nil {
+		return nil, 0, 0, fmt.Errorf("error querying prometheus: %w", err)
 	}
-	res := s.cache.Queries[query]
-	return res, len(res), duration, nil
+	if len(warnings) > 0 {
+		log.Warnf("Warning querying Prometheus: %s\n", warnings)
+	}
+	switch result.Type() {
+	case model.ValVector:
+		vectorResult, ok := result.(model.Vector)
+		if !ok {
+			return nil, 0, 0, fmt.Errorf("failed to convert result to model.Vector")
+		}
+		return vectorResult, len(vectorResult), duration, nil
+	case model.ValScalar:
+		scalarResult, ok := result.(*model.Scalar)
+		if !ok {
+			return nil, 0, 0, fmt.Errorf("failed to convert result to model.Scalar")
+		}
+		return []*model.Sample{{Value: scalarResult.Value, Timestamp: model.Now()}}, 1, duration, nil
+	}
+	return nil, 0, 0, fmt.Errorf("unknown prometheus response type: %s", result)
+}
+
+func (s *Client) QueryStats(query string) (int, time.Duration, error) {
+	if stats, found := s.cache.QueriesStats[query]; found {
+		return stats.Series, stats.Duration, stats.Error
+	}
+	_, series, duration, err := s.Query(query)
+	stats := queryStats{Series: series, Duration: duration, Error: err}
+	s.cache.QueriesStats[query] = stats
+	return stats.Series, stats.Duration, stats.Error
 }

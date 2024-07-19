@@ -279,11 +279,17 @@ func (h rateBeforeAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Ru
 }
 
 func newExpressionCanBeEvaluated(paramsConfig yaml.Node) (Validator, error) {
-	params := struct{}{}
+	params := struct {
+		timeSeriesLimit         int           `yaml:"timeSeriesLimit"`
+		evaluationDurationLimit time.Duration `yaml:"evaluationDurationLimit"`
+	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	return &expressionCanBeEvaluated{}, nil
+	return &expressionCanBeEvaluated{
+		timeSeriesLimit:         params.timeSeriesLimit,
+		evaluationDurationLimit: params.evaluationDurationLimit,
+	}, nil
 }
 
 type expressionCanBeEvaluated struct {
@@ -308,7 +314,7 @@ func (h expressionCanBeEvaluated) Validate(_ unmarshaler.RuleGroup, rule rulefmt
 		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
 		return nil
 	}
-	_, count, duration, err := prometheusClient.Query(rule.Expr)
+	count, duration, err := prometheusClient.QueryStats(rule.Expr)
 	if err != nil {
 		return append(errs, err)
 	}
@@ -365,14 +371,20 @@ func (h expressionUsesExistingLabels) Validate(_ unmarshaler.RuleGroup, rule rul
 }
 
 func newExpressionSelectorsMatchesAnything(paramsConfig yaml.Node) (Validator, error) {
-	params := struct{}{}
+	params := struct {
+		maximumMatchingSeries int `yaml:"maximumMatchingSeries"`
+	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	return &expressionSelectorsMatchesAnything{}, nil
+	return &expressionSelectorsMatchesAnything{
+		maximumMatchingSeries: params.maximumMatchingSeries,
+	}, nil
 }
 
-type expressionSelectorsMatchesAnything struct{}
+type expressionSelectorsMatchesAnything struct {
+	maximumMatchingSeries int `yaml:"maximumMatchingSeries"`
+}
 
 func (h expressionSelectorsMatchesAnything) String() string {
 	return "expression selectors actually matches any series in Prometheus"
@@ -389,13 +401,16 @@ func (h expressionSelectorsMatchesAnything) Validate(_ unmarshaler.RuleGroup, ru
 		return []error{err}
 	}
 	for _, s := range selectors {
-		match, err := prometheusClient.SelectorMatch(s)
+		matchingSeries, err := prometheusClient.SelectorMatchingSeries(s)
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
-		if len(match) == 0 {
+		if matchingSeries == 0 {
 			errs = append(errs, fmt.Errorf("selector `%s` does not match any actual series in Prometheus", s))
+		}
+		if h.maximumMatchingSeries != 0 && matchingSeries > h.maximumMatchingSeries {
+			errs = append(errs, fmt.Errorf("selector `%s` matches %d series which exceeds the limit %d", s, matchingSeries, h.maximumMatchingSeries))
 		}
 	}
 	return errs
