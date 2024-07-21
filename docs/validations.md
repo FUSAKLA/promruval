@@ -30,11 +30,12 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
       - [`validFunctionsOnCounters`](#validfunctionsoncounters)
       - [`rateBeforeAggregation`](#ratebeforeaggregation)
+      - [`expressionWithNoMetricName`](#expressionwithnometricname)
+      - [`expressionIsWellFormatted`](#expressioniswellformatted)
+    - [PromQL expression validators (using live Prometheus instance)](#promql-expression-validators-using-live-prometheus-instance)
       - [`expressionCanBeEvaluated`](#expressioncanbeevaluated)
       - [`expressionUsesExistingLabels`](#expressionusesexistinglabels)
       - [`expressionSelectorsMatchesAnything`](#expressionselectorsmatchesanything)
-      - [`expressionWithNoMetricName`](#expressionwithnometricname)
-      - [`expressionIsWellFormatted`](#expressioniswellformatted)
     - [LogQL expression validators](#logql-expression-validators)
       - [`expressionIsValidLogQL`](#expressionisvalidlogql)
       - [`logQlExpressionUsesRangeAggregation`](#logqlexpressionusesrangeaggregation)
@@ -294,6 +295,28 @@ Fails if the expression uses a `rate` or `increase` function on a metric that do
 Fails if aggregation function is used before the `rate` or `increase` functions.
 > Avoid common mistake of using aggregation function before the `rate` or `increase` function.
 
+#### `expressionWithNoMetricName`
+
+Fails if an expression doesn't use an explicit metric name (also if used as `__name__` label) in all its selectors(eg `up{foo="bar"}`).
+> Such queries may be very expensive and can lead to performance issues.
+
+#### `expressionIsWellFormatted`
+
+Fails if the expression is not well formatted PromQL as would `promtool promql format` do.
+It does remove the comments from the expression before the validation, since the PromQL prettifier drops them, so this should avoid false positive diffs.
+But if you want to ignore the expressions with comments, you can set the `ignoreComments` to true.
+> Useful to make sure the expressions are formatted in a consistent way.
+
+```yaml
+params:
+  showExpectedForm: true # Optional, will show how the query should be formatted
+  skipExpressionsWithComments: true # Optional, will skip the expressions with comments
+```
+
+### PromQL expression validators (using live Prometheus instance)
+
+All these validations require the ` prometheus` sectiong in the config to be set.
+
 #### `expressionCanBeEvaluated`
 
 > Queries live prometheus instance, requires the `prometheus` config to be set.
@@ -323,24 +346,6 @@ instance.
 ```yaml
 params:
   maximumMatchingSeries: 1000 # Optional, maximum number of matching series for single selector used in expression
-```
-
-#### `expressionWithNoMetricName`
-
-Fails if an expression doesn't use an explicit metric name (also if used as `__name__` label) in all its selectors(eg `up{foo="bar"}`).
-> Such queries may be very expensive and can lead to performance issues.
-
-#### `expressionIsWellFormatted`
-
-Fails if the expression is not well formatted PromQL as would `promtool promql format` do.
-It does remove the comments from the expression before the validation, since the PromQL prettifier drops them, so this should avoid false positive diffs.
-But if you want to ignore the expressions with comments, you can set the `ignoreComments` to true.
-> Useful to make sure the expressions are formatted in a consistent way.
-
-```yaml
-params:
-  showExpectedForm: true # Optional, will show how the query should be formatted
-  skipExpressionsWithComments: true # Optional, will skip the expressions with comments
 ```
 
 ### LogQL expression validators
