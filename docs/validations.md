@@ -10,6 +10,8 @@ All the supported validations are listed here. The validations are grouped by th
     - [`hasValidPartialResponseStrategy`](#hasvalidpartialresponsestrategy)
     - [`maxRulesPerGroup`](#maxrulespergroup)
     - [`hasValidLimit`](#hasvalidlimit)
+    - [`groupNameMatchesRegexp`](#groupnamematchesregexp)
+    - [`hasAllowedQueryOffset`](#hasallowedqueryoffset)
   - [Universal rule validators](#universal-rule-validators)
     - [Labels](#labels)
       - [`hasLabels`](#haslabels)
@@ -53,7 +55,9 @@ All the supported validations are listed here. The validations are grouped by th
     - [Other](#other-1)
       - [`forIsNotLongerThan`](#forisnotlongerthan)
       - [`keepFiringForIsNotLongerThan`](#keepfiringforisnotlongerthan)
+      - [`alertNameMatchesRegexp`](#alertnamematchesregexp)
   - [Recording rules validators](#recording-rules-validators)
+      - [`recordedMetricNameMatchesRegexp`](#recordedmetricnamematchesregexp)
 
 
 
@@ -120,6 +124,24 @@ params:
   limit: 10
 ```
 
+### `groupNameMatchesRegexp`
+
+Fails if the group name does not match the specified regular expression.
+
+```yaml
+params:
+  regexp: "[A-Z]\s+"
+```
+
+### `hasAllowedQueryOffset`
+
+Fails if the rule group has the `query_offset` out of the configured range.
+
+```yaml
+params:
+  minimum: <duration>
+  maximum: <duration> # Optional, default is infinity
+```
 
 ## Universal rule validators
 Validators that can be used on  `All rules`, `Recording rule` and `Alert` scopes.
@@ -464,5 +486,23 @@ params:
   limit: "1h"
 ```
 
+#### `alertNameMatchesRegexp`
+
+Fails if the alert name does not match the specified regular expression.
+
+```yaml
+params:
+  regexp: "[A-Z]\s+"
+```
+
 ## Recording rules validators
 Validators that can be used on `Recording rule` scope.
+
+#### `recordedMetricNameMatchesRegexp`
+
+Fails if the name of the recorded metric does not match the specified regular expression.
+
+```yaml
+params:
+  regexp: "[^:]+:[^:]+:[^:]+"
+```

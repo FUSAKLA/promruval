@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -97,6 +98,41 @@ func (h validateLabelTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 		if _, err := t.Expand(); err != nil && !strings.Contains(err.Error(), "error executing template") {
 			errs = append(errs, fmt.Errorf("invalid template of label %s: %w", k, err))
 		}
+	}
+	return errs
+}
+
+func newAlertNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Regexp string `yaml:"regexp"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if params.Regexp == "" {
+		return nil, fmt.Errorf("missing pattern")
+	}
+	r, err := regexp.Compile(params.Regexp)
+	if err != nil {
+		return nil, fmt.Errorf("invalid pattern %s: %w", params.Regexp, err)
+	}
+	return &alertNameMatchesRegexp{
+		pattern: r,
+	}, nil
+}
+
+type alertNameMatchesRegexp struct {
+	pattern *regexp.Regexp
+}
+
+func (h alertNameMatchesRegexp) String() string {
+	return fmt.Sprintf("Alert name matches regexp: %s", h.pattern.String())
+}
+
+func (h alertNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	var errs []error
+	if !h.pattern.MatchString(rule.Alert) {
+		errs = append(errs, fmt.Errorf("alert name %s does not match pattern %s", rule.Alert, h.pattern.String()))
 	}
 	return errs
 }

@@ -266,6 +266,23 @@ var testCases = []struct {
 	{name: "logQlExpressionUsesFiltersFirst_OK", validator: logQlExpressionUsesFiltersFirst{}, rule: rulefmt.Rule{Expr: `{job="foo"} |= "foo" | logfmt`}, expectedErrors: 0},
 	{name: "logQlExpressionUsesFiltersFirst_Invalid", validator: logQlExpressionUsesFiltersFirst{}, rule: rulefmt.Rule{Expr: `{job="foo"} | logfmt |= "foo"`}, expectedErrors: 1},
 	{name: "logQlExpressionUsesFiltersFirst_Invalid", validator: logQlExpressionUsesFiltersFirst{}, rule: rulefmt.Rule{Expr: `{job="foo"} |= "foo" | logfmt |= "bar"`}, expectedErrors: 1},
+
+	// alertNameMatchesRegexp
+	{name: "alertNameMatchesRegexp_Valid", validator: alertNameMatchesRegexp{pattern: regexp.MustCompile("Foo.*")}, rule: rulefmt.Rule{Alert: `FooBAr`}, expectedErrors: 0},
+	{name: "alertNameMatchesRegexp_NotMatch", validator: alertNameMatchesRegexp{pattern: regexp.MustCompile("Foo.*")}, rule: rulefmt.Rule{Alert: `Bar`}, expectedErrors: 1},
+
+	// recordedMetricNameMatchesRegexp
+	{name: "recordedMetricNameMatchesRegexp_Matches", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+")}, rule: rulefmt.Rule{Record: `cluster:foo_bar:avg`}, expectedErrors: 0},
+	{name: "recordedMetricNameMatchesRegexp_notMatches", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+")}, rule: rulefmt.Rule{Record: `foo_bar`}, expectedErrors: 1},
+
+	// hasAllowedQueryOffset
+	{name: "hasAllowedQueryOffset_valid", validator: hasAllowedQueryOffset{min: model.Duration(time.Second), max: model.Duration(time.Minute)}, group: unmarshaler.RuleGroup{QueryOffset: model.Duration(time.Second * 30)}, expectedErrors: 0},
+	{name: "hasAllowedQueryOffset_tooHigh", validator: hasAllowedQueryOffset{min: model.Duration(time.Second), max: model.Duration(time.Minute)}, group: unmarshaler.RuleGroup{QueryOffset: model.Duration(time.Minute * 2)}, expectedErrors: 1},
+	{name: "hasAllowedQueryOffset_tooLow", validator: hasAllowedQueryOffset{min: model.Duration(time.Minute), max: model.Duration(time.Hour)}, group: unmarshaler.RuleGroup{QueryOffset: model.Duration(time.Second)}, expectedErrors: 1},
+
+	// groupNameMatchesRegexp
+	{name: "groupNameMatchesRegexp_valid", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`)}, group: unmarshaler.RuleGroup{Name: "TestGroup"}, expectedErrors: 0},
+	{name: "groupNameMatchesRegexp_invalid", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`)}, group: unmarshaler.RuleGroup{Name: "Test Group"}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {
