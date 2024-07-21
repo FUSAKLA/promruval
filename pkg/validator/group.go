@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/fusakla/promruval/v2/pkg/prometheus"
@@ -184,4 +185,78 @@ func (h hasAllowedLimit) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _
 		return []error{fmt.Errorf("limit must be set, the default value 0 means it is unlimited and maximum allowed limit is %d", h.limit)}
 	}
 	return []error{}
+}
+
+func newHasAllowedQueryOffset(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Minimum model.Duration `yaml:"minimum"`
+		Maximum model.Duration `yaml:"maximum"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if params.Minimum > params.Maximum {
+		return nil, fmt.Errorf("minimum is greater than maximum")
+	}
+	if params.Maximum == 0 && params.Minimum == 0 {
+		return nil, fmt.Errorf("minimum or maximum must be set")
+	}
+	if params.Maximum == 0 {
+		params.Maximum = model.Duration(1<<63 - 1)
+	}
+
+	return &hasAllowedQueryOffset{min: params.Minimum, max: params.Maximum}, nil
+}
+
+type hasAllowedQueryOffset struct {
+	min model.Duration
+	max model.Duration
+}
+
+func (h hasAllowedQueryOffset) String() string {
+	return fmt.Sprintf("group query_offset is higher than %s and lowed then %s", h.min, h.max)
+}
+
+func (h hasAllowedQueryOffset) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
+	if group.QueryOffset > h.max {
+		return []error{fmt.Errorf("group has query_offset %s, allowed maximum is %s", group.QueryOffset, h.max)}
+	} else if group.QueryOffset < h.min {
+		return []error{fmt.Errorf("group has query_offset %s, allowed minimum is %s", group.QueryOffset, h.min)}
+	}
+	return []error{}
+}
+
+func newGroupNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Regexp string `yaml:"regexp"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if params.Regexp == "" {
+		return nil, fmt.Errorf("missing regexp")
+	}
+	r, err := regexp.Compile(params.Regexp)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regexp %s: %w", params.Regexp, err)
+	}
+	return &groupNameMatchesRegexp{
+		pattern: r,
+	}, nil
+}
+
+type groupNameMatchesRegexp struct {
+	pattern *regexp.Regexp
+}
+
+func (h groupNameMatchesRegexp) String() string {
+	return fmt.Sprintf("Group name matches regexp: %s", h.pattern.String())
+}
+
+func (h groupNameMatchesRegexp) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
+	var errs []error
+	if !h.pattern.MatchString(group.Name) {
+		errs = append(errs, fmt.Errorf("group name %s does not match regexp %s", group.Name, h.pattern.String()))
+	}
+	return errs
 }

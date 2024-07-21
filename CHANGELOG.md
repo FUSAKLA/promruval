@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: new config options to the prometheus section of config:
   - `queryOffset`: Specify offset(delay) of the query (useful for consistency if using remote write for example).
   - `queryLookback`: How long into the past to look in queries supporting time range (just metadata queries for now).
+- Added: New validator `alertNameMatchesRegexp` to check if the alert name matches the regexp.
+- Added: New validator `groupNameMatchesRegexp` to check if the rule group name matches the regexp.
+- Added: New validator `recordedMetricNameMatchesRegexp` to check if the recorded metric name matches the regexp.
 - Fixed: Loading glob patterns in the file paths to rules
 - Fixed: Params of the `expressionCanBeEvaluated` validator were ignored, this is now fixed.
 - Updated: Prometheus and other dependencies

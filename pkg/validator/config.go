@@ -40,11 +40,14 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"hasSourceTenantsForMetrics": newHasSourceTenantsForMetrics,
 }
 
-var registeredRecordingRuleValidators = map[string]validatorCreator{}
+var registeredRecordingRuleValidators = map[string]validatorCreator{
+	"recordedMetricNameMatchesRegexp": newRecordedMetricNameMatchesRegexp,
+}
 
 var registeredAlertValidators = map[string]validatorCreator{
 	"forIsNotLongerThan":           newForIsNotLongerThan,
 	"keepFiringForIsNotLongerThan": newKeepFiringForIsNotLongerThan,
+	"alertNameMatchesRegexp":       newAlertNameMatchesRegexp,
 
 	"validateAnnotationTemplates": newValidateAnnotationTemplates,
 	"annotationIsValidPromQL":     newAnnotationIsValidPromQL,
@@ -63,6 +66,8 @@ var registeredGroupValidators = map[string]validatorCreator{
 	"hasValidPartialResponseStrategy": newHasValidPartialResponseStrategy,
 	"maxRulesPerGroup":                newMaxRulesPerGroup,
 	"hasAllowedLimit":                 newHasAllowedLimit,
+	"groupNameMatchesRegexp":          newGroupNameMatchesRegexp,
+	"hasAllowedQueryOffset":           newHasAllowedQueryOffset,
 }
 
 var (
