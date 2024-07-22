@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: New validator `alertNameMatchesRegexp` to check if the alert name matches the regexp.
 - Added: New validator `groupNameMatchesRegexp` to check if the rule group name matches the regexp.
 - Added: New validator `recordedMetricNameMatchesRegexp` to check if the recorded metric name matches the regexp.
+- Added: Set the `User-Agent` header in the Prometheus requests to `promruva` to identify the client.
+- Added: Automatically configure the `X-ScopeOrgID` header in the Prometheus requests if the `source_tenants` field is set in the rule group.
+- Fixed: Rules count in the result stats is now correct.
+- Fixed: Better error message when validation rule is missing `scope`.
 - Fixed: Loading glob patterns in the file paths to rules
 - Fixed: Params of the `expressionCanBeEvaluated` validator were ignored, this is now fixed.
 - Updated: Prometheus and other dependencies

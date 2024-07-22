@@ -55,6 +55,9 @@ func validationRulesFromConfig(validationConfig *config.Config) ([]*validationru
 	var validationRules []*validationrule.ValidationRule
 rulesIteration:
 	for _, validationRule := range validationConfig.ValidationRules {
+		if validationRule.Scope == "" {
+			return nil, fmt.Errorf("scope is missing in the validation rule `%s`", validationRule.Name)
+		}
 		for _, disabledRule := range *disabledRules {
 			if disabledRule == validationRule.Name {
 				continue rulesIteration

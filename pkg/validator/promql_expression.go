@@ -308,13 +308,13 @@ func (h expressionCanBeEvaluated) String() string {
 	return msg
 }
 
-func (h expressionCanBeEvaluated) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+func (h expressionCanBeEvaluated) Validate(group unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
 	var errs []error
 	if prometheusClient == nil {
 		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
 		return nil
 	}
-	count, duration, err := prometheusClient.QueryStats(rule.Expr)
+	count, duration, err := prometheusClient.QueryStats(rule.Expr, group.SourceTenants)
 	if err != nil {
 		return append(errs, err)
 	}
@@ -341,7 +341,7 @@ func (h expressionUsesExistingLabels) String() string {
 	return "expression uses only labels that are actually present in Prometheus"
 }
 
-func (h expressionUsesExistingLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+func (h expressionUsesExistingLabels) Validate(group unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
 	if prometheusClient == nil {
 		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
 		return nil
@@ -351,7 +351,7 @@ func (h expressionUsesExistingLabels) Validate(_ unmarshaler.RuleGroup, rule rul
 		return []error{err}
 	}
 	var errs []error
-	knownLabels, err := prometheusClient.Labels()
+	knownLabels, err := prometheusClient.Labels(group.SourceTenants)
 	if err != nil {
 		return []error{err}
 	}
@@ -390,7 +390,7 @@ func (h expressionSelectorsMatchesAnything) String() string {
 	return "expression selectors actually matches any series in Prometheus"
 }
 
-func (h expressionSelectorsMatchesAnything) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
+func (h expressionSelectorsMatchesAnything) Validate(group unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
 	if prometheusClient == nil {
 		log.Error("missing the `prometheus` section of configuration for querying prometheus, skipping check that requires it...")
 		return nil
@@ -401,7 +401,7 @@ func (h expressionSelectorsMatchesAnything) Validate(_ unmarshaler.RuleGroup, ru
 		return []error{err}
 	}
 	for _, s := range selectors {
-		matchingSeries, err := prometheusClient.SelectorMatchingSeries(s)
+		matchingSeries, err := prometheusClient.SelectorMatchingSeries(s, group.SourceTenants)
 		if err != nil {
 			errs = append(errs, err)
 			continue
