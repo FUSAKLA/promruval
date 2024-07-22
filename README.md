@@ -79,7 +79,7 @@ version
 
 
 validate [<flags>] <path>...
-    Validate Prometheus rule files using validation rules from config file.
+    Validate Prometheus rule files in YAML or jsonnet format using validation rules from config file(s).
 
     -d, --disable-rule=DISABLE-RULE ...
                                    Allows to disable any validation rules by it's name. Can be passed multiple times.
@@ -97,6 +97,10 @@ validation-docs [<flags>]
     -o, --output=[text,markdown,html]
       Format of the output.
 ```
+
+#### Jsonnet support
+Promruval supports the default YAML format (`.yaml` or `.yml`) of rule files but also supports rules written in [Jsonnet](https://jsonnet.org/) (`.jsonnet`).
+If will be rendered using the [go-jsonnet](https://github.com/google/go-jsonnet) library and then validated as usual, so you don't have to evaluate those by yourself before running the validation.
 
 #### Configuration composition
 

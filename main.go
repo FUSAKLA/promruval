@@ -32,8 +32,8 @@ var (
 
 	versionCmd = app.Command("version", "Print version and build information.")
 
-	validateCmd            = app.Command("validate", "Validate Prometheus rule files using validation rules from config file.")
-	filePaths              = validateCmd.Arg("path", "File paths to be validated, can use even double star globs or ~. Will be expanded if not done by bash.").Required().Strings()
+	validateCmd            = app.Command("validate", "Validate Prometheus rule files in YAML or jsonnet format using validation rules from config file(s).")
+	filePaths              = validateCmd.Arg("path", "Rule file paths to be validated (.yaml, .yml or .jsonnet), can use even double star globs or ~. Will be expanded if not done by bash.").Required().Strings()
 	disabledRules          = validateCmd.Flag("disable-rule", "Allows to disable any validation rules by it's name. Can be passed multiple times.").Short('d').Strings()
 	enabledRules           = validateCmd.Flag("enable-rule", "Only enable these validation rules. Can be passed multiple times.").Short('e').Strings()
 	validationOutputFormat = validateCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,json,yaml]").Default("text").Enum("text", "json", "yaml")

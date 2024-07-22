@@ -15,6 +15,7 @@ import (
 	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
 	"github.com/fusakla/promruval/v2/pkg/validationrule"
 	"github.com/fusakla/promruval/v2/pkg/validator"
+	"github.com/google/go-jsonnet"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -42,23 +43,38 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 	for _, r := range validationRules {
 		validationReport.ValidationRules = append(validationReport.ValidationRules, r)
 	}
+	jsonnetVM := jsonnet.MakeVM()
 	start := time.Now()
 	fileCount := len(fileNames)
 	for i, fileName := range fileNames {
 		log.Infof("processing file %d/%d %s", i+1, fileCount, fileName)
 		validationReport.FilesCount++
 		fileReport := validationReport.NewFileReport(fileName)
-		f, err := os.Open(fileName)
-		if err != nil {
-			validationReport.Failed = true
-			fileReport.Valid = false
-			fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %w", fileName, err)}
-			continue
+		var yamlReader io.Reader
+		if strings.HasSuffix(fileName, ".yaml") || strings.HasSuffix(fileName, ".yml") {
+			var err error
+			yamlReader, err = os.Open(fileName)
+			if err != nil {
+				validationReport.Failed = true
+				fileReport.Valid = false
+				fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %w", fileName, err)}
+				continue
+			}
+		} else if strings.HasSuffix(fileName, ".jsonnet") {
+			log.Debugf("evaluating jsonnet file %s", fileName)
+			jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
+			if err != nil {
+				validationReport.Failed = true
+				fileReport.Valid = false
+				fileReport.Errors = []error{fmt.Errorf("cannot evaluate jsonnet file %s: %w", fileName, err)}
+				continue
+			}
+			yamlReader = strings.NewReader(jsonnetOutput)
 		}
 		var rf unmarshaler.RulesFileWithComment
-		decoder := yaml.NewDecoder(f)
+		decoder := yaml.NewDecoder(yamlReader)
 		decoder.KnownFields(true)
-		err = decoder.Decode(&rf)
+		err := decoder.Decode(&rf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				continue
