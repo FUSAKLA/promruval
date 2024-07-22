@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
            To enable them, you need to set some of the new flags described below
 - Changed: The Prometheus results cache format has changed to reduce it's size and improve performance. **Delete the old cache file** before upgrade.
            Also now if the cache contains time of creation and URL of the Prometheus it has data for. From now on, if the URL does not match, the case is pruned.
+- Added: :rocket: Support for validation of rule files in the [Jsonnet](https://jsonnet.org/) format.
 - Added: New flags `--support-thanos`, `--support-mimir`, `--support-loki` to enable special rule file fields of Thanos, Mimir or Loki
 - Added: :tada: **Support for validation of Loki rules!** Now you can validate Loki rules as well. First two validators are:
    - `expressionIsValidLogQL` to check if the expression is a valid LogQL query
