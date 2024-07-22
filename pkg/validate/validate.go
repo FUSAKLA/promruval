@@ -95,6 +95,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				groupReport.Valid = false
 			}
 			for _, ruleNode := range group.Rules {
+				validationReport.RulesCount++
 				originalRule := ruleNode.OriginalRule()
 				var ruleReport *report.RuleReport
 				if originalRule.Alert != "" {
