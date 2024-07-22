@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/fusakla/promruval/v2/pkg/config"
+	"github.com/fusakla/promruval/v3/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 

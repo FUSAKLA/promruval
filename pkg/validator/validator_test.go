@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fusakla/promruval/v2/pkg/prometheus"
-	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
+	"github.com/fusakla/promruval/v3/pkg/prometheus"
+	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"gotest.tools/assert"

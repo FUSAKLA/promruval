@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fusakla/promruval/v2/pkg/config"
+	"github.com/fusakla/promruval/v3/pkg/config"
 	"github.com/grafana/dskit/user"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"

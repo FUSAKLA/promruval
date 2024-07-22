@@ -9,13 +9,13 @@ import (
 
 	"github.com/alecthomas/kingpin/v2"
 	doublestar "github.com/bmatcuk/doublestar/v4"
-	"github.com/fusakla/promruval/v2/pkg/config"
-	"github.com/fusakla/promruval/v2/pkg/prometheus"
-	"github.com/fusakla/promruval/v2/pkg/report"
-	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
-	"github.com/fusakla/promruval/v2/pkg/validate"
-	"github.com/fusakla/promruval/v2/pkg/validationrule"
-	"github.com/fusakla/promruval/v2/pkg/validator"
+	"github.com/fusakla/promruval/v3/pkg/config"
+	"github.com/fusakla/promruval/v3/pkg/prometheus"
+	"github.com/fusakla/promruval/v3/pkg/report"
+	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
+	"github.com/fusakla/promruval/v3/pkg/validate"
+	"github.com/fusakla/promruval/v3/pkg/validationrule"
+	"github.com/fusakla/promruval/v3/pkg/validator"
 	log "github.com/sirupsen/logrus"
 )
 

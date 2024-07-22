@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fusakla/promruval/v2/pkg/config"
+	"github.com/fusakla/promruval/v3/pkg/config"
 	"github.com/prometheus/common/model"
 )
 

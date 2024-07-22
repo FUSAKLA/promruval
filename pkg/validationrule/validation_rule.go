@@ -3,8 +3,8 @@ package validationrule
 import (
 	"reflect"
 
-	"github.com/fusakla/promruval/v2/pkg/config"
-	"github.com/fusakla/promruval/v2/pkg/validator"
+	"github.com/fusakla/promruval/v3/pkg/config"
+	"github.com/fusakla/promruval/v3/pkg/validator"
 )
 
 type ValidatorWithDetails interface {
