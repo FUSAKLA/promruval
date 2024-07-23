@@ -3,8 +3,8 @@ package validator
 import (
 	"fmt"
 
-	"github.com/fusakla/promruval/v2/pkg/prometheus"
-	"github.com/fusakla/promruval/v2/pkg/unmarshaler"
+	"github.com/fusakla/promruval/v3/pkg/prometheus"
+	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/grafana/loki/v3/pkg/logql/syntax"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"gopkg.in/yaml.v3"

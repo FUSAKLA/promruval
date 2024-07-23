@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2024-07-23
+
+- Changed: Updated README.md installation instructions, to install latest version use `go install github.com/fusakla/promruval/v3`.
 - Fixed: :warning: **Unmarshalling of the rule files is strict again**, this behavior was unintentionally brought when adding support for yaml comments.
 - Changed: :warning: **Renamed `hasValidPartialStrategy` to `hasValidPartialResponseStrategy`** as it was documented so it is actually a fix
 - Changed: :warning: **Disallow special rule file fields of Thanos, Mimir or Loki by default**
@@ -152,7 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [#30](https://github.com/FUSAKLA/promruval/pull/30)
   - Upgrade Go to 1.19.
   - :warning: CHANGE - go.mod version bumped to match the project major version, if you use promruval as a library,
-                       make sure to change the package to `github.com/fusakla/promruval/v2`.
+                       make sure to change the package to `github.com/fusakla/promruval/v3`.
   - :warning: CHANGE - Updated README.md installation instructions, to install latest version use `go install github.com/fusakla/promruval/v2`.
 
 

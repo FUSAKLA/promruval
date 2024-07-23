@@ -1,4 +1,4 @@
-module github.com/fusakla/promruval/v2
+module github.com/fusakla/promruval/v3
 
 go 1.22.0
 
