@@ -52,7 +52,7 @@ func TestGetExpressionUsedLabelsForMetric(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		labels, err := getExpressionUsedLabelsForMetric(test.expr, test.metric)
+		labels, err := getExpressionUsedLabelsForMetricRegexp(test.expr, test.metric)
 		assert.ElementsMatch(t, labels, test.expected, "Expected labels %v, but got %v", test.expected, labels)
 		if !errors.Is(err, test.expectedErr) {
 			t.Errorf("Expected error %v, but got %v", test.expectedErr, err)

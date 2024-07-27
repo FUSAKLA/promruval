@@ -23,7 +23,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"validFunctionsOnCounters":             newValidFunctionsOnCounters,
 	"rateBeforeAggregation":                newRateBeforeAggregation,
 	"expressionDoesNotUseLabels":           newExpressionDoesNotUseLabels,
-	"expressionUseOnlyWhitelistedLabelsForMetric": newExpressionUseOnlyWhitelistedLabelsForMetric,
+	"expressionUsesOnlyAllowedLabelsForMetricRegexp": newExpressionUseOnlyWhitelistedLabelsForMetric,
 	"expressionDoesNotUseOlderDataThan":    newExpressionDoesNotUseOlderDataThan,
 	"expressionDoesNotUseRangeShorterThan": newExpressionDoesNotUseRangeShorterThan,
 	"expressionDoesNotUseMetrics":          newExpressionDoesNotUseMetrics,

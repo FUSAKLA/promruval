@@ -121,15 +121,15 @@ func (h expressionDoesNotUseLabels) Validate(_ unmarshaler.RuleGroup, rule rulef
 	return errs
 }
 
-type expressionUseOnlyWhitelistedLabelsForMetric struct {
-	allowedLabels []string
-	metric        string
+type expressionUsesOnlyAllowedLabelsForMetricRegexp struct {
+	allowedLabels    []string
+	metricNameRegexp string
 }
 
 func newExpressionUseOnlyWhitelistedLabelsForMetric(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		AllowedLabels []string `yaml:"allowedLabels"`
-		Metric        string   `yaml:"metric"`
+		AllowedLabels    []string `yaml:"allowedLabels"`
+		MetricNameRegexp string   `yaml:"metricNameRegexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -137,15 +137,15 @@ func newExpressionUseOnlyWhitelistedLabelsForMetric(paramsConfig yaml.Node) (Val
 	if len(params.AllowedLabels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	return &expressionUseOnlyWhitelistedLabelsForMetric{allowedLabels: params.AllowedLabels, metric: params.Metric}, nil
+	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: params.AllowedLabels, metricNameRegexp: params.MetricNameRegexp}, nil
 }
 
-func (h expressionUseOnlyWhitelistedLabelsForMetric) String() string {
-	return fmt.Sprintf("expression only uses allowed labels `%s` for metric %s", strings.Join(h.allowedLabels, "`,`"), h.metric)
+func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) String() string {
+	return fmt.Sprintf("expression only uses allowed labels `%s` for metric %s", strings.Join(h.allowedLabels, "`,`"), h.metricNameRegexp)
 }
 
-func (h expressionUseOnlyWhitelistedLabelsForMetric) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
-	usedLabels, err := getExpressionUsedLabelsForMetric(rule.Expr, h.metric)
+func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	usedLabels, err := getExpressionUsedLabelsForMetricRegexp(rule.Expr, h.metricNameRegexp)
 	if err != nil {
 		return []error{err}
 	}
@@ -156,7 +156,7 @@ func (h expressionUseOnlyWhitelistedLabelsForMetric) Validate(_ unmarshaler.Rule
 	var errs []error
 	for _, l := range usedLabels {
 		if _, ok := allowedLabelsMap[l]; !ok {
-			errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression", l))
+			errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression in combination with metric %s (regexp)", l, h.metricNameRegexp))
 		}
 	}
 	return errs

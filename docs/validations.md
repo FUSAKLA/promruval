@@ -25,7 +25,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionIsValidPromQL`](#expressionisvalidpromql)
       - [`expressionDoesNotUseMetrics`](#expressiondoesnotusemetrics)
       - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
-      - [`expressionUseOnlyWhitelistedLabelsForMetric`](#expressionUseOnlyWhitelistedLabelsForMetric)
+      - [`expressionUsesOnlyAllowedLabelsForMetricRegexp`](#expressionUsesOnlyAllowedLabelsForMetric)
       - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
       - [`expressionDoesNotUseRangeShorterThan`](#expressiondoesnotuserangeshorterthan)
       - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
@@ -258,21 +258,21 @@ params:
   labels: [ "foo", "bar" ]
 ```
 
-#### `expressionUseOnlyWhitelistedLabelsForMetric`
+#### `expressionUsesOnlyAllowedLabelsForMetricRegexp`
 
-Fails if the rule uses any labels beside those provided in combination with given metric in its `expr` label matchers, aggregations or joins.
+Fails if the rule uses any labels beside those provided in combination with given metric regexp in its `expr` label matchers, aggregations or joins.
 > If using kube-state-metrics for exposing labels information about K8S objects (kube_*_labels) only those labels whitelisted by kube-state-metrics admin will be available.
 > Might be useful to check that users does not use any other in their expressions.
 
 ```yaml
 params:
-  metric: "kube_pod_labels"
+  metricNameRegexp: "kube_pod_labels"
   allowedLabels: [ "pod", "cluster", "app", "team" ]
 ```
 
 #### `expressionDoesNotUseOlderDataThan`
 
-Fails if the rule `expr` uses older data than specified limit in Prometheus duration syntax. Checks even in sub-queries
+Fails if the rule `expr` uses older data than specified limit in Prometheus duration syntax. Checks even in sub-queriesmetric
 and offsets.
 > Useful to avoid writing queries which expects longer data retention than the Prometheus actually has.
 
