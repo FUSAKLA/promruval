@@ -267,7 +267,7 @@ Fails if the rule uses any labels beside those provided in combination with give
 ```yaml
 params:
   metric: "kube_pod_labels"
-  labels: [ "pod", "cluster", "app", "team" ]
+  allowedLabels: [ "pod", "cluster", "app", "team" ]
 ```
 
 #### `expressionDoesNotUseOlderDataThan`
