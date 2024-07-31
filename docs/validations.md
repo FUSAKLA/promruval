@@ -260,7 +260,12 @@ params:
 
 #### `expressionUsesOnlyAllowedLabelsForMetricRegexp`
 
-Fails if the rule uses any labels beside those provided in combination with given metric regexp in its `expr` label matchers, aggregations or joins.
+Fails if the rule uses any labels beside those listed in `allowedLabels`, in combination with given metric regexp in its `expr` label matchers, aggregations or joins.
+Different metric name matchers are handled as follows:
+* `{__name__="foo",..}, foo{...}` - `foo` is matched literally against given `metricNameRegexp`, if matches, expr is validated against `allowedLabels`
+* `{__name__=~"foo",..}` - skipped
+* `{__name__!="foo",}, {__name__!~"foo"}` - skipped
+
 > If using kube-state-metrics for exposing labels information about K8S objects (kube_*_labels) only those labels whitelisted by kube-state-metrics admin will be available.
 > Might be useful to check that users does not use any other in their expressions.
 

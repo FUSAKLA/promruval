@@ -38,11 +38,9 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 // Returns true in case metric name selector matches given regexp and a list of other labels beside __name__, false and empty list otherwise.
 func labelsUsedInSelectorForMetricRegexp(selector *parser.VectorSelector, metricRegexp string) (usedLabels []string, metricUsed bool) {
 	for _, m := range selector.LabelMatchers {
-		if m.Name == "__name__" {
-			if (m.Type == labels.MatchRegexp || m.Type == labels.MatchEqual) && regexp.MustCompile(metricRegexp).MatchString(m.Value) {
-				metricUsed = true
-				continue
-			}
+		if m.Name == "__name__" && m.Type == labels.MatchEqual && regexp.MustCompile("^"+metricRegexp+"$").MatchString(m.Value) {
+			metricUsed = true
+			continue
 		}
 		usedLabels = append(usedLabels, m.Name)
 	}
