@@ -121,6 +121,47 @@ func (h expressionDoesNotUseLabels) Validate(_ unmarshaler.RuleGroup, rule rulef
 	return errs
 }
 
+type expressionUsesOnlyAllowedLabelsForMetricRegexp struct {
+	allowedLabels    []string
+	metricNameRegexp string
+}
+
+func newExpressionUseOnlyWhitelistedLabelsForMetric(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		AllowedLabels    []string `yaml:"allowedLabels"`
+		MetricNameRegexp string   `yaml:"metricNameRegexp"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if len(params.AllowedLabels) == 0 {
+		return nil, fmt.Errorf("missing labels")
+	}
+	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: params.AllowedLabels, metricNameRegexp: params.MetricNameRegexp}, nil
+}
+
+func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) String() string {
+	return fmt.Sprintf("expression only uses allowed labels `%s` for metric %s", strings.Join(h.allowedLabels, "`,`"), h.metricNameRegexp)
+}
+
+func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	usedLabels, err := getExpressionUsedLabelsForMetricRegexp(rule.Expr, h.metricNameRegexp)
+	if err != nil {
+		return []error{err}
+	}
+	allowedLabelsMap := map[string]struct{}{}
+	for _, l := range h.allowedLabels {
+		allowedLabelsMap[l] = struct{}{}
+	}
+	var errs []error
+	for _, l := range usedLabels {
+		if _, ok := allowedLabelsMap[l]; !ok {
+			errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression in combination with metric %s (regexp)", l, h.metricNameRegexp))
+		}
+	}
+	return errs
+}
+
 func newExpressionDoesNotUseRangeShorterThan(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`

@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
@@ -30,6 +31,63 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 		}
 		return nil
 	})
+	slices.Sort(usedLabels)
+	return slices.Compact(usedLabels), nil
+}
+
+// Returns true in case metric name selector matches given regexp and a list of other labels beside __name__, false and empty list otherwise.
+func labelsUsedInSelectorForMetricRegexp(selector *parser.VectorSelector, metricRegexp string) (usedLabels []string, metricUsed bool) {
+	for _, m := range selector.LabelMatchers {
+		if m.Name == "__name__" && m.Type == labels.MatchEqual && regexp.MustCompile("^"+metricRegexp+"$").MatchString(m.Value) {
+			metricUsed = true
+			continue
+		}
+		usedLabels = append(usedLabels, m.Name)
+	}
+	return usedLabels, metricUsed
+}
+
+// Returns a list of labels which are used in given expr in relation to given metric.
+// Beside labels within vector selector itself, it adds labels used in Aggregate expressions and labels used in Binary expression.
+// For Binary expressions it may report false positives as the current implementation does not consider on which side of group_left/group_right is the given metric.
+func getExpressionUsedLabelsForMetricRegexp(expr, metricRegexp string) ([]string, error) {
+	promQl, err := parser.ParseExpr(expr)
+	if err != nil {
+		return []string{}, fmt.Errorf("failed to parse expression `%s`: %w", expr, err)
+	}
+	var metricInExpr bool
+	var usedLabels []string
+
+	labelsUpInExpr := func(path []parser.Node) []string {
+		usedLabels := []string{}
+		for _, n := range path {
+			switch v := n.(type) {
+			case *parser.AggregateExpr:
+				usedLabels = append(usedLabels, v.Grouping...)
+			case *parser.BinaryExpr:
+				if v.VectorMatching != nil {
+					usedLabels = append(usedLabels, v.VectorMatching.Include...)
+					usedLabels = append(usedLabels, v.VectorMatching.MatchingLabels...)
+				}
+			}
+		}
+		return usedLabels
+	}
+
+	parser.Inspect(promQl, func(n parser.Node, path []parser.Node) error {
+		if v, isVectorSelector := n.(*parser.VectorSelector); isVectorSelector {
+			selectorUsedLabels, ok := labelsUsedInSelectorForMetricRegexp(v, metricRegexp)
+			if ok {
+				metricInExpr = true
+				usedLabels = append(usedLabels, selectorUsedLabels...)
+				usedLabels = append(usedLabels, labelsUpInExpr(path)...)
+			}
+		}
+		return nil
+	})
+	if !metricInExpr {
+		return []string{}, nil
+	}
 	slices.Sort(usedLabels)
 	return slices.Compact(usedLabels), nil
 }
