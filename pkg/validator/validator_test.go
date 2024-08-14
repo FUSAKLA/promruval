@@ -14,6 +14,14 @@ import (
 	"gotest.tools/assert"
 )
 
+func mustCompileAnchoredRegexp(regexpString string) *regexp.Regexp {
+	compiled, err := regexp.Compile("^" + regexpString + "$")
+	if err != nil {
+		panic(err)
+	}
+	return compiled
+}
+
 var testCases = []struct {
 	name           string
 	validator      Validator
@@ -85,6 +93,22 @@ var testCases = []struct {
 	{name: "ruleExprUsesForbiddenLabelInWithout", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "sum(up) without (foo)"}, expectedErrors: 1},
 	{name: "ruleExprUsesForbiddenLabelInOn", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up * on(foo) up"}, expectedErrors: 1},
 	{name: "ruleExprUsesForbiddenLabelInGroup", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up * group_left (foo) up"}, expectedErrors: 1},
+
+	// expressionUsesOnlyAllowedLabelsForMetricRegexp
+	{name: "ruleExprDoesNotUseAnyLabels", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{"label_app"}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels"}, expectedErrors: 0},
+	{name: "ruleExprDoesUseForbiddenLabelInSelector", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels{app=~'foo'}"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInSelector", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels{app='foo'}"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInSelectorWithMetricNameAsRegexp", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_.*_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels{app='foo'}"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInSelectorWithMetricNameAsRegexpExtraAnchors", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("^kube_.*_labels$")}, rule: rulefmt.Rule{Expr: "kube_pod_labels{app='foo'}"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInSelectorWithMetricNameAsRegexpNotFullMatch", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_.*_label")}, rule: rulefmt.Rule{Expr: "kube_pod_labels{app='foo'}"}, expectedErrors: 0},
+	{name: "ruleExprDoesUseForbiddenLabelInSelectorWithMetricNameAsRegexp", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "{__name__=~'kube_.*_labels', app='foo'}"}, expectedErrors: 0},
+	{name: "ruleExprDoesUseForbiddenLabelInBy", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "sum(kube_pod_labels) by (app)"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInOn", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) up"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInGroup", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "group(kube_pod_labels) by (label_app)"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_left(foo) up"}, expectedErrors: 2},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_right(foo) up"}, expectedErrors: 2},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{"app"}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_left(foo) up"}, expectedErrors: 1},
+	{name: "ruleExprDoesUseForbiddenLabelInBinaryExprWithLabelTransfer", validator: expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap([]string{"app"}), metricNameRegexp: mustCompileAnchoredRegexp("kube_pod_labels")}, rule: rulefmt.Rule{Expr: "kube_pod_labels * on(app) group_right(foo) up"}, expectedErrors: 1},
 
 	// expressionDoesNotUseOlderDataThan
 	{name: "ruleExprDoesNotUseOlderData", validator: expressionDoesNotUseOlderDataThan{limit: time.Hour}, rule: rulefmt.Rule{Expr: "up{xxx='yyy'}"}, expectedErrors: 0},

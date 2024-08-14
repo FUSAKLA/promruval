@@ -25,7 +25,7 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.SourceTenants == nil || len(params.SourceTenants) == 0 {
+	if len(params.SourceTenants) == 0 {
 		return nil, fmt.Errorf("sourceTenants metrics mapping needs to be set")
 	}
 	validator := hasSourceTenantsForMetrics{sourceTenants: map[string][]tenantMetrics{}, defaultTenant: params.DefaultTenant}
