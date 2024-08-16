@@ -10,7 +10,6 @@ on:
   pull_request:
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +22,8 @@ jobs:
 
       - name: Golangci-lint
         uses: golangci/golangci-lint-action@v6
+        with:
+          args: --timeout 5m0s
 
       - name: Build
         run: make build
