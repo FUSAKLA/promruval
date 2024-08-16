@@ -23,4 +23,4 @@ jobs:
       - name: Test
         uses: goreleaser/goreleaser-action@v6
         with:
-          args: release --snapshot --skip-publish
+          args: release --snapshot --clean
