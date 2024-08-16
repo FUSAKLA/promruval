@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0]
+- Added: Build of windows and darwin and support for arm architectures in CI
+
 ## [3.1.0] - 2024-08-14
 
  - Added: New validator `expressionUsesOnlyAllowedLabelsForMetricRegexp` to check if the expression uses only allowed labels for the metric.
