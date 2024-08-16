@@ -9,4 +9,5 @@ vendor/
 
 *_cache.json
 promruval
+dist/
 tmp

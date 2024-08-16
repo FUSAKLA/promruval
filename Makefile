@@ -6,7 +6,7 @@ CACHE_FILE := .promruval_cache.json
 
 PROMRUVAL_BIN := ./promruval
 
-all: clean deps lint build test e2e-test
+all: clean deps lint build test e2e-test test-release
 
 $(TMP_DIR):
 	mkdir -p $(TMP_DIR)
@@ -61,3 +61,6 @@ clean:
 .PHONY: deps
 deps:
 	go mod tidy && go mod verify
+
+test-release:
+	goreleaser release --snapshot --clean
