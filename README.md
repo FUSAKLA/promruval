@@ -55,6 +55,11 @@ or
 make build
 ```
 
+#### Supported platforms
+Promruval is tested only on the linux amd64. It should work on other platforms as well, but it's not tested.
+Each release contains the binaries for linux, darwin and windows and different architectures (amd64, arm64).
+So please use them with caution and report any issues.
+
 ### Usage
 
 ```bash

@@ -9,9 +9,15 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
+      - darwin
+      - windows
     goarch:
       - amd64
-      - 386
+      - arm64
+      - "386"
+    ignore:
+      - goos: darwin
+        goarch: "386"
 
 source:
   enabled: true
@@ -37,4 +43,3 @@ dockers:
       - --label=org.opencontainers.image.url={{.GitURL}}
       - --label=org.opencontainers.image.documentation={{.GitURL}}
       - --label=org.opencontainers.image.source={{replace .GitURL ".git" "" }}
-
