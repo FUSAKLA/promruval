@@ -602,11 +602,9 @@ func (h expressionDoesNotUseExperimentalFunctions) Validate(_ unmarshaler.RuleGr
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
 	}
-	fmt.Println(">>>>>>>>> ", promQl)
 	forbiddenFuncs := []string{}
 	parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
 		if fnCall, ok := n.(*parser.Call); ok {
-			fmt.Println(fnCall.Func.Name, fnCall.Func.Experimental)
 			if fnCall.Func != nil && fnCall.Func.Experimental {
 				forbiddenFuncs = append(forbiddenFuncs, fnCall.Func.Name)
 			}
