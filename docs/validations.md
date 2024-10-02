@@ -23,9 +23,10 @@ All the supported validations are listed here. The validations are grouped by th
       - [`exclusiveLabels`](#exclusivelabels)
     - [PromQL expression validators](#promql-expression-validators)
       - [`expressionIsValidPromQL`](#expressionisvalidpromql)
+      - [`expressionDoesNotUseExperimentalFunctions`](#expressiondoesnotuseexperimentalfunctions)
       - [`expressionDoesNotUseMetrics`](#expressiondoesnotusemetrics)
       - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
-      - [`expressionUsesOnlyAllowedLabelsForMetricRegexp`](#expressionUsesOnlyAllowedLabelsForMetric)
+      - [`expressionUsesOnlyAllowedLabelsForMetricRegexp`](#expressionusesonlyallowedlabelsformetricregexp)
       - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
       - [`expressionDoesNotUseRangeShorterThan`](#expressiondoesnotuserangeshorterthan)
       - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
@@ -236,6 +237,10 @@ params:
 #### `expressionIsValidPromQL`
 
 Fails if the expression is not a valid PromQL query.
+
+#### `expressionDoesNotUseExperimentalFunctions`
+
+Fails if the rule expression uses any of the experimental PromQL functions.
 
 #### `expressionDoesNotUseMetrics`
 

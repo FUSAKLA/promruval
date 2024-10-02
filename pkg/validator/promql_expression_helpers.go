@@ -9,6 +9,11 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+func init() {
+	// Enable experimental functions in promql parser.
+	parser.EnableExperimentalFunctions = true
+}
+
 const metricNameLabel = "__name__"
 
 func allowedLabelsMap(l []string) map[string]struct{} {

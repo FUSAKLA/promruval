@@ -29,6 +29,7 @@ validationRules:
       - type: validFunctionsOnCounters
       - type: rateBeforeAggregation
       - type: expressionWithNoMetricName
+      - type: expressionDoesNotUseExperimentalFunctions
       - type: expressionIsWellFormatted
         params:
           showExpectedForm: true

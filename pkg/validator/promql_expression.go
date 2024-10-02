@@ -582,3 +582,39 @@ func (h expressionIsWellFormatted) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	}
 	return []error{errors.New(errorText)}
 }
+
+func newExpressionDoesNotUseExperimentalFunctions(paramsConfig yaml.Node) (Validator, error) {
+	params := struct{}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &expressionDoesNotUseExperimentalFunctions{}, nil
+}
+
+type expressionDoesNotUseExperimentalFunctions struct{}
+
+func (h expressionDoesNotUseExperimentalFunctions) String() string {
+	return "expression does not use any experimental PromQL functions"
+}
+
+func (h expressionDoesNotUseExperimentalFunctions) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	promQl, err := parser.ParseExpr(rule.Expr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
+	}
+	fmt.Println(">>>>>>>>> ", promQl)
+	forbiddenFuncs := []string{}
+	parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
+		if fnCall, ok := n.(*parser.Call); ok {
+			fmt.Println(fnCall.Func.Name, fnCall.Func.Experimental)
+			if fnCall.Func != nil && fnCall.Func.Experimental {
+				forbiddenFuncs = append(forbiddenFuncs, fnCall.Func.Name)
+			}
+		}
+		return nil
+	})
+	if len(forbiddenFuncs) > 0 {
+		return []error{fmt.Errorf("expression uses experimental functions: %s", strings.Join(forbiddenFuncs, ", "))}
+	}
+	return []error{}
+}

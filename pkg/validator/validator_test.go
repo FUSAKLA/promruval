@@ -307,6 +307,10 @@ var testCases = []struct {
 	// groupNameMatchesRegexp
 	{name: "groupNameMatchesRegexp_valid", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`)}, group: unmarshaler.RuleGroup{Name: "TestGroup"}, expectedErrors: 0},
 	{name: "groupNameMatchesRegexp_invalid", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`)}, group: unmarshaler.RuleGroup{Name: "Test Group"}, expectedErrors: 1},
+
+	// expressionDoesNotUseExperimentalFunctions
+	{name: "expressionDoesNotUseExperimentalFunctions_valid", validator: expressionDoesNotUseExperimentalFunctions{}, rule: rulefmt.Rule{Expr: `sort_desc(up)`}, expectedErrors: 0},
+	{name: "expressionDoesNotUseExperimentalFunctions_invalid", validator: expressionDoesNotUseExperimentalFunctions{}, rule: rulefmt.Rule{Expr: `sort_by_label(up, "instance")`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

@@ -65,6 +65,7 @@ validationRules:
   - name: check-prometheus-limitations
     scope: All rules
     validations:
+      - type: expressionDoesNotUseExperimentalFunctions
       - type: expressionDoesNotUseOlderDataThan
         params:
           limit: "6h"

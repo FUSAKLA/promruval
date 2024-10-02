@@ -34,6 +34,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"expressionWithNoMetricName":                     newExpressionWithNoMetricName,
 	"expressionIsWellFormatted":                      newExpressionIsWellFormatted,
 	"expressionIsValidLogQL":                         newExpressionIsValidLogQL,
+	"expressionDoesNotUseExperimentalFunctions":      newExpressionDoesNotUseExperimentalFunctions,
 	"logQlExpressionUsesRangeAggregation":            newLogQLExpressionUsesRangeAggregation,
 	"logQlExpressionUsesFiltersFirst":                newlogQlExpressionUsesFiltersFirst,
 

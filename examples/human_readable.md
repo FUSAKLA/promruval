@@ -23,6 +23,7 @@ Validation rules:
     - Alert has all of these annotations: `title`
 
   check-prometheus-limitations
+    - All rules expression does not use any experimental PromQL functions
     - All rules expression does not use data older than `6h0m0s`
     - All rules does not use any of the `cluster`,`locality`,`prometheus-type`,`replica` labels is in its expression
 
