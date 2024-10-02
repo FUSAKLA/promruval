@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Changed: Upgrade to go 1.23
+- Changed: Upgrade prometheus dependencies
 
 ## [3.2.0]
 - Added: Build of windows and darwin and support for arm architectures in CI
