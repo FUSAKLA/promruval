@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Changed: Upgrade to go 1.23
 - Changed: Upgrade prometheus dependencies
+- Changed: Upgrade other dependencies
 - Changed: Enable experimental functions in PromQL parser by default, to forbid them use a new validator `expressionDoesNotUseExperimentalFunctions`
 - Added: New validator `expressionDoesNotUseExperimentalFunctions` to check if the expression does not use experimental functions
 - Added: New validator `expressionUsesUnderscoresInLargeNumbers` that requires using underscores as separators in large numbers in expressions
