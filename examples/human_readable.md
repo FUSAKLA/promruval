@@ -24,6 +24,7 @@ Validation rules:
 
   check-prometheus-limitations
     - All rules expression does not use any experimental PromQL functions
+    - All rules expression uses underscores as separators in large numbers in PromQL expression. Example: 1_000_000
     - All rules expression does not use data older than `6h0m0s`
     - All rules does not use any of the `cluster`,`locality`,`prometheus-type`,`replica` labels is in its expression
 

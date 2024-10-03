@@ -33,6 +33,7 @@
   <h2><a href="#check-prometheus-limitations">check-prometheus-limitations</a></h2>
 	  <ul>
 		<li>All rules expression does not use any experimental PromQL functions</li>
+		<li>All rules expression uses underscores as separators in large numbers in PromQL expression. Example: 1_000_000</li>
 		<li>All rules expression does not use data older than <code>6h0m0s</code></li>
 		<li>All rules does not use any of the <code>cluster</code>,<code>locality</code>,<code>prometheus-type</code>,<code>replica</code> labels is in its expression</li>
 	  </ul>

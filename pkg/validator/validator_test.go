@@ -311,6 +311,12 @@ var testCases = []struct {
 	// expressionDoesNotUseExperimentalFunctions
 	{name: "expressionDoesNotUseExperimentalFunctions_valid", validator: expressionDoesNotUseExperimentalFunctions{}, rule: rulefmt.Rule{Expr: `sort_desc(up)`}, expectedErrors: 0},
 	{name: "expressionDoesNotUseExperimentalFunctions_invalid", validator: expressionDoesNotUseExperimentalFunctions{}, rule: rulefmt.Rule{Expr: `sort_by_label(up, "instance")`}, expectedErrors: 1},
+
+	// expressionUsesUnderscoresInLargeNumbers
+	{name: "expressionUsesUnderscoresInLargeNumbers_valid", validator: expressionUsesUnderscoresInLargeNumbers{}, rule: rulefmt.Rule{Expr: `vector(time())  > 100`}, expectedErrors: 0},
+	{name: "expressionUsesUnderscoresInLargeNumbers_valid_duration", validator: expressionUsesUnderscoresInLargeNumbers{}, rule: rulefmt.Rule{Expr: `vector(time())  > 100h`}, expectedErrors: 0},
+	{name: "expressionUsesUnderscoresInLargeNumbers_valid_exp", validator: expressionUsesUnderscoresInLargeNumbers{}, rule: rulefmt.Rule{Expr: `vector(time())  > 10e12`}, expectedErrors: 0},
+	{name: "expressionUsesUnderscoresInLargeNumbers_invalid", validator: expressionUsesUnderscoresInLargeNumbers{}, rule: rulefmt.Rule{Expr: `time() > 1000`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

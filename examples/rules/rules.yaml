@@ -10,6 +10,14 @@ groups:
         labels:
           foo: bar
 
+      - alert: testExperimentalPromQL
+        expr: |
+          # ignore_validations: expressionCanBeEvaluated, expressionDoesNotUseExperimentalFunctions, hasLabels, hasAnyOfAnnotations, hasAnnotations
+          sort_by_label(
+            up,
+            "instance"
+          )
+
   # ignore_validations: labelHasAllowedValue
   - name: testGroup
     limit: 1000
@@ -18,11 +26,7 @@ groups:
       # Comment on the same line. ignore_validations: expressionSelectorsMatchesAnything, expressionDoesNotUseOlderDataThan
       # Comment after.
       - alert: test
-        expr: |
-          sort_by_label(
-            avg_over_time(max_over_time(up{job="prometheus"}[10h] offset 10d)[10m:10m]),
-            "instance"
-          )
+        expr: avg_over_time(max_over_time(up{job="prometheus"}[10h] offset 10d)[10m:10m])
         for: 4w
         keep_firing_for: 5m
         labels:

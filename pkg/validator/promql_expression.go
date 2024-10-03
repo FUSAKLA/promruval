@@ -616,3 +616,41 @@ func (h expressionDoesNotUseExperimentalFunctions) Validate(_ unmarshaler.RuleGr
 	}
 	return []error{}
 }
+
+func newExpressionUsesUnderscoresInLargeNumbers(paramsConfig yaml.Node) (Validator, error) {
+	params := struct{}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &expressionUsesUnderscoresInLargeNumbers{}, nil
+}
+
+type expressionUsesUnderscoresInLargeNumbers struct{}
+
+func (h expressionUsesUnderscoresInLargeNumbers) String() string {
+	return "expression uses underscores as separators in large numbers in PromQL expression. Example: 1_000_000"
+}
+
+var numberRegexp = regexp.MustCompile(`^\d+$`)
+
+func (h expressionUsesUnderscoresInLargeNumbers) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	promQl, err := parser.ParseExpr(rule.Expr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
+	}
+	invalidNumbers := []string{}
+	parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
+		if number, ok := n.(*parser.NumberLiteral); ok {
+			numberStr := rule.Expr[number.PosRange.Start:number.PosRange.End]
+			// Ignore numbers that use 10e2 notation and duration notation (1m, 1h, etc.) and numbers that are less than 1000 where the underscore is not needed
+			if numberRegexp.MatchString(numberStr) && number.Val >= 1000 && !strings.Contains(numberStr, "_") {
+				invalidNumbers = append(invalidNumbers, number.String())
+			}
+		}
+		return nil
+	})
+	if len(invalidNumbers) > 0 {
+		return []error{fmt.Errorf("expression should use _ in large numbers (example: 1_000_0000) for better readability in these numbers: %s", strings.Join(invalidNumbers, ", "))}
+	}
+	return []error{}
+}

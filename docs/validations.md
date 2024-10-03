@@ -32,6 +32,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
       - [`validFunctionsOnCounters`](#validfunctionsoncounters)
       - [`rateBeforeAggregation`](#ratebeforeaggregation)
+      - [`expressionUsesUnderscoresInLargeNumbers`](#expressionusesunderscoresinlargenumbers)
       - [`expressionWithNoMetricName`](#expressionwithnometricname)
       - [`expressionIsWellFormatted`](#expressioniswellformatted)
     - [PromQL expression validators (using live Prometheus instance)](#promql-expression-validators-using-live-prometheus-instance)
@@ -317,6 +318,11 @@ Fails if the expression uses a `rate` or `increase` function on a metric that do
 
 Fails if aggregation function is used before the `rate` or `increase` functions.
 > Avoid common mistake of using aggregation function before the `rate` or `increase` function.
+
+#### `expressionUsesUnderscoresInLargeNumbers`
+
+Fails if the query containes numbers higher than 1000 without using underscores as separators for better readability.
+Ignores numbers in the `10e2` and duration format.
 
 #### `expressionWithNoMetricName`
 

@@ -2,7 +2,7 @@
 # customDisableComment: my_disable_comment
 
 prometheus:
-  url: http://demo.robustperception.io:9090
+  url: https://prometheus.demo.do.prometheus.io
   bearerTokenFile: ./bearer.token
 
 validationRules:
@@ -66,6 +66,7 @@ validationRules:
     scope: All rules
     validations:
       - type: expressionDoesNotUseExperimentalFunctions
+      - type: expressionUsesUnderscoresInLargeNumbers
       - type: expressionDoesNotUseOlderDataThan
         params:
           limit: "6h"

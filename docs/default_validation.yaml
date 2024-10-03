@@ -30,6 +30,7 @@ validationRules:
       - type: rateBeforeAggregation
       - type: expressionWithNoMetricName
       - type: expressionDoesNotUseExperimentalFunctions
+      - type: expressionUsesUnderscoresInLargeNumbers
       - type: expressionIsWellFormatted
         params:
           showExpectedForm: true

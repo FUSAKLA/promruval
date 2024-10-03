@@ -11,6 +11,7 @@ import (
 type validatorCreator func(params yaml.Node) (Validator, error)
 
 var registeredUniversalRuleValidators = map[string]validatorCreator{
+	// Labels
 	"hasLabels":            newHasLabels,
 	"doesNotHaveLabels":    newDoesNotHaveLabels,
 	"hasAnyOfLabels":       newHasAnyOfLabels,
@@ -19,6 +20,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"nonEmptyLabels":       newNonEmptyLabels,
 	"exclusiveLabels":      newExclusiveLabels,
 
+	// Expressions
 	"expressionIsValidPromQL":                        newExpressionIsValidPromQL,
 	"validFunctionsOnCounters":                       newValidFunctionsOnCounters,
 	"rateBeforeAggregation":                          newRateBeforeAggregation,
@@ -33,11 +35,15 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"expressionSelectorsMatchesAnything":             newExpressionSelectorsMatchesAnything,
 	"expressionWithNoMetricName":                     newExpressionWithNoMetricName,
 	"expressionIsWellFormatted":                      newExpressionIsWellFormatted,
-	"expressionIsValidLogQL":                         newExpressionIsValidLogQL,
+	"expressionUsesUnderscoresInLargeNumbers":        newExpressionUsesUnderscoresInLargeNumbers,
 	"expressionDoesNotUseExperimentalFunctions":      newExpressionDoesNotUseExperimentalFunctions,
-	"logQlExpressionUsesRangeAggregation":            newLogQLExpressionUsesRangeAggregation,
-	"logQlExpressionUsesFiltersFirst":                newlogQlExpressionUsesFiltersFirst,
 
+	// LogQL
+	"expressionIsValidLogQL":              newExpressionIsValidLogQL,
+	"logQlExpressionUsesRangeAggregation": newLogQLExpressionUsesRangeAggregation,
+	"logQlExpressionUsesFiltersFirst":     newlogQlExpressionUsesFiltersFirst,
+
+	// Other
 	"hasSourceTenantsForMetrics": newHasSourceTenantsForMetrics,
 }
 
