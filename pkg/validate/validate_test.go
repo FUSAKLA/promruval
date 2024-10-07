@@ -7,7 +7,6 @@ import (
 
 func TestGenerateExcludedRules(t *testing.T) {
 	type testCase struct {
-		name     string
 		input    string
 		expected []string
 	}
