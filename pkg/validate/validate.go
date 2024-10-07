@@ -176,5 +176,6 @@ func generateExcludedRules(excludedRulesText string) []string {
 		}
 		excludedRules = append(excludedRules, rule)
 	}
-	return excludedRules
+	slices.Sort(excludedRules)
+	return slices.Compact(excludedRules)
 }
