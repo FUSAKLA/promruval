@@ -12,40 +12,44 @@ func TestGenerateExcludedRules(t *testing.T) {
 	}
 	testCases := []testCase{
 		{
+			input:    "check-test-label,check-testy-label",
+			expected: []string{"check-test-label", "check-testy-label"},
+		},
+		{
 			input:    "check-test-label,check-test-label",
-			expected: []string{"check-test-label", "check-test-label"},
+			expected: []string{"check-test-label"},
 		},
 		{
-			input:    "check-test-label, check-test-label",
-			expected: []string{"check-test-label", "check-test-label"},
+			input:    "check-test-label, check-testy-label",
+			expected: []string{"check-test-label", "check-testy-label"},
 		},
 		{
-			input:    "check-test-label, check-test-label,",
-			expected: []string{"check-test-label", "check-test-label"},
+			input:    "check-test-label, check-testy-label,",
+			expected: []string{"check-test-label", "check-testy-label"},
 		},
 		{
 			input:    "check-test-label ,check-test-label",
-			expected: []string{"check-test-label", "check-test-label"},
+			expected: []string{"check-test-label"},
 		},
 		{
 			input:    "check-test-label,check-test-label, ",
-			expected: []string{"check-test-label", "check-test-label"},
+			expected: []string{"check-test-label"},
 		},
 		{
-			input:    "check-test-label  ,  check test label , ",
-			expected: []string{"check-test-label", "check test label"},
+			input:    "check-test-label  ,  check testy label , ",
+			expected: []string{"check testy label", "check-test-label"},
 		},
 		{
-			input:    "check-test-label , check-test-label    ",
-			expected: []string{"check-test-label", "check-test-label"},
+			input:    "check-test-label , check-testy-label    ",
+			expected: []string{"check-test-label", "check-testy-label"},
 		},
 		{
-			input:    "check-test-label , check-test-label, ,    ",
-			expected: []string{"check-test-label", "check-test-label"},
+			input:    "check-test-label , check-testy-label, ,    ",
+			expected: []string{"check-test-label", "check-testy-label"},
 		},
 		{
-			input:    " check-test-label , check-test-label , ,    ",
-			expected: []string{"check-test-label", "check-test-label"},
+			input:    " check-test-label , check-testy-label , ,    ",
+			expected: []string{"check-test-label", "check-testy-label"},
 		},
 	}
 	for i, tc := range testCases {
