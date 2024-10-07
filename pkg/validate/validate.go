@@ -124,6 +124,9 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				if ok {
 					excludedRules = strings.Split(excludedRulesText, ",")
 				}
+				for i := range excludedRules {
+					excludedRules[i] = strings.TrimSpace(excludedRules[i])
+				}
 				disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
 				if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
 					ruleReport.Errors = append(ruleReport.Errors, fmt.Errorf("invalid disabled validators: %w", err))

@@ -1,0 +1,15 @@
+validationRules:
+
+  - name: check-test-label
+    scope: Alert
+    validations:
+      - type: hasLabels
+        params:
+          labels: ["test"]
+
+  - name: check-testy-label
+    scope: Alert
+    validations:
+      - type: hasLabels
+        params:
+          labels: ["testy"]
