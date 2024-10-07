@@ -171,10 +171,9 @@ func generateExcludedRules(excludedRulesText string) []string {
 	var excludedRules []string
 	for _, r := range strings.Split(excludedRulesText, ",") {
 		rule := strings.TrimSpace(r)
-		if rule == "" {
-			continue
+		if rule != "" {
+			excludedRules = append(excludedRules, rule)
 		}
-		excludedRules = append(excludedRules, rule)
 	}
 	slices.Sort(excludedRules)
 	return slices.Compact(excludedRules)
