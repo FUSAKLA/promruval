@@ -122,12 +122,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				var excludedRules []string
 				excludedRulesText, ok := originalRule.Annotations[excludeAnnotationName]
 				if ok {
-					excludedRules = slices.DeleteFunc(strings.Split(excludedRulesText, ","), func(s string) bool {
-						return s == ""
-					})
-					for i := range excludedRules {
-						excludedRules[i] = strings.TrimSpace(excludedRules[i])
-					}
+					excludedRules = generateExcludedRules(excludedRulesText)
 				}
 				disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
 				if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
@@ -170,4 +165,15 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 	}
 	validationReport.Duration = time.Since(start)
 	return validationReport
+}
+
+func generateExcludedRules(excludedRulesText string) []string {
+	excludedRules := strings.Split(excludedRulesText, ",")
+	for i := range excludedRules {
+		excludedRules[i] = strings.TrimSpace(excludedRules[i])
+	}
+	excludedRules = slices.DeleteFunc(excludedRules, func(s string) bool {
+		return s == ""
+	})
+	return excludedRules
 }
