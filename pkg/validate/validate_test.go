@@ -33,8 +33,8 @@ func TestGenerateExcludedRules(t *testing.T) {
 			expected: []string{"check-test-label", "check-test-label"},
 		},
 		{
-			input:    "check-test-label  ,  check test-label , ",
-			expected: []string{"check-test-label", "check test-label"},
+			input:    "check-test-label  ,  check test label , ",
+			expected: []string{"check-test-label", "check test label"},
 		},
 		{
 			input:    "check-test-label , check-test-label    ",

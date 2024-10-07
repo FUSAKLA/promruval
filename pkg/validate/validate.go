@@ -168,12 +168,13 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 }
 
 func generateExcludedRules(excludedRulesText string) []string {
-	excludedRules := strings.Split(excludedRulesText, ",")
-	for i := range excludedRules {
-		excludedRules[i] = strings.TrimSpace(excludedRules[i])
+	var excludedRules []string
+	for _, r := range strings.Split(excludedRulesText, ",") {
+		rule := strings.TrimSpace(r)
+		if rule == "" {
+			continue
+		}
+		excludedRules = append(excludedRules, rule)
 	}
-	excludedRules = slices.DeleteFunc(excludedRules, func(s string) bool {
-		return s == ""
-	})
 	return excludedRules
 }
