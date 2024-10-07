@@ -21,4 +21,4 @@ groups:
           description: Too many restarts in pod {{ $labels.pod }} in namespace {{ $labels.namespace }}.
           email: "{{ $labels.email }}"
           summary: Pods had several restarts within 15 minutes.
-          disabled_validation_rules: check-test-label, check-testy-label
+          disabled_validation_rules: check-test-label, check-testy-label,
