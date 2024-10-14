@@ -1,8 +1,8 @@
 package validate
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
 )
 
 func TestGenerateExcludedRules(t *testing.T) {
