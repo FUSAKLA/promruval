@@ -135,6 +135,7 @@ promruval validate --config-file ./rules/validation.yaml --config-file ./rules/p
 ### Configuration
 
 Promruval uses a yaml configuration file to define the validation rules.
+
 Basic structure is:
 
 ```yaml
@@ -159,6 +160,9 @@ prometheus:
   queryOffset: 1m
   # OPTIONAL how long into the past to look in queries supporting time range (just metadata queries for now).
   queryLookback: 20m
+  # OPTIONAL HTTP headers to be added to the request
+  httpHeaders:
+    foo: bar
 
 validationRules:
   # Name of the validation rule.
@@ -185,6 +189,9 @@ validationRules:
 For a complete list of supported validations see the [docs/validations.md](docs/validations.md).
 
 If you want to see example configuration see the  [`examples/validation.yaml`](examples/validation.yaml).
+
+#### ENV expansion
+You can use ENV variable expansion in the configuration file. Just use the `$ENV` or `${ENV_VAR}` syntax and it will be replaced with the value of the `ENV_VAR` environment variable.
 
 ### How to run it
 

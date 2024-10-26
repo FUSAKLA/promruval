@@ -47,7 +47,10 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 	start := time.Now()
 	fileCount := len(fileNames)
 	for i, fileName := range fileNames {
-		log.Infof("processing file %d/%d %s", i+1, fileCount, fileName)
+		log.WithFields(log.Fields{
+			"file":     fileName,
+			"progress": fmt.Sprintf("%d/%d", i+1, fileCount),
+		}).Info("processing file")
 		validationReport.FilesCount++
 		fileReport := validationReport.NewFileReport(fileName)
 		var yamlReader io.Reader
