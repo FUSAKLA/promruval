@@ -10,12 +10,10 @@ import (
 
 func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 	emptyCache := cache{
-		file:                   file,
-		PrometheusURL:          prometheusURL,
-		Created:                time.Now(),
-		QueriesStats:           make(map[string]queryStats),
-		KnownLabels:            []string{},
-		SelectorMatchingSeries: make(map[string]int),
+		file:          file,
+		PrometheusURL: prometheusURL,
+		Created:       time.Now(),
+		SourceTenants: make(map[string]*cacheData),
 	}
 	previousCache := emptyCache
 	f, err := os.Open(file)
@@ -23,30 +21,38 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 		if !os.IsNotExist(err) {
 			f, err = os.Create(file)
 			if err != nil {
-				log.Warnf("error creating cache file %s: %s", file, err)
+				log.WithError(err).WithField("file", file).Warn("error creating cache file")
 				return &emptyCache
 			}
 		} else {
-			log.Warnf("error opening cache file %s, skipping: %s", file, err)
+			log.WithError(err).WithField("file", file).Warn("error opening cache file, skipping")
 			return &emptyCache
 		}
 	}
 	if err := json.NewDecoder(f).Decode(&previousCache); err != nil {
-		log.Warnf("invalid cache file `%s` format: %s", file, err)
+		log.WithError(err).WithField("file", file).Warn("invalid cache file format")
 		return &emptyCache
 	}
 	pruneCache := false
 	cacheAge := time.Since(previousCache.Created)
 	if maxAge != 0 && cacheAge > maxAge {
-		log.Infof("%s old cache %s is outdated, limit is %s", cacheAge, file, maxAge)
+		log.WithFields(log.Fields{
+			"cacheAge":    cacheAge,
+			"maxCacheAge": maxAge,
+			"file_name":   file,
+		}).Info("cache is outdated")
 		pruneCache = true
 	}
 	if previousCache.PrometheusURL != prometheusURL {
-		log.Infof("data in cache file %s are from different Prometheus on URL %s, cannot be used for the instance on %s URL", file, previousCache.PrometheusURL, prometheusURL)
+		log.WithFields(log.Fields{
+			"previousPrometheusURL": previousCache.PrometheusURL,
+			"newPrometheusURL":      prometheusURL,
+			"file_name":             file,
+		}).Info("data in cache file are from different Prometheus, cannot be used")
 		pruneCache = true
 	}
 	if pruneCache {
-		log.Warnf("Pruning cache file %s", file)
+		log.WithField("file", file).Warn("Pruning cache file")
 		return &emptyCache
 	}
 	return &previousCache
@@ -57,30 +63,48 @@ type queryStats struct {
 	Series   int           `json:"series"`
 	Duration time.Duration `json:"duration"`
 }
-type cache struct {
-	file                   string
-	PrometheusURL          string                `json:"prometheus_url"`
-	Created                time.Time             `json:"created"`
+
+type cacheData struct {
 	QueriesStats           map[string]queryStats `json:"queries_stats"`
 	KnownLabels            []string              `json:"known_labels"`
 	SelectorMatchingSeries map[string]int        `json:"selector_matching_series"`
+}
+type cache struct {
+	file          string
+	PrometheusURL string                `json:"prometheus_url"`
+	Created       time.Time             `json:"created"`
+	SourceTenants map[string]*cacheData `json:"source_tenants"`
+}
+
+func (c *cache) SourceTenantsData(sourceTenants []string) *cacheData {
+	key := sourceTenantsToHeader(sourceTenants)
+	data, found := c.SourceTenants[key]
+	if !found {
+		data = &cacheData{
+			QueriesStats:           make(map[string]queryStats),
+			SelectorMatchingSeries: make(map[string]int),
+			KnownLabels:            []string{},
+		}
+		c.SourceTenants[key] = data
+	}
+	return data
 }
 
 func (c *cache) Dump() {
 	f, err := os.Create(c.file)
 	if err != nil {
-		log.Warnf("failed to create cache file %s: %s", c.file, err)
+		log.WithError(err).WithField("file", c.file).Warn("failed to create cache file")
 		return
 	}
 	defer func(f *os.File) {
 		_ = f.Close()
 	}(f)
 	e := json.NewEncoder(f)
-	e.SetIndent("", "  ")
+	e.SetIndent("", "")
 	err = e.Encode(c)
 	if err != nil {
-		log.Warnf("failed to write cache data: %s", err)
+		log.WithError(err).Warn("failed to write cache data")
 		return
 	}
-	log.Infof("successfully dumped cache to file %s", c.file)
+	log.WithField("file_name", c.file).Info("successfully dumped cache to file")
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Fixed: Ignore white spaces around rule names in the `disabled_validation_rules` annotation CSV format (Thanks @jmichalek13 !)
+- Added: Support ENV expansion in the config file in format `$ENV_VAR` or `${ENV_VAR}`
+- Changed: The cache format is now scoped by source tenants (internal change, no action required)
+- Changed: Logging uses structured logs now
+- Added: new `httpHeaders` field in the `prometheus` section of the config to set custom headers in the Prometheus requests
 
 ## [3.3.0] - 2024-10-03
 - Changed: Upgrade to go 1.23

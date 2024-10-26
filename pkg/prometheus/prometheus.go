@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -24,6 +25,10 @@ const (
 	bearerTokenEnvVar = "PROMETHEUS_BEARER_TOKEN"
 	userAgent         = "promruval"
 )
+
+func sourceTenantsToHeader(sourceTenants []string) string {
+	return strings.Join(sort.StringSlice(sourceTenants), "|")
+}
 
 func loadBearerToken(promConfig config.PrometheusConfig) (string, error) {
 	bearerToken := ""
@@ -63,6 +68,13 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 			"User-Agent": {Values: []string{userAgent}},
 		},
 	}
+	originalSourceTenants := []string{}
+	for k, v := range promConfig.HTTPHeaders {
+		if k == user.OrgIDHeaderName {
+			originalSourceTenants = []string{v}
+		}
+		headers.Headers[k] = prom_config.Header{Values: []string{v}}
+	}
 	cli, err := api.NewClient(api.Config{
 		Address:      promConfig.URL,
 		RoundTripper: prom_config.NewHeadersRoundTripper(&headers, tripper),
@@ -72,36 +84,41 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 	}
 	v1cli := v1.NewAPI(cli)
 	promClient := Client{
-		apiClient:      v1cli,
-		httpHeaders:    &headers,
-		httpHeadersMtx: sync.Mutex{},
-		url:            promConfig.URL,
-		timeout:        promConfig.Timeout,
-		queryOffset:    promConfig.QueryOffset,
-		queryLookback:  promConfig.QueryLookback,
-		cache:          newCache(promConfig.CacheFile, promConfig.URL, promConfig.MaxCacheAge),
+		apiClient:             v1cli,
+		httpHeaders:           &headers,
+		originalSourceTenants: originalSourceTenants,
+		httpHeadersMtx:        sync.Mutex{},
+		url:                   promConfig.URL,
+		timeout:               promConfig.Timeout,
+		queryOffset:           promConfig.QueryOffset,
+		queryLookback:         promConfig.QueryLookback,
+		cache:                 newCache(promConfig.CacheFile, promConfig.URL, promConfig.MaxCacheAge),
 	}
 	return &promClient, nil
 }
 
 type Client struct {
-	apiClient      v1.API
-	httpHeaders    *prom_config.Headers
-	httpHeadersMtx sync.Mutex
-	url            string
-	timeout        time.Duration
-	queryOffset    time.Duration
-	queryLookback  time.Duration
-	cache          *cache
+	apiClient             v1.API
+	httpHeaders           *prom_config.Headers
+	originalSourceTenants []string
+	httpHeadersMtx        sync.Mutex
+	url                   string
+	timeout               time.Duration
+	queryOffset           time.Duration
+	queryLookback         time.Duration
+	cache                 *cache
 }
 
 func (s *Client) SetSourceTenants(sourceTenants []string) {
 	s.httpHeadersMtx.Lock()
-	s.httpHeaders.Headers[user.OrgIDHeaderName] = prom_config.Header{Values: sourceTenants}
+	if len(sourceTenants) == 0 {
+		return
+	}
+	s.httpHeaders.Headers[user.OrgIDHeaderName] = prom_config.Header{Values: []string{sourceTenantsToHeader(sourceTenants)}}
 }
 
 func (s *Client) ClearSourceTenants() {
-	delete(s.httpHeaders.Headers, user.OrgIDHeaderName)
+	s.httpHeaders.Headers[user.OrgIDHeaderName] = prom_config.Header{Values: s.originalSourceTenants}
 	s.httpHeadersMtx.Unlock()
 }
 
@@ -114,7 +131,7 @@ func (s *Client) queryTimeRange() (start, end time.Time) {
 func (s *Client) DumpCache() {
 	start := time.Now()
 	s.cache.Dump()
-	log.Info("cache dumped in ", time.Since(start))
+	log.WithField("duration", time.Since(start)).Info("cache dumped")
 }
 
 func (s *Client) newContext() (context.Context, context.CancelFunc) {
@@ -133,30 +150,36 @@ func (s *Client) SelectorMatch(selector string, sourceTenants []string) ([]model
 	start := time.Now()
 	queryStart, queryEnd := s.queryTimeRange()
 	result, warnings, err := s.apiClient.Series(ctx, []string{selector}, queryStart, queryEnd)
-	log.Debugf("queried series matching selector `%s` on %s prometheus in %s", selector, s.url, time.Since(start))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query series: %w", err)
 	}
+	log.WithFields(log.Fields{
+		"selector":       selector,
+		"url":            s.url,
+		"sourceTenants":  sourceTenants,
+		"duration":       time.Since(start),
+		"matchingSeries": len(result),
+	}).Debug("queried prometheus for series matching selector")
 	if len(warnings) > 0 {
-		log.Warnf("Warning querying Prometheus: %s\n", warnings)
+		log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
 	}
 	return result, nil
 }
 
 func (s *Client) SelectorMatchingSeries(selector string, sourceTenants []string) (int, error) {
-	if count, found := s.cache.SelectorMatchingSeries[selector]; found {
+	if count, found := s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector]; found {
 		return count, nil
 	}
 	series, err := s.SelectorMatch(selector, sourceTenants)
 	if err != nil {
 		return 0, err
 	}
-	s.cache.SelectorMatchingSeries[selector] = len(series)
+	s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector] = len(series)
 	return len(series), nil
 }
 
 func (s *Client) Labels(sourceTenants []string) ([]string, error) {
-	if len(s.cache.KnownLabels) == 0 {
+	if len(s.cache.SourceTenantsData(sourceTenants).KnownLabels) == 0 {
 		ctx, cancel := s.newContext()
 		defer cancel()
 		s.SetSourceTenants(sourceTenants)
@@ -164,16 +187,23 @@ func (s *Client) Labels(sourceTenants []string) ([]string, error) {
 		start := time.Now()
 		queryStart, queryEnd := s.queryTimeRange()
 		result, warnings, err := s.apiClient.LabelNames(ctx, []string{}, queryStart, queryEnd)
-		log.Debugf("loaded all prometheus label names from %s in %s", s.url, time.Since(start))
 		if err != nil {
 			return nil, err
 		}
+		log.WithFields(log.Fields{
+			"url":           s.url,
+			"sourceTenants": sourceTenants,
+			"duration":      time.Since(start),
+			"labels":        len(result),
+			"queryStart":    queryStart,
+			"queryEnd":      queryEnd,
+		}).Debug("loaded all prometheus label names")
 		if len(warnings) > 0 {
-			log.Warnf("Warning querying Prometheus: %s\n", warnings)
+			log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
 		}
-		s.cache.KnownLabels = result
+		s.cache.SourceTenantsData(sourceTenants).KnownLabels = result
 	}
-	return s.cache.KnownLabels, nil
+	return s.cache.SourceTenantsData(sourceTenants).KnownLabels, nil
 }
 
 func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, int, time.Duration, error) {
@@ -185,12 +215,19 @@ func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, i
 	_, queryEnd := s.queryTimeRange()
 	result, warnings, err := s.apiClient.Query(ctx, query, queryEnd)
 	duration := time.Since(start)
-	log.Debugf("query `%s` on %s prometheus took %s", query, s.url, duration)
 	if err != nil {
 		return nil, 0, 0, fmt.Errorf("error querying prometheus: %w", err)
 	}
+	log.WithFields(log.Fields{
+		"url":           s.url,
+		"query":         query,
+		"at":            queryEnd,
+		"sourceTenants": sourceTenants,
+		"duration":      time.Since(start),
+		"resultType":    result.Type().String(),
+	}).Debug("query prometheus")
 	if len(warnings) > 0 {
-		log.Warnf("Warning querying Prometheus: %s\n", warnings)
+		log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
 	}
 	switch result.Type() {
 	case model.ValVector:
@@ -210,11 +247,11 @@ func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, i
 }
 
 func (s *Client) QueryStats(query string, sourceTenants []string) (int, time.Duration, error) {
-	if stats, found := s.cache.QueriesStats[query]; found {
+	if stats, found := s.cache.SourceTenantsData(sourceTenants).QueriesStats[query]; found {
 		return stats.Series, stats.Duration, stats.Error
 	}
 	_, series, duration, err := s.Query(query, sourceTenants)
 	stats := queryStats{Series: series, Duration: duration, Error: err}
-	s.cache.QueriesStats[query] = stats
+	s.cache.SourceTenantsData(sourceTenants).QueriesStats[query] = stats
 	return stats.Series, stats.Duration, stats.Error
 }

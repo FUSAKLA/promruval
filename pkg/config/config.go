@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -48,7 +49,7 @@ type Loader struct {
 }
 
 func (l *Loader) Load() (*Config, error) {
-	configFile, err := os.Open(l.ConfigPath)
+	configFileData, err := os.ReadFile(l.ConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("open config file: %w", err)
 	}
@@ -58,7 +59,8 @@ func (l *Loader) Load() (*Config, error) {
 		configDirMtx.Unlock()
 	}()
 	validationConfig := Config{}
-	decoder := yaml.NewDecoder(configFile)
+	expandedConfigFileData := os.ExpandEnv(string(configFileData))
+	decoder := yaml.NewDecoder(strings.NewReader(expandedConfigFileData))
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&validationConfig); err != nil {
 		return nil, fmt.Errorf("loading config file: %w", err)
@@ -74,14 +76,15 @@ type Config struct {
 }
 
 type PrometheusConfig struct {
-	URL                   string        `yaml:"url"`
-	Timeout               time.Duration `yaml:"timeout" default:"30s"`
-	InsecureSkipTLSVerify bool          `yaml:"insecureSkipTlsVerify"`
-	CacheFile             string        `yaml:"cacheFile,omitempty" default:".promruval_cache.json"`
-	MaxCacheAge           time.Duration `yaml:"maxCacheAge,omitempty" default:"1h"`
-	BearerTokenFile       string        `yaml:"bearerTokenFile,omitempty"`
-	QueryOffset           time.Duration `yaml:"queryOffset,omitempty" default:"1m"`
-	QueryLookback         time.Duration `yaml:"queryLookback,omitempty" default:"20m"`
+	URL                   string            `yaml:"url"`
+	Timeout               time.Duration     `yaml:"timeout" default:"30s"`
+	InsecureSkipTLSVerify bool              `yaml:"insecureSkipTlsVerify"`
+	CacheFile             string            `yaml:"cacheFile,omitempty" default:".promruval_cache.json"`
+	MaxCacheAge           time.Duration     `yaml:"maxCacheAge,omitempty" default:"1h"`
+	BearerTokenFile       string            `yaml:"bearerTokenFile,omitempty"`
+	QueryOffset           time.Duration     `yaml:"queryOffset,omitempty" default:"1m"`
+	QueryLookback         time.Duration     `yaml:"queryLookback,omitempty" default:"20m"`
+	HTTPHeaders           map[string]string `yaml:"httpHeaders,omitempty"`
 }
 
 func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
