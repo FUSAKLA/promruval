@@ -35,6 +35,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionUsesUnderscoresInLargeNumbers`](#expressionusesunderscoresinlargenumbers)
       - [`expressionWithNoMetricName`](#expressionwithnometricname)
       - [`expressionIsWellFormatted`](#expressioniswellformatted)
+      - [`expressionDoesNotUseClassicHistogramBucketOperations`](#expressiondoesnotuseclassichistogrambucketoperations)
     - [PromQL expression validators (using live Prometheus instance)](#promql-expression-validators-using-live-prometheus-instance)
       - [`expressionCanBeEvaluated`](#expressioncanbeevaluated)
       - [`expressionUsesExistingLabels`](#expressionusesexistinglabels)
@@ -342,6 +343,14 @@ params:
   showExpectedForm: true # Optional, will show how the query should be formatted
   skipExpressionsWithComments: true # Optional, will skip the expressions with comments
 ```
+
+#### `expressionDoesNotUseClassicHistogramBucketOperations`
+
+Fails if the expression does any binary operation between bucket metrics of a classical histogram.
+
+> There are situations when the classic histogram is not atomic (for example remote write), this it may result in unexpected results.
+> This calculation is often used to calculate SLOs a a difference between the `+Inf` bucket and one of the buckets which is the SLO threshold.
+> To avoid this issue, it's recommended to calculate such differences before sending the data over the remote write for example.
 
 ### PromQL expression validators (using live Prometheus instance)
 

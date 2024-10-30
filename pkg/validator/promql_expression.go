@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -653,4 +654,56 @@ func (h expressionUsesUnderscoresInLargeNumbers) Validate(_ unmarshaler.RuleGrou
 		return []error{fmt.Errorf("expression should use _ in large numbers (example: 1_000_0000) for better readability in these numbers: %s", strings.Join(invalidNumbers, ", "))}
 	}
 	return []error{}
+}
+
+func newExpressionDoesNotUseOperationsBetweenClassicHistogramBuckets(paramsConfig yaml.Node) (Validator, error) {
+	params := struct{}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	return &expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, nil
+}
+
+type expressionDoesNotUseOperationsBetweenClassicHistogramBuckets struct{}
+
+func (h expressionDoesNotUseOperationsBetweenClassicHistogramBuckets) String() string {
+	return "expression does not do any binary operations between histogram buckets, it can be dangerous because of inconsistency in the data if sent over remote write for example"
+}
+
+const (
+	histogramBucketSuffix    = "_bucket"
+	histogramBucketLabelName = "le"
+)
+
+func (h expressionDoesNotUseOperationsBetweenClassicHistogramBuckets) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	promQl, err := parser.ParseExpr(rule.Expr)
+	if err != nil {
+		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}
+	}
+	var errs []error
+	parser.Inspect(promQl, func(n parser.Node, _ []parser.Node) error {
+		if op, ok := n.(*parser.BinaryExpr); ok {
+			lhsVectorSelectors, err := getExpressionVectorSelectors(op.LHS.String())
+			if err != nil {
+				return err
+			}
+			rhsVectorSelectors, err := getExpressionVectorSelectors(op.RHS.String())
+			if err != nil {
+				return err
+			}
+			// If there is more then one vector selector on either side of the binary operation, we can't be sure that it is a histogram bucket operation
+			if len(lhsVectorSelectors) == 1 && len(rhsVectorSelectors) == 1 {
+				lhs := lhsVectorSelectors[0]
+				rhs := rhsVectorSelectors[0]
+				lhsLabelsUsedInSelector, _ := labelsUsedInSelectorForMetric(lhs, nil)
+				rhsLabelsUsedInSelector, _ := labelsUsedInSelectorForMetric(rhs, nil)
+				// Only detect if the metric name is the same and both selectors use the le label in selector
+				if lhs.Name == rhs.Name && strings.HasSuffix(lhs.Name, histogramBucketSuffix) && slices.Contains(lhsLabelsUsedInSelector, histogramBucketLabelName) && slices.Contains(rhsLabelsUsedInSelector, "le") {
+					errs = append(errs, fmt.Errorf("expression does binary operation between histogram buckets `%s` and `%s`", lhs.Name, rhs.Name))
+				}
+			}
+		}
+		return nil
+	})
+	return errs
 }

@@ -29,7 +29,7 @@ func allowedLabelsMap(l []string) map[string]struct{} {
 // Returns true in case metric name selector matches given regexp and a list used labels, false and empty list otherwise.
 func labelsUsedInSelectorForMetric(selector *parser.VectorSelector, metricRegexp *regexp.Regexp) (usedLabels []string, metricUsed bool) {
 	for _, m := range selector.LabelMatchers {
-		if m.Name == metricNameLabel && m.Type == labels.MatchEqual && metricRegexp.MatchString(m.Value) {
+		if metricRegexp != nil && m.Name == metricNameLabel && m.Type == labels.MatchEqual && metricRegexp.MatchString(m.Value) {
 			metricUsed = true
 		}
 		usedLabels = append(usedLabels, m.Name)

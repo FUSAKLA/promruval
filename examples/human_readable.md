@@ -40,6 +40,7 @@ Validation rules:
 
   check-formatting
     - All rules expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/
+    - All rules expression does not do any binary operations between histogram buckets, it can be dangerous because of inconsistency in the data if sent over remote write for example
 
   check-recording-rules
     - Recording rule Recorded metric name does not match regexp: ^foo_bar$
