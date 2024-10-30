@@ -62,6 +62,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`alertNameMatchesRegexp`](#alertnamematchesregexp)
   - [Recording rules validators](#recording-rules-validators)
       - [`recordedMetricNameMatchesRegexp`](#recordedmetricnamematchesregexp)
+      - [`recordedMetricNameDoesNotMatchRegexp`](#recordedmetricnamedoesnotmatchregexp)
 
 
 
@@ -545,4 +546,13 @@ Fails if the name of the recorded metric does not match the specified regular ex
 ```yaml
 params:
   regexp: "[^:]+:[^:]+:[^:]+"
+```
+
+#### `recordedMetricNameDoesNotMatchRegexp`
+
+Fails if the name of the recorded metric matches the specified regular expression.
+
+```yaml
+params:
+  regexp: "^foo_bar$"
 ```

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed: Logging uses structured logs now
 - Added: new `httpHeaders` field in the `prometheus` section of the config to set custom headers in the Prometheus requests
 - Added: new option `negativeRegexp` to the `hasSourceTenantsForMetrics` validation, see [the docs](docs/validations.md#hassourcetenantsformetrics)
+- Added: new validator `recordedMetricNameDoesNotMatchRegexp` to check if the recorded metric name does not match the regexp
 
 ## [3.3.0] - 2024-10-03
 - Changed: Upgrade to go 1.23

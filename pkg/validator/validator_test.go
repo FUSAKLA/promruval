@@ -301,6 +301,10 @@ var testCases = []struct {
 	{name: "recordedMetricNameMatchesRegexp_Matches", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+")}, rule: rulefmt.Rule{Record: `cluster:foo_bar:avg`}, expectedErrors: 0},
 	{name: "recordedMetricNameMatchesRegexp_notMatches", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+")}, rule: rulefmt.Rule{Record: `foo_bar`}, expectedErrors: 1},
 
+	// recordedMetricNameDoesNotMatchRegexp
+	{name: "recordedMetricNameDoesNotMatchRegexp_Matches", validator: recordedMetricNameDoesNotMatchRegexp{pattern: regexp.MustCompile("^foo_bar$")}, rule: rulefmt.Rule{Record: `cluster:foo_bar:avg`}, expectedErrors: 0},
+	{name: "recordedMetricNameDoesNotMatchRegexp_notMatches", validator: recordedMetricNameDoesNotMatchRegexp{pattern: regexp.MustCompile("^foo_bar$")}, rule: rulefmt.Rule{Record: `foo_bar`}, expectedErrors: 1},
+
 	// hasAllowedQueryOffset
 	{name: "hasAllowedQueryOffset_valid", validator: hasAllowedQueryOffset{min: model.Duration(time.Second), max: model.Duration(time.Minute)}, group: unmarshaler.RuleGroup{QueryOffset: model.Duration(time.Second * 30)}, expectedErrors: 0},
 	{name: "hasAllowedQueryOffset_tooHigh", validator: hasAllowedQueryOffset{min: model.Duration(time.Second), max: model.Duration(time.Minute)}, group: unmarshaler.RuleGroup{QueryOffset: model.Duration(time.Minute * 2)}, expectedErrors: 1},
