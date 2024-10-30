@@ -19,6 +19,9 @@ builds:
       - goos: darwin
         goarch: "386"
 
+release:
+  draft: true
+
 source:
   enabled: true
 

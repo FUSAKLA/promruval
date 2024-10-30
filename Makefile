@@ -1,25 +1,14 @@
 #!/usr/bin/make -f
 SRC_DIR	:= $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-TMP_DIR ?= $(SRC_DIR)/tmp
-TMP_BIN_DIR ?= $(TMP_DIR)/bin
 CACHE_FILE := .promruval_cache.json
 
 PROMRUVAL_BIN := ./promruval
+RELEASE_NOTES := release_notes.md
 
 all: clean deps lint build test e2e-test test-release
 
-$(TMP_DIR):
-	mkdir -p $(TMP_DIR)
-
-$(TMP_BIN_DIR):
-	mkdir -p $(TMP_BIN_DIR)
-
-RELEASE_NOTES ?= $(TMP_DIR)/release_notes
-$(RELEASE_NOTES): $(TMP_DIR)
-	@echo "Generating release notes to $(RELEASE_NOTES) ..."
-	@csplit -q -n1 --suppress-matched -f $(TMP_DIR)/release-notes-part CHANGELOG.md '/## \[\s*v.*\]/' {1}
-	@mv $(TMP_DIR)/release-notes-part1 $(RELEASE_NOTES)
-	@rm $(TMP_DIR)/release-notes-part*
+$(RELEASE_NOTES):
+	@cat CHANGELOG.md | grep -E -A 1000 -m 1 "## \[[0-9]" | grep -E -B 1000 -m 2 "## \[[0-9]" | head -n-1 | tail -n+2 > $(RELEASE_NOTES)
 
 lint:
 	golangci-lint run
@@ -56,11 +45,11 @@ docker: build
 
 .PHONY: clean
 clean:
-	rm -rf dist $(TMP_DIR) $(PROMRUVAL_BIN) $(CACHE_FILE)
+	rm -rf dist $(RELEASE_NOTES) $(PROMRUVAL_BIN) $(CACHE_FILE)
 
 .PHONY: deps
 deps:
 	go mod tidy && go mod verify
 
-test-release:
-	goreleaser release --snapshot --clean
+test-release: release_notes.md
+	goreleaser release --snapshot --clean --release-notes release_notes.md
