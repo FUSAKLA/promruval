@@ -401,15 +401,21 @@ params:
   sourceTenants:
     <tenant_name>:
       - regexp: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
+        negativeRegexp: <metric_name_regexp> # Optional, metrics matching the regexp will be excluded from the check, will be fully anchored (surrounded by ^...$)
         description: <description> # Optional, will be shown in the validator output human-readable description
   # Example:
   # k8s:
   #   - regexp: "kube_.*|container_.*"
   #     description: "Metrics from KSM"
   #   - regexp: "container_.*"
-  #     description: "Metrics from cAdvisor "
+  #     description: "Metrics from cAdvisor"
+  #   - regexp: "kafka_.*"
   #   - regexp: "node_.*"
   #     description: "Node exporter metrics provided by the k8s infrastructure team"
+  # kafka:
+  #   - regexp: "kafka_.*"
+  #     negativeRegexp: "kafka_(consumer|producer)_.*"
+  #     description: "Metrics from Kafka"
 ```
 
 ## Alert validators
