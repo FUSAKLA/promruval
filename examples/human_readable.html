@@ -55,6 +55,7 @@
   <h2><a href="#check-formatting">check-formatting</a></h2>
 	  <ul>
 		<li>All rules expression is well formatted as would <code>promtool promql format</code> do or similar online tool such as https://o11y.tools/promqlparser/</li>
+		<li>All rules expression does not do any binary operations between histogram buckets, it can be dangerous because of inconsistency in the data if sent over remote write for example</li>
 	  </ul>
 
   <h2><a href="#check-recording-rules">check-recording-rules</a></h2>

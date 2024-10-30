@@ -10,4 +10,5 @@ vendor/
 *_cache.json
 promruval
 dist/
-tmp
+release_notes.md
+

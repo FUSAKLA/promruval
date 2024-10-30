@@ -20,7 +20,9 @@ jobs:
         with:
           go-version: "1.23"
 
+      - name: ReleaseNotes
+        run: make release_notes.md
       - name: Test
         uses: goreleaser/goreleaser-action@v6
         with:
-          args: release --snapshot --clean
+          args: release --snapshot --clean --release-notes release_notes.md

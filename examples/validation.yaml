@@ -104,6 +104,7 @@ validationRules:
         params:
           showExpectedForm: true
           skipExpressionsWithComments: true
+      - type: expressionDoesNotUseClassicHistogramBucketOperations
 
   - name: check-recording-rules
     scope: Recording rule

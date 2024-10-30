@@ -323,6 +323,11 @@ var testCases = []struct {
 	{name: "expressionUsesUnderscoresInLargeNumbers_valid_duration", validator: expressionUsesUnderscoresInLargeNumbers{}, rule: rulefmt.Rule{Expr: `vector(time())  > 100h`}, expectedErrors: 0},
 	{name: "expressionUsesUnderscoresInLargeNumbers_valid_exp", validator: expressionUsesUnderscoresInLargeNumbers{}, rule: rulefmt.Rule{Expr: `vector(time())  > 10e12`}, expectedErrors: 0},
 	{name: "expressionUsesUnderscoresInLargeNumbers_invalid", validator: expressionUsesUnderscoresInLargeNumbers{}, rule: rulefmt.Rule{Expr: `time() > 1000`}, expectedErrors: 1},
+
+	// expressionDoesNotUseOperationsBetweenClassicHistogramBuckets
+	{name: "expressionDoesNotUseOperationsBetweenClassicHistogramBuckets_valid", validator: expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, rule: rulefmt.Rule{Expr: `foo_bucket{le="+Inf"} - bar_bucket{le="1"}`}, expectedErrors: 0},
+	{name: "expressionDoesNotUseOperationsBetweenClassicHistogramBuckets_invalid", validator: expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, rule: rulefmt.Rule{Expr: `request_duration_seconds_bucket{le="+Inf"} - ignoring(le) request_duration_seconds_bucket{le="1"}`}, expectedErrors: 1},
+	{name: "expressionDoesNotUseOperationsBetweenClassicHistogramBuckets_complicated_valid", validator: expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, rule: rulefmt.Rule{Expr: `(request_duration_seconds_bucket{app="foo", le="+Inf"} * up{app="foo"}) - ignoring(le) request_duration_seconds_bucket{le="1"}`}, expectedErrors: 0},
 }
 
 func Test(t *testing.T) {
