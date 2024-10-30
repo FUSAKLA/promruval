@@ -6,10 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Fixed: Ignore white spaces around rule names in the `disabled_validation_rules` annotation CSV format (Thanks @jmichalek13 !)
-- Added: Support ENV expansion in the config file in format `$ENV_VAR` or `${ENV_VAR}`
-- Changed: The cache format is now scoped by source tenants (internal change, no action required)
-- Changed: Logging uses structured logs now
+
+## [3.4.0] - 2024-10-30
+- Fixed: :warning: Ignore white spaces around rule names in the `disabled_validation_rules` annotation CSV format (Thanks @jmichalek13 !)
+- Added: :warning: Support ENV expansion in the config file in format `$ENV_VAR` or `${ENV_VAR}`
+- Changed: :warning: The cache format is now scoped by source tenants (internal change, no action required)
+- Changed: Uses structured logging
 - Added: new `httpHeaders` field in the `prometheus` section of the config to set custom headers in the Prometheus requests
 - Added: new option `negativeRegexp` to the `hasSourceTenantsForMetrics` validation, see [the docs](docs/validations.md#hassourcetenantsformetrics)
 - Added: new validator `recordedMetricNameDoesNotMatchRegexp` to check if the recorded metric name does not match the regexp
