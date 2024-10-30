@@ -13,8 +13,9 @@ import (
 )
 
 type SourceTenantMetrics struct {
-	Regexp      string `yaml:"regexp"`
-	Description string `yaml:"description"`
+	Regexp         string `yaml:"regexp"`
+	NegativeRegexp string `yaml:"negativeRegexp"`
+	Description    string `yaml:"description"`
 }
 
 func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
@@ -32,13 +33,21 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	for tenant, metrics := range params.SourceTenants {
 		m := make([]tenantMetrics, len(metrics))
 		for i, metric := range metrics {
-			compiledRegexp, err := regexp.Compile("^" + metric.Regexp + "$")
+			compiledRegexp, err := compileAnchoredRegexp(metric.Regexp)
 			if err != nil {
-				return nil, fmt.Errorf("invalid metric name regexp: %s", metric.Regexp)
+				return nil, fmt.Errorf("invalid metric name regexp: %s", anchorRegexp(metric.Regexp))
+			}
+			compiledNegativeRegexp := (*regexp.Regexp)(nil)
+			if metric.NegativeRegexp != "" {
+				compiledNegativeRegexp, err = compileAnchoredRegexp(metric.NegativeRegexp)
+				if err != nil {
+					return nil, fmt.Errorf("invalid metric name regexp: %s", anchorRegexp(metric.NegativeRegexp))
+				}
 			}
 			m[i] = tenantMetrics{
-				regexp:      compiledRegexp,
-				description: metric.Description,
+				regexp:         compiledRegexp,
+				negativeRegexp: compiledNegativeRegexp,
+				description:    metric.Description,
 			}
 		}
 		validator.sourceTenants[tenant] = m
@@ -47,8 +56,9 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 }
 
 type tenantMetrics struct {
-	regexp      *regexp.Regexp
-	description string
+	regexp         *regexp.Regexp
+	negativeRegexp *regexp.Regexp
+	description    string
 }
 
 type hasSourceTenantsForMetrics struct {
@@ -82,6 +92,9 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 		for tenant, metrics := range h.sourceTenants {
 			for _, metric := range metrics {
 				if !metric.regexp.MatchString(usedMetric.Name) {
+					continue
+				}
+				if metric.negativeRegexp != nil && metric.negativeRegexp.MatchString(usedMetric.Name) {
 					continue
 				}
 				if len(group.SourceTenants) == 0 && h.defaultTenant == tenant {

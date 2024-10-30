@@ -15,5 +15,5 @@ type Validator interface {
 }
 
 func compileAnchoredRegexp(regexpString string) (*regexp.Regexp, error) {
-	return regexp.Compile("^" + regexpString + "$")
+	return regexp.Compile(anchorRegexp(regexpString))
 }

@@ -15,7 +15,7 @@ import (
 )
 
 func mustCompileAnchoredRegexp(regexpString string) *regexp.Regexp {
-	compiled, err := regexp.Compile("^" + regexpString + "$")
+	compiled, err := compileAnchoredRegexp(regexpString)
 	if err != nil {
 		panic(err)
 	}
@@ -227,6 +227,8 @@ var testCases = []struct {
 	{name: "usesMetricWithSourceTenantAndGroupHasMultipleSourceTenantsAndOneIsMissing", validator: hasSourceTenantsForMetrics{sourceTenants: map[string][]tenantMetrics{"tenant1": {{regexp: regexp.MustCompile(`^teanant1_metric$`)}}}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant2", "tenant3"}}, rule: rulefmt.Rule{Expr: `teanant1_metric{foo="bar"}`}, expectedErrors: 1},
 	{name: "doesNotHaveSourceTenantForMetricButIsDefault", validator: hasSourceTenantsForMetrics{defaultTenant: "tenant1", sourceTenants: map[string][]tenantMetrics{"tenant1": {{regexp: regexp.MustCompile(`^teanant1_metric$`)}}}}, group: unmarshaler.RuleGroup{SourceTenants: []string{}}, rule: rulefmt.Rule{Expr: `teanant1_metric{foo="bar"}`}, expectedErrors: 0},
 	{name: "doesNotHaveSourceTenantForMetricAndIsNotDefault", validator: hasSourceTenantsForMetrics{defaultTenant: "tenant2", sourceTenants: map[string][]tenantMetrics{"tenant1": {{regexp: regexp.MustCompile(`^teanant1_metric$`)}}}}, group: unmarshaler.RuleGroup{SourceTenants: []string{}}, rule: rulefmt.Rule{Expr: `teanant1_metric{foo="bar"}`}, expectedErrors: 1},
+	{name: "notMatchingNegativeRegexp", validator: hasSourceTenantsForMetrics{sourceTenants: map[string][]tenantMetrics{"tenant1": {{regexp: regexp.MustCompile(`^teanant1_metric_.*$`), negativeRegexp: regexp.MustCompile(`^teanant1_metric_bar$`)}}}}, group: unmarshaler.RuleGroup{SourceTenants: []string{"tenant1"}}, rule: rulefmt.Rule{Expr: `teanant1_metric_foo{foo="bar"}`}, expectedErrors: 0},
+	{name: "MatchingNegativeRegexp", validator: hasSourceTenantsForMetrics{sourceTenants: map[string][]tenantMetrics{"tenant1": {{regexp: regexp.MustCompile(`^teanant1_metric_.*$`), negativeRegexp: regexp.MustCompile(`^teanant1_metric_bar$`)}}}}, group: unmarshaler.RuleGroup{SourceTenants: []string{}}, rule: rulefmt.Rule{Expr: `teanant1_metric_bar{foo="bar"}`}, expectedErrors: 0},
 
 	// hasAllowedSourceTenants
 	{name: "emptyAllowedSourceTenantsAndGroupSourceTenants", validator: hasAllowedSourceTenants{allowedSourceTenants: []string{}}, group: unmarshaler.RuleGroup{SourceTenants: []string{}}, rule: rulefmt.Rule{Expr: `up{foo="bar"}`}, expectedErrors: 0},

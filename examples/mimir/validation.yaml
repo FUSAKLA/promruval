@@ -13,4 +13,5 @@ validationRules:
           sourceTenants:
             "k8s":
               - regexp: "container_.*"
+                negativeRegexp: "container_memory_.*"
                 description: "Metrics from cAdvisor"
