@@ -104,3 +104,14 @@ validationRules:
         params:
           showExpectedForm: true
           skipExpressionsWithComments: true
+
+  - name: check-recording-rules
+    scope: Recording rule
+    validations:
+      - type: recordedMetricNameDoesNotMatchRegexp
+        params:
+          regexp: "^foo_bar$"
+      - type: recordedMetricNameMatchesRegexp
+        params:
+          regexp: "[^:]+:[^:]+:[^:]+"
+          negative: true

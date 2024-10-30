@@ -48,7 +48,8 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 }
 
 var registeredRecordingRuleValidators = map[string]validatorCreator{
-	"recordedMetricNameMatchesRegexp": newRecordedMetricNameMatchesRegexp,
+	"recordedMetricNameMatchesRegexp":      newRecordedMetricNameMatchesRegexp,
+	"recordedMetricNameDoesNotMatchRegexp": newRecordedMetricNameDoesNotMatchRegexp,
 }
 
 var registeredAlertValidators = map[string]validatorCreator{

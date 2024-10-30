@@ -5,7 +5,7 @@ groups:
     limit: 10
     rules:
       # foo bar
-      - record: recorded_metrics
+      - record: foo:recorded_metrics:bar
         expr: 1
         labels:
           foo: bar

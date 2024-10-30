@@ -41,6 +41,10 @@ Validation rules:
   check-formatting
     - All rules expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/
 
+  check-recording-rules
+    - Recording rule Recorded metric name does not match regexp: ^foo_bar$
+    - Recording rule Recorded metric name matches regexp: [^:]&#43;:[^:]&#43;:[^:]&#43;
+
   another-checks
     - All rules labels does not have empty values
 
