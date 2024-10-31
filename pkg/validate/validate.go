@@ -54,16 +54,8 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 		validationReport.FilesCount++
 		fileReport := validationReport.NewFileReport(fileName)
 		var yamlReader io.Reader
-		if strings.HasSuffix(fileName, ".yaml") || strings.HasSuffix(fileName, ".yml") {
-			var err error
-			yamlReader, err = os.Open(fileName)
-			if err != nil {
-				validationReport.Failed = true
-				fileReport.Valid = false
-				fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %w", fileName, err)}
-				continue
-			}
-		} else if strings.HasSuffix(fileName, ".jsonnet") {
+		switch {
+		case strings.HasSuffix(fileName, ".jsonnet"):
 			log.Debugf("evaluating jsonnet file %s", fileName)
 			jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
 			if err != nil {
@@ -73,6 +65,15 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				continue
 			}
 			yamlReader = strings.NewReader(jsonnetOutput)
+		default:
+			var err error
+			yamlReader, err = os.Open(fileName)
+			if err != nil {
+				validationReport.Failed = true
+				fileReport.Valid = false
+				fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %w", fileName, err)}
+				continue
+			}
 		}
 		var rf unmarshaler.RulesFileWithComment
 		decoder := yaml.NewDecoder(yamlReader)

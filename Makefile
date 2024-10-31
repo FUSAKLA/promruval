@@ -24,7 +24,7 @@ build:
 
 E2E_TESTS_VALIDATIONS_FILE := examples/validation.yaml
 E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE := examples/additional-validation.yaml
-E2E_TESTS_RULES_FILES := examples/rules/*.yaml
+E2E_TESTS_RULES_FILES := examples/rules/*
 E2E_TESTS_DOCS_FILE_MD := examples/human_readable.md
 E2E_TESTS_DOCS_FILE_HTML := examples/human_readable.html
 
