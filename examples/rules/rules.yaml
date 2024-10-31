@@ -68,9 +68,9 @@ groups:
           title: test alert
           playbook: http://foo.bar/nonexisting/playbook
 
-  # ignore_validations: hasLabels,expressionUsesExistingLabels,hasLabels,hasAnyOfAnnotations,hasAnnotations
+  # ignore_validations: hasLabels,expressionUsesExistingLabels,hasLabels,hasAnyOfAnnotations,hasAnnotations,expressionCanBeEvaluated,expressionIsWellFormatted
   - name: testUTF8
     limit: 10
     rules:
       - alert: test
-        expr: sum by ("foo.bar") (up)
+        expr: sum by ("foo.bar") ({"up"})
