@@ -67,3 +67,10 @@ groups:
         annotations:
           title: test alert
           playbook: http://foo.bar/nonexisting/playbook
+
+  # ignore_validations: hasLabels,expressionUsesExistingLabels,hasLabels,hasAnyOfAnnotations,hasAnnotations
+  - name: testUTF8
+    limit: 10
+    rules:
+      - alert: test
+        expr: sum by ("foo.bar") (up)

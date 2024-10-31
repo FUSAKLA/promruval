@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Change: :warning: Enable UTF-8 support in metic and label names by default. To disallow usage of UTF-8 characters in metric and label names use the new validator [`doesNotUseUTF8`](./docs/validations.md#doesnotuseutf8).
+- Added: new validator [`doesNotUseUTF8`](./docs/validations.md#doesnotuseemoji) to check if the metric and label names do not use UTF-8 characters.
+- Added: new validator [`doesNotUseEmoji`](./docs/validations.md#doesnotuseemoji) to check if the metric and label names or values does not contain emojis 💩.
+- Changed: Upgraded Prometheus dependencies to v2.55.0
 
 ## [3.5.0] - 2024-10-31
 - Added: New validation `expressionDoesNotUseClassicHistogramBucketOperations` to avoid queries fragile because of the classic histogram bucket operations.

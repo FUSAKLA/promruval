@@ -5,8 +5,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/forPelevin/gomoji"
 	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
@@ -102,6 +104,92 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 				}
 				if !slices.Contains(group.SourceTenants, tenant) {
 					errs = append(errs, fmt.Errorf("rule uses metric `%s` of the tenant `%s`, you should set the tenant in the group's source_tenants settings", usedMetric.Name, tenant))
+				}
+			}
+		}
+	}
+	return errs
+}
+
+func newDoesNotUseEmoji(_ yaml.Node) (Validator, error) {
+	return &doesNotUseEmoji{}, nil
+}
+
+type doesNotUseEmoji struct{}
+
+func (h doesNotUseEmoji) String() string {
+	return "fails if any rule uses an emoji in metric name or labels"
+}
+
+func (h doesNotUseEmoji) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	var errs []error
+	for k, v := range rule.Labels {
+		if gomoji.ContainsEmoji(k) {
+			errs = append(errs, fmt.Errorf("rule uses label named `%s` with emoji", k))
+		}
+		if gomoji.ContainsEmoji(v) {
+			errs = append(errs, fmt.Errorf("rule uses label with value `%s` containing emoji", v))
+		}
+	}
+	usedMetrics, err := getExpressionMetrics(rule.Expr)
+	if err != nil {
+		errs = append(errs, err)
+		return errs
+	}
+	if gomoji.ContainsEmoji(rule.Record) {
+		errs = append(errs, fmt.Errorf("recording rule metric name contains emoji `%s`", rule.Record))
+	}
+	for _, m := range usedMetrics {
+		if gomoji.ContainsEmoji(m.Name) {
+			errs = append(errs, fmt.Errorf("rule uses metric `%s` with emoji", m.Name))
+		}
+		if m.VectorSelector != nil {
+			for _, l := range m.VectorSelector.LabelMatchers {
+				if gomoji.ContainsEmoji(l.Name) {
+					errs = append(errs, fmt.Errorf("expression uses label `%s` with emoji", l.Value))
+				}
+				if gomoji.ContainsEmoji(l.Value) {
+					errs = append(errs, fmt.Errorf("expression uses label with value `%s` containing emoji", l.Value))
+				}
+			}
+		}
+	}
+	return errs
+}
+
+func newDoesNotUseUTF8(_ yaml.Node) (Validator, error) {
+	return &doesNotUseEmoji{}, nil
+}
+
+type doesNotUseUTF8 struct{}
+
+func (h doesNotUseUTF8) String() string {
+	return "fails if any rule uses UTF-8 characters in metric name or labels"
+}
+
+func (h doesNotUseUTF8) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	var errs []error
+	for k := range rule.Labels {
+		if !model.LabelName(k).IsValidLegacy() {
+			errs = append(errs, fmt.Errorf("rule uses label named `%s` with UTF-8 characters", k))
+		}
+	}
+	usedMetrics, err := getExpressionMetrics(rule.Expr)
+	if err != nil {
+		errs = append(errs, err)
+		return errs
+	}
+	if rule.Record != "" && !model.IsValidLegacyMetricName(rule.Record) {
+		errs = append(errs, fmt.Errorf("recording rule metric name contains UTF-8 characters `%s`", rule.Record))
+	}
+	for _, m := range usedMetrics {
+		if !model.IsValidLegacyMetricName(m.Name) {
+			errs = append(errs, fmt.Errorf("rule uses metric `%s` with UTF-8 characters", m.Name))
+		}
+		if m.VectorSelector != nil {
+			for _, l := range m.VectorSelector.LabelMatchers {
+				if !model.LabelName(l.Name).IsValidLegacy() {
+					errs = append(errs, fmt.Errorf("expression uses label `%s` with UTF-8 characters", l.Value))
 				}
 			}
 		}

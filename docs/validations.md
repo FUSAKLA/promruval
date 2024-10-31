@@ -45,6 +45,8 @@ All the supported validations are listed here. The validations are grouped by th
       - [`logQlExpressionUsesRangeAggregation`](#logqlexpressionusesrangeaggregation)
     - [Other](#other)
       - [`hasSourceTenantsForMetrics`](#hassourcetenantsformetrics)
+      - [`doesNotUseEmoji`](#doesnotuseemoji)
+      - [`doesNotUseUTF8`](#doesnotuseutf8)
   - [Alert validators](#alert-validators)
     - [Labels](#labels-1)
       - [`validateLabelTemplates`](#validatelabeltemplates)
@@ -427,6 +429,15 @@ params:
   #     negativeRegexp: "kafka_(consumer|producer)_.*"
   #     description: "Metrics from Kafka"
 ```
+
+#### `doesNotUseEmoji`
+
+Fails if the rule contains any emoji characters (expression, label names/values, recording rule metric name, ...).
+
+#### `doesNotUseUTF8`
+
+Fails if the rule contains any label names or metric names which does not follow the legacy non UTF-8 character set.
+See the UTF-8 support proposal [here](https://github.com/prometheus/proposals/blob/main/proposals/2023-08-21-utf8.md).
 
 ## Alert validators
 Validators that can be used on `Alert` scope.
