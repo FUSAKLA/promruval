@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
 	"golang.org/x/exp/slices"
@@ -12,6 +13,8 @@ import (
 func init() {
 	// Enable experimental functions in promql parser.
 	parser.EnableExperimentalFunctions = true
+	// Enable UTF-8 support
+	model.NameValidationScheme = model.UTF8Validation
 }
 
 const metricNameLabel = "__name__"

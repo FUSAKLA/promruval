@@ -105,6 +105,7 @@ validationRules:
           showExpectedForm: true
           skipExpressionsWithComments: true
       - type: expressionDoesNotUseClassicHistogramBucketOperations
+      - type: doesNotUseEmoji
 
   - name: check-recording-rules
     scope: Recording rule
