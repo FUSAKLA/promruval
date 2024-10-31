@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"sync"
 	"time"
 
@@ -49,18 +48,18 @@ type Loader struct {
 }
 
 func (l *Loader) Load() (*Config, error) {
-	configFileData, err := os.ReadFile(l.ConfigPath)
+	configFile, err := os.Open(l.ConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("open config file: %w", err)
 	}
+	defer configFile.Close()
 	configDirMtx.Lock()
 	configDir = path.Dir(l.ConfigPath)
 	defer func() {
 		configDirMtx.Unlock()
 	}()
 	validationConfig := Config{}
-	expandedConfigFileData := os.ExpandEnv(string(configFileData))
-	decoder := yaml.NewDecoder(strings.NewReader(expandedConfigFileData))
+	decoder := yaml.NewDecoder(configFile)
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&validationConfig); err != nil {
 		return nil, fmt.Errorf("loading config file: %w", err)

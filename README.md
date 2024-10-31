@@ -190,9 +190,6 @@ For a complete list of supported validations see the [docs/validations.md](docs/
 
 If you want to see example configuration see the  [`examples/validation.yaml`](examples/validation.yaml).
 
-#### ENV expansion
-You can use ENV variable expansion in the configuration file. Just use the `$ENV` or `${ENV_VAR}` syntax and it will be replaced with the value of the `ENV_VAR` environment variable.
-
 ### How to run it
 
 If you downloaded the [prebuilt binary](https://github.com/FUSAKLA/promruval/releases/latest) or built it on your own:
