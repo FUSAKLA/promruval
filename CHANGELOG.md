@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.5.0] - 2024-10-31
 - Added: New validation `expressionDoesNotUseClassicHistogramBucketOperations` to avoid queries fragile because of the classic histogram bucket operations.
   See the docs for more info [expressionDoesNotUseClassicHistogramBucketOperations](docs/validations.md#expressiondoesnotuseclassichistogrambucketoperations)
 - Changed: :warning: revert the ENV expansion in config file since it was breaking and caused issues (it was a stupid idea)
