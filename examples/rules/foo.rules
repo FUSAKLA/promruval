@@ -1,0 +1,6 @@
+# ignore_validations: hasLabels,hasAnyOfAnnotations,hasAnnotations,hasAllowedLimit
+groups:
+    - name: foo
+      rules:
+        - alert: foo
+          expr: 1

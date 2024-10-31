@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added: New validation `expressionDoesNotUseClassicHistogramBucketOperations` to avoid queries fragile because of the classic histogram bucket operations.
   See the docs for more info [expressionDoesNotUseClassicHistogramBucketOperations](docs/validations.md#expressiondoesnotuseclassichistogrambucketoperations)
 - Changed: :warning: revert the ENV expansion in config file since it was breaking and caused issues (it was a stupid idea)
+- Fix: Avoid panic when validating unsupported file type and revert to previous behavior when any file was treated as a rule file regardless of the extension.
+       The only exception are `.jsonnet` files that are evaluated first.
 
 ## [3.4.0] - 2024-10-30
 - Fixed: :warning: Ignore white spaces around rule names in the `disabled_validation_rules` annotation CSV format (Thanks @jmichalek13 !)
