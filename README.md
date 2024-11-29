@@ -107,6 +107,8 @@ validation-docs [<flags>]
 Promruval supports the default YAML format (`.yaml` or `.yml`) of rule files but also supports rules written in [Jsonnet](https://jsonnet.org/) (`.jsonnet`).
 If will be rendered using the [go-jsonnet](https://github.com/google/go-jsonnet) library and then validated as usual, so you don't have to evaluate those by yourself before running the validation.
 
+Additionaly it supports also the configuration file in the Jsonnet format.
+
 #### Configuration composition
 
 The `--config-file` flag can be passed multiple times. Promruval will append the additional validation rules from the
@@ -134,7 +136,7 @@ promruval validate --config-file ./rules/validation.yaml --config-file ./rules/p
 
 ### Configuration
 
-Promruval uses a yaml configuration file to define the validation rules.
+Promruval uses a yaml or jsonnet (if config file ends with `.jsonnet`) configuration file to define the validation rules.
 
 Basic structure is:
 

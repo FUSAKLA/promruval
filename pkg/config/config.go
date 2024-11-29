@@ -2,14 +2,17 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
 	"gopkg.in/yaml.v3"
 
 	"github.com/creasty/defaults"
+	"github.com/google/go-jsonnet"
 )
 
 const (
@@ -48,6 +51,7 @@ type Loader struct {
 }
 
 func (l *Loader) Load() (*Config, error) {
+	var configFile io.ReadCloser
 	configFile, err := os.Open(l.ConfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("open config file: %w", err)
@@ -59,6 +63,17 @@ func (l *Loader) Load() (*Config, error) {
 		configDirMtx.Unlock()
 	}()
 	validationConfig := Config{}
+
+	// If the config file is a jsonnet file, evaluate it first
+	if strings.HasSuffix(l.ConfigPath, ".jsonnet") {
+		jsonnetVM := jsonnet.MakeVM()
+		jsonStr, err := jsonnetVM.EvaluateFile(l.ConfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("evaluating jsonnet in config file %s: %w", l.ConfigPath, err)
+		}
+		configFile = io.NopCloser(strings.NewReader(jsonStr))
+	}
+
 	decoder := yaml.NewDecoder(configFile)
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&validationConfig); err != nil {
