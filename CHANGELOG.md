@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.0] - 2024-11-29
+- Added: Configuration file can now be in Jsonnet format if the config file name ends with `.jsonnet` and it will get automatically evaluated.
+
 ## [3.5.0] - 2024-10-31
 - Added: New validation `expressionDoesNotUseClassicHistogramBucketOperations` to avoid queries fragile because of the classic histogram bucket operations.
   See the docs for more info [expressionDoesNotUseClassicHistogramBucketOperations](docs/validations.md#expressiondoesnotuseclassichistogrambucketoperations)

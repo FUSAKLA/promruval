@@ -277,7 +277,11 @@ func (h validFunctionsOnCounters) Validate(_ unmarshaler.RuleGroup, rule rulefmt
 			}
 			for _, ch := range parser.Children(n) {
 				if m, ok := ch.(*parser.MatrixSelector); ok {
-					if !match.MatchString(m.VectorSelector.(*parser.VectorSelector).Name) {
+					vs, ok := m.VectorSelector.(*parser.VectorSelector)
+					if !ok {
+						continue
+					}
+					if !match.MatchString(vs.Name) {
 						errs = append(errs, fmt.Errorf("`%s` function should be used only on counters and those should end with the `_total` suffix, which is not this case `%s`", v.Func.Name, n.String()))
 					}
 				}
