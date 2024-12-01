@@ -2,6 +2,7 @@ package validator
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 	"testing"
@@ -48,16 +49,28 @@ func TestGetExpressionUsedLabelsForMetric(t *testing.T) {
 		{expr: "kube_pod_labels{label_app!='foo'}", metric: "kube_pod_labels", expected: []string{metricNameLabel, "label_app"}},
 		{expr: "kube_pod_labels{label_app='foo'} * on(pod) kube_pod_info{}", metric: "kube_pod_labels", expected: []string{metricNameLabel, "label_app", "pod"}},
 		{expr: "kube_pod_info{} * on(pod) group_left(label_workload) kube_pod_labels{label_app='foo'}", metric: "kube_pod_labels", expected: []string{metricNameLabel, "label_app", "label_workload", "pod"}},
-		{expr: "kube_pod_info{} * on(pod) group_right(pod_ip) kube_pod_labels{label_app='foo'}", metric: "kube_pod_labels", expected: []string{metricNameLabel, "label_app", "pod", "pod_ip"}},
-		{expr: "kube_pod_info{} * on(pod) group_right(pod_ip) kube_pod_labels{label_app='foo'} offset 1h", metric: "kube_pod_labels", expected: []string{metricNameLabel, "label_app", "pod", "pod_ip"}},
+		{expr: "kube_pod_info{} * on(pod) group_right(pod_ip) kube_pod_labels{label_app='foo'}", metric: "kube_pod_labels", expected: []string{metricNameLabel, "label_app", "pod"}},
+		{expr: "kube_pod_info{} * on(pod) group_right(pod_ip) kube_pod_labels{label_app='foo'} offset 1h", metric: "kube_pod_labels", expected: []string{metricNameLabel, "label_app", "pod"}},
+		{expr: "sum(kube_pod_info * kube_pod_labels) by (foo)", metric: "kube_pod_labels", expected: []string{metricNameLabel, "foo"}},
+		{expr: "label_replace(kube_pod_labels, 'bar', '$1', 'foo', '.*')", metric: "kube_pod_labels", expected: []string{metricNameLabel, "foo"}},
+		{expr: `sum(label_join(kube_pod_labels, "foo", ",", "l1", "l2", "l3")) by (foo)`, metric: "kube_pod_labels", expected: []string{metricNameLabel, "l1", "l2", "l3"}},
+		{expr: `sum(label_join(kube_pod_labels, "foo", ",", "l1", "l2", "l3")) by (bar)`, metric: "kube_pod_labels", expected: []string{metricNameLabel, "l1", "l2", "l3", "bar"}},
+		{expr: `sum(kube_pod_labels * on (foo, bar) group_right(baz) kube_pod_info) by (to_be_dropped)`, metric: "kube_pod_labels", expected: []string{metricNameLabel, "foo", "bar", "baz"}},
+		{expr: `sum(kube_pod_labels * on (foo, bar) group_left(baz) kube_pod_info) by (to_be_dropped)`, metric: "kube_pod_labels", expected: []string{metricNameLabel, "foo", "bar"}},
+		{expr: `sum(kube_pod_labels * ignoring (foo, bar) group_left() kube_pod_info) by (to_be_dropped)`, metric: "kube_pod_labels", expected: []string{metricNameLabel}},
+		{expr: `sum(kube_pod_labels * on (foo, bar) kube_pod_info) by (baz)`, metric: "kube_pod_labels", expected: []string{metricNameLabel, "foo", "bar", "baz"}},
+		{expr: `sort_by_label(kube_pod_labels, "foo", "bar", "baz")`, metric: "kube_pod_labels", expected: []string{metricNameLabel, "foo", "bar", "baz"}},
+		{expr: `sort_by_label_desc(kube_pod_labels, "foo", "bar", "baz")`, metric: "kube_pod_labels", expected: []string{metricNameLabel, "foo", "bar", "baz"}},
 	}
 
-	for _, test := range tests {
-		labels, err := getExpressionUsedLabelsForMetric(test.expr, regexp.MustCompile(test.metric))
-		assert.ElementsMatch(t, labels, test.expected, "Expected labels %v, but got %v", test.expected, labels)
-		if !errors.Is(err, test.expectedErr) {
-			t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
-		}
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test_case_%d", i), func(t *testing.T) {
+			labels, err := getExpressionUsedLabelsForMetric(test.expr, regexp.MustCompile(test.metric))
+			assert.ElementsMatch(t, labels, test.expected, "Expected labels %v, but got %v", test.expected, labels)
+			if !errors.Is(err, test.expectedErr) {
+				t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
+			}
+		})
 	}
 }
 

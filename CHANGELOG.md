@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.1] - 2024-12-01
+- Fixed: FIxed the `expressionUsesOnlyAllowedLabelsForMetricRegexp` validator that might return false positives when used on more complex expressions with vector matching and functions using labels.
+
 ## [3.6.0] - 2024-11-29
 - Added: Configuration file can now be in Jsonnet format if the config file name ends with `.jsonnet` and it will get automatically evaluated.
 
