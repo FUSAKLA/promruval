@@ -127,7 +127,7 @@ type expressionUsesOnlyAllowedLabelsForMetricRegexp struct {
 	metricNameRegexp *regexp.Regexp
 }
 
-func newExpressionUseOnlyWhitelistedLabelsForMetric(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		AllowedLabels    []string `yaml:"allowedLabels"`
 		MetricNameRegexp string   `yaml:"metricNameRegexp"`

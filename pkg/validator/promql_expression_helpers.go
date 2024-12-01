@@ -2,11 +2,12 @@ package validator
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
+	"slices"
 
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
-	"golang.org/x/exp/slices"
 )
 
 func init() {
@@ -37,9 +38,18 @@ func labelsUsedInSelectorForMetric(selector *parser.VectorSelector, metricRegexp
 	return usedLabels, metricUsed
 }
 
+func parserCallStringArgValue(e parser.Expr) string {
+	val, ok := e.(*parser.StringLiteral)
+	if !ok {
+		return "" // Ignore the error, this shouldn't happen anyway, parser should already catch this.
+	}
+	return val.Val
+}
+
 // Returns a list of labels which are used in given expr in relation to given metric.
-// Beside labels within vector selector itself, it adds labels used in Aggregate expressions and labels used in Binary expression.
-// For Binary expressions it may report false positives as the current implementation does not consider on which side of group_left/group_right is the given metric.
+// It traverses the whole expression tree top to bottom and collects all labels used in selectors, operators, functions etc.
+// In case of vector matching, it also collects labels used in vector matching only relevant to the part of the expression where the metric is used.
+// If the vector matching uses grouping, any labels used on top of the expression are not validated, since they might come from the other side of the expression.
 func getExpressionUsedLabelsForMetric(expr string, metricRegexp *regexp.Regexp) ([]string, error) {
 	promQl, err := parser.ParseExpr(expr)
 	if err != nil {
@@ -49,29 +59,72 @@ func getExpressionUsedLabelsForMetric(expr string, metricRegexp *regexp.Regexp) 
 	var usedLabels []string
 
 	labelsUpInExpr := func(path []parser.Node) []string {
-		usedLabels := []string{}
-		for _, n := range path {
+		usedLabels := map[string]struct{}{}
+		for i, n := range path {
 			switch v := n.(type) {
 			case *parser.AggregateExpr:
-				usedLabels = append(usedLabels, v.Grouping...)
+				for _, l := range v.Grouping {
+					usedLabels[l] = struct{}{}
+				}
 			case *parser.BinaryExpr:
-				if v.VectorMatching != nil {
-					usedLabels = append(usedLabels, v.VectorMatching.Include...)
-					usedLabels = append(usedLabels, v.VectorMatching.MatchingLabels...)
+				if v.VectorMatching == nil {
+					continue
+				}
+				// If any group_left/group_right is used, we need to reset the used labels, since any labels used on top of this expression might come from the other side of the expression.
+				if v.VectorMatching.Include != nil {
+					usedLabels = map[string]struct{}{}
+				}
+				// Validate only the on(...) labels. The ignoring(...) might target the other side of the binary expression.
+				if v.VectorMatching.On {
+					for _, l := range v.VectorMatching.MatchingLabels {
+						usedLabels[l] = struct{}{}
+					}
+				}
+				// We want to validate the group_left/group_right labels only if the validated metric is on the "one" of the many-one/one-to.many side.
+				nextExpr := path[i+1].String()
+				if (v.VectorMatching.Card == parser.CardManyToOne && v.RHS.String() == nextExpr) || (v.VectorMatching.Card == parser.CardOneToMany && v.LHS.String() == nextExpr) {
+					for _, l := range v.VectorMatching.Include {
+						usedLabels[l] = struct{}{}
+					}
+				}
+			case *parser.Call:
+				switch v.Func.Name {
+				case "label_replace":
+					// Any PromQL "above" this label_replace can use the destination synthetic label, so drop it from the list of already used labels.
+					delete(usedLabels, parserCallStringArgValue(v.Args[1]))
+					usedLabels[parserCallStringArgValue(v.Args[3])] = struct{}{} // The source_label is interesting for us
+				case "label_join":
+					delete(usedLabels, parserCallStringArgValue(v.Args[1]))
+					// label_join is variadic, so we need to iterate over all labels that are used in the expression
+					for _, l := range v.Args[3:] {
+						usedLabels[parserCallStringArgValue(l)] = struct{}{}
+					}
+				case "sort_by_label":
+					for _, l := range v.Args[1:] {
+						usedLabels[parserCallStringArgValue(l)] = struct{}{}
+					}
+				case "sort_by_label_desc":
+					for _, l := range v.Args[1:] {
+						usedLabels[parserCallStringArgValue(l)] = struct{}{}
+					}
 				}
 			}
 		}
-		return usedLabels
+		delete(usedLabels, "") // Used in case of errors so just drop it
+		return slices.Collect(maps.Keys(usedLabels))
 	}
 
 	parser.Inspect(promQl, func(n parser.Node, path []parser.Node) error {
-		if v, isVectorSelector := n.(*parser.VectorSelector); isVectorSelector {
-			selectorUsedLabels, ok := labelsUsedInSelectorForMetric(v, metricRegexp)
-			if ok {
-				metricInExpr = true
-				usedLabels = append(usedLabels, selectorUsedLabels...)
-				usedLabels = append(usedLabels, labelsUpInExpr(path)...)
-			}
+		v, isVectorSelector := n.(*parser.VectorSelector)
+		if !isVectorSelector {
+			return nil
+		}
+		selectorUsedLabels, ok := labelsUsedInSelectorForMetric(v, metricRegexp)
+		if ok {
+			metricInExpr = true
+			usedLabels = append(usedLabels, selectorUsedLabels...)
+			// The path does not contain the current node, so we need to append it since some cases need also the last node.
+			usedLabels = append(usedLabels, labelsUpInExpr(append(path, n))...)
 		}
 		return nil
 	})
