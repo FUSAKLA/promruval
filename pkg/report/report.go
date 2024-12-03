@@ -16,6 +16,11 @@ type ValidationRule interface {
 	ValidationTexts() []string
 }
 
+type SerializableValidationRule struct {
+	Name            string
+	ValidationTexts []string
+}
+
 func NewValidationReport() *ValidationReport {
 	return &ValidationReport{
 		Failed:          false,
@@ -43,6 +48,25 @@ type ValidationReport struct {
 	FilesReports []*FileReport
 }
 
+type SerializableValidationReport struct {
+	Failed      bool
+	Duration    time.Duration
+	ErrorsCount int
+
+	FilesCount         int
+	FilesExcludedCount int
+
+	GroupsCount         int
+	GroupsExcludedCount int
+
+	RulesCount         int
+	RulesExcludedCount int
+
+	ValidationRules []SerializableValidationRule
+
+	FilesReports []*SerializableFileReport
+}
+
 func (r *ValidationReport) NewFileReport(name string) *FileReport {
 	newReport := FileReport{
 		Name:         name,
@@ -61,6 +85,15 @@ type FileReport struct {
 	Errors                  []error
 	HasRuleValidationErrors bool
 	GroupReports            []*GroupReport
+}
+
+type SerializableFileReport struct {
+	Name                    string
+	Valid                   bool
+	Excluded                bool
+	Errors                  []string
+	HasRuleValidationErrors bool
+	GroupReports            []*SerializableGroupReport
 }
 
 func (r *FileReport) NewGroupReport(name string) *GroupReport {
@@ -94,6 +127,14 @@ type GroupReport struct {
 	Excluded    bool
 	RuleReports []*RuleReport
 	Errors      []error
+}
+
+type SerializableGroupReport struct {
+	Valid       bool
+	Name        string
+	Excluded    bool
+	RuleReports []*SerializableRuleReport
+	Errors      []string
 }
 
 func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope) *RuleReport {
@@ -139,6 +180,14 @@ type RuleReport struct {
 	Name     string
 	Excluded bool
 	Errors   []error
+}
+
+type SerializableRuleReport struct {
+	Valid    bool
+	RuleType config.ValidationScope
+	Name     string
+	Excluded bool
+	Errors   []string
 }
 
 func (r *RuleReport) AsText(output *IndentedOutput) {
@@ -198,8 +247,103 @@ func renderStatistic(objectType string, total, excluded int) string {
 	return fmt.Sprintf("%s: %d and %d of them excluded", objectType, total, excluded)
 }
 
+func (r *ValidationReport) SerializeValidationReport() (SerializableValidationReport, error) {
+	if r == nil {
+		return SerializableValidationReport{}, fmt.Errorf("ValidationReport is nil")
+	}
+
+	SerializedFileReports := []*SerializableFileReport{}
+	for _, FileReport := range r.FilesReports {
+		StringifiedFileReportErrors := []string{}
+		for _, FileReportError := range FileReport.Errors {
+			if FileReportError != nil {
+				StringifiedFileReportErrors = append(StringifiedFileReportErrors, FileReportError.Error())
+			}
+		}
+		SerializedGroupReports := []*SerializableGroupReport{}
+		for _, GroupReport := range FileReport.GroupReports {
+			if GroupReport == nil {
+				continue
+			}
+			StringifiedGroupReportErrors := []string{}
+			for _, GroupReportError := range GroupReport.Errors {
+				if GroupReportError != nil {
+					StringifiedGroupReportErrors = append(StringifiedGroupReportErrors, GroupReportError.Error())
+				}
+			}
+			SerializedRuleReports := []*SerializableRuleReport{}
+			for _, RuleReport := range GroupReport.RuleReports {
+				if RuleReport == nil {
+					continue
+				}
+				StringifiedRuleReportErrors := []string{}
+				for _, RuleReportError := range RuleReport.Errors {
+					if RuleReportError != nil {
+						StringifiedRuleReportErrors = append(StringifiedRuleReportErrors, RuleReportError.Error())
+					}
+				}
+				SerializedRuleReport := SerializableRuleReport{
+					Valid:    RuleReport.Valid,
+					RuleType: RuleReport.RuleType,
+					Name:     RuleReport.Name,
+					Excluded: RuleReport.Excluded,
+					Errors:   StringifiedRuleReportErrors,
+				}
+				SerializedRuleReports = append(SerializedRuleReports, &SerializedRuleReport)
+			}
+			SerializedGroupReport := SerializableGroupReport{
+				Valid:       GroupReport.Valid,
+				Name:        GroupReport.Name,
+				Excluded:    GroupReport.Excluded,
+				RuleReports: SerializedRuleReports,
+				Errors:      StringifiedGroupReportErrors,
+			}
+			SerializedGroupReports = append(SerializedGroupReports, &SerializedGroupReport)
+		}
+
+		SerializedFileReport := SerializableFileReport{
+			Name:                    FileReport.Name,
+			Valid:                   FileReport.Valid,
+			Excluded:                FileReport.Excluded,
+			Errors:                  StringifiedFileReportErrors,
+			HasRuleValidationErrors: FileReport.HasRuleValidationErrors,
+			GroupReports:            SerializedGroupReports,
+		}
+		SerializedFileReports = append(SerializedFileReports, &SerializedFileReport)
+	}
+	SerializedValidationRules := []SerializableValidationRule{}
+	for _, ValidationRule := range r.ValidationRules {
+		if ValidationRule == nil {
+			continue
+		}
+		SerializedValidationRule := SerializableValidationRule{
+			Name:            ValidationRule.Name(),
+			ValidationTexts: ValidationRule.ValidationTexts(),
+		}
+		SerializedValidationRules = append(SerializedValidationRules, SerializedValidationRule)
+	}
+	SerializedValidationReport := SerializableValidationReport{
+		Failed:              r.Failed,
+		Duration:            r.Duration,
+		ErrorsCount:         r.ErrorsCount,
+		FilesCount:          r.FilesCount,
+		FilesExcludedCount:  r.FilesExcludedCount,
+		GroupsCount:         r.GroupsCount,
+		GroupsExcludedCount: r.GroupsExcludedCount,
+		RulesCount:          r.RulesCount,
+		RulesExcludedCount:  r.RulesExcludedCount,
+		ValidationRules:     SerializedValidationRules,
+		FilesReports:        SerializedFileReports,
+	}
+	return SerializedValidationReport, nil
+}
+
 func (r *ValidationReport) AsJSON() (string, error) {
-	b, err := json.MarshalIndent(r, "", "  ")
+	sr, err := r.SerializeValidationReport()
+	if err != nil {
+		return "", err
+	}
+	b, err := json.MarshalIndent(sr, "", "  ")
 	if err != nil {
 		return "", err
 	}
@@ -208,7 +352,11 @@ func (r *ValidationReport) AsJSON() (string, error) {
 }
 
 func (r *ValidationReport) AsYaml() (string, error) {
-	b, err := yaml.Marshal(r)
+	sr, err := r.SerializeValidationReport()
+	if err != nil {
+		return "", err
+	}
+	b, err := yaml.Marshal(sr)
 	if err != nil {
 		return "", err
 	}
