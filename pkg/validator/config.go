@@ -46,6 +46,8 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 
 	// Other
 	"hasSourceTenantsForMetrics": newHasSourceTenantsForMetrics,
+	"doesNotUseEmoji":            newDoesNotUseEmoji,
+	"doesNotUseUTF8":             newDoesNotUseUTF8,
 }
 
 var registeredRecordingRuleValidators = map[string]validatorCreator{

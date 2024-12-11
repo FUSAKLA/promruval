@@ -40,3 +40,5 @@ validationRules:
       - type: expressionDoesNotUseOlderDataThan
         params:
           limit: "4w"
+      - type: doesNotUseUTF8
+      - type: doesNotUseEmoji

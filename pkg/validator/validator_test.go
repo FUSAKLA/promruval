@@ -326,6 +326,21 @@ var testCases = []struct {
 	{name: "expressionDoesNotUseOperationsBetweenClassicHistogramBuckets_valid", validator: expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, rule: rulefmt.Rule{Expr: `foo_bucket{le="+Inf"} - bar_bucket{le="1"}`}, expectedErrors: 0},
 	{name: "expressionDoesNotUseOperationsBetweenClassicHistogramBuckets_invalid", validator: expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, rule: rulefmt.Rule{Expr: `request_duration_seconds_bucket{le="+Inf"} - ignoring(le) request_duration_seconds_bucket{le="1"}`}, expectedErrors: 1},
 	{name: "expressionDoesNotUseOperationsBetweenClassicHistogramBuckets_complicated_valid", validator: expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, rule: rulefmt.Rule{Expr: `(request_duration_seconds_bucket{app="foo", le="+Inf"} * up{app="foo"}) - ignoring(le) request_duration_seconds_bucket{le="1"}`}, expectedErrors: 0},
+
+	// doesNotUseEmoji
+	{name: "doesNotUseEmoji_valid", validator: doesNotUseEmoji{}, rule: rulefmt.Rule{Expr: `foo_bar{emoji="foo"}`}, expectedErrors: 0},
+	{name: "doesNotUseEmoji_expr_label_value_poop", validator: doesNotUseEmoji{}, rule: rulefmt.Rule{Expr: `foo_bar{emoji="💩"}`}, expectedErrors: 1},
+	{name: "doesNotUseEmoji_expr_label_name_poop", validator: doesNotUseEmoji{}, rule: rulefmt.Rule{Expr: `foo_bar{"💩"="foo"}`}, expectedErrors: 1},
+	{name: "doesNotUseEmoji_rule_label_value_poop", validator: doesNotUseEmoji{}, rule: rulefmt.Rule{Expr: "1", Labels: map[string]string{"foo": "💩"}}, expectedErrors: 1},
+	{name: "doesNotUseEmoji_rule_label_name_poop", validator: doesNotUseEmoji{}, rule: rulefmt.Rule{Expr: "1", Labels: map[string]string{"💩": "foo"}}, expectedErrors: 1},
+	{name: "doesNotUseEmoji_rule_record_poop", validator: doesNotUseEmoji{}, rule: rulefmt.Rule{Record: "foo:💩:bar", Expr: "1"}, expectedErrors: 1},
+
+	// doesNotUseUTF8
+	{name: "doesNotUseUTF8_valid", validator: doesNotUseUTF8{}, rule: rulefmt.Rule{Expr: `foo_bar{foo="bar"}`}, expectedErrors: 0},
+	{name: "doesNotUseUTF8_invalid_label_name", validator: doesNotUseUTF8{}, rule: rulefmt.Rule{Expr: `foo_bar{"žluťoulinký"="bar"}`}, expectedErrors: 1},
+	{name: "doesNotUseUTF8_invalid_metric_name", validator: doesNotUseUTF8{}, rule: rulefmt.Rule{Expr: `{"žluťoulinký",foo="bar"}`}, expectedErrors: 1},
+	{name: "doesNotUseUTF8_invalid_rule_label_name", validator: doesNotUseUTF8{}, rule: rulefmt.Rule{Expr: `1`, Labels: map[string]string{"žluťoulinký": "foo"}}, expectedErrors: 1},
+	{name: "doesNotUseUTF8_invalid_recorded_metric_name", validator: doesNotUseUTF8{}, rule: rulefmt.Rule{Expr: `1`, Record: "foo:žluťoulinký:bar"}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {
