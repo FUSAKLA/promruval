@@ -25,6 +25,17 @@ func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshale
 	var reportedError error
 	validatorName := v.Name()
 	additionalDetails := v.AdditionalDetails()
+    isOnlyIfConditionMet := true
+	for _, onlyIfValidator := range v.OnlyIf() {
+	    errors := onlyIfValidator.Validate(group, rule, prometheusClient)
+	    if len(errors) > 0 {
+	        isOnlyIfConditionMet = false
+	        break
+	    }
+	}
+    if !isOnlyIfConditionMet {
+        return []error{}
+    }
 	validationErrors := v.Validate(group, rule, prometheusClient)
 	errs := make([]error, 0, len(validationErrors))
 	for _, err := range validationErrors {

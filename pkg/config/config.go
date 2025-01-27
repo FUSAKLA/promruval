@@ -122,10 +122,11 @@ type ValidationRule struct {
 }
 
 type ValidatorConfig struct {
-	ValidatorType     string    `yaml:"type"`
-	AdditionalDetails string    `yaml:"additionalDetails"`
-	Params            yaml.Node `yaml:"params"`
-	ParamsFromFile    string    `yaml:"paramsFromFile"`
+	ValidatorType     string    `       yaml:"type"`
+	AdditionalDetails string            `yaml:"additionalDetails"`
+	Params            yaml.Node         `yaml:"params"`
+	ParamsFromFile    string            `yaml:"paramsFromFile"`
+	OnlyIf            []ValidatorConfig `yaml:"onlyIf"`
 }
 
 func (c *ValidatorConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
