@@ -660,17 +660,17 @@ func (h expressionUsesUnderscoresInLargeNumbers) Validate(_ unmarshaler.RuleGrou
 	return []error{}
 }
 
-func newExpressionDoesNotUseOperationsBetweenClassicHistogramBuckets(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseClassicHistogramBucketOperations(paramsConfig yaml.Node) (Validator, error) {
 	params := struct{}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	return &expressionDoesNotUseOperationsBetweenClassicHistogramBuckets{}, nil
+	return &expressionDoesNotUseClassicHistogramBucketOperations{}, nil
 }
 
-type expressionDoesNotUseOperationsBetweenClassicHistogramBuckets struct{}
+type expressionDoesNotUseClassicHistogramBucketOperations struct{}
 
-func (h expressionDoesNotUseOperationsBetweenClassicHistogramBuckets) String() string {
+func (h expressionDoesNotUseClassicHistogramBucketOperations) String() string {
 	return "expression does not do any binary operations between histogram buckets, it can be dangerous because of inconsistency in the data if sent over remote write for example"
 }
 
@@ -679,7 +679,7 @@ const (
 	histogramBucketLabelName = "le"
 )
 
-func (h expressionDoesNotUseOperationsBetweenClassicHistogramBuckets) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+func (h expressionDoesNotUseClassicHistogramBucketOperations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	promQl, err := parser.ParseExpr(rule.Expr)
 	if err != nil {
 		return []error{fmt.Errorf("failed to parse expression `%s`: %w", rule.Expr, err)}

@@ -37,7 +37,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"expressionIsWellFormatted":                            newExpressionIsWellFormatted,
 	"expressionUsesUnderscoresInLargeNumbers":              newExpressionUsesUnderscoresInLargeNumbers,
 	"expressionDoesNotUseExperimentalFunctions":            newExpressionDoesNotUseExperimentalFunctions,
-	"expressionDoesNotUseClassicHistogramBucketOperations": newExpressionDoesNotUseOperationsBetweenClassicHistogramBuckets,
+	"expressionDoesNotUseClassicHistogramBucketOperations": newExpressionDoesNotUseClassicHistogramBucketOperations,
 
 	// LogQL
 	"expressionIsValidLogQL":              newExpressionIsValidLogQL,
