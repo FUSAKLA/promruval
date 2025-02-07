@@ -226,7 +226,7 @@ type labelMatchesRegexp struct {
 }
 
 func (h labelMatchesRegexp) String() string {
-	return fmt.Sprintf("label `%s` matches Regexp `%s`", h.label, h.regexp)
+	return fmt.Sprintf("label `%s` matches regexp `%s`", h.label, h.regexp)
 }
 
 func (h labelMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {

@@ -186,6 +186,8 @@ validationRules:
         # The option is mutually exclusive with the `params` option.
         # paramsFromFile: ./params.yaml
       ...
+    # OPTIONAL If you want the rule validations to apply only to rules/groups which match specified criteria.
+    onlyIf: [] # Same syntax as the `validations` field, all the conditions must be met for the rule to be validated.
 ```
 
 For a complete list of supported validations see the [docs/validations.md](docs/validations.md).
