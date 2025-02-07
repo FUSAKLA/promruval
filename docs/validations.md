@@ -3,6 +3,8 @@ All the supported validations are listed here. The validations are grouped by th
 
 > If you want some sane default validations, you can look at the [default_validation.yaml](./default_validation.yaml). Those should be a good starting point for your own configuration and applicable to most of the use cases.
 
+Validations can also be conditional based on various criteria. More information about the conditions can be found [here](#conditional-validation).
+
 - [Supported validations by scopes](#supported-validations-by-scopes)
   - [Groups](#groups)
     - [`hasAllowedSourceTenants`](#hasallowedsourcetenants)
@@ -562,4 +564,31 @@ Fails if the name of the recorded metric matches the specified regular expressio
 ```yaml
 params:
   regexp: "^foo_bar$"
+```
+
+# Conditional validation
+
+Validating the output does not have to be strictly defined but can be based on variable criteria. To achieve this, 
+a `onlyIf` section can be added to the validator, which allows the output to be validated only if **all conditions** 
+in the `onlyIf` array are met.
+
+```yaml
+  - name: critical-alert-escalation-validation
+    scope: Alert
+    validations:
+      - type: hasAnnotations
+        params:
+          annotations: [ "playbook" ]
+        onlyIf:
+          - type: hasLabels
+            params:
+              labels: ["escalate"]
+      - type: hasLabels
+        params:
+          labels: ["escalate"]
+        onlyIf:
+          - type: labelHasAllowedValue
+            params:
+              label: "severity"
+              allowedValues: ["critical", "error"]
 ```

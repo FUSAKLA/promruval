@@ -80,7 +80,19 @@ rulesIteration:
 			if newValidator == nil {
 				continue
 			}
-			newRule.AddValidator(newValidator, validatorConfig.AdditionalDetails)
+            var onlyIfValidators []validator.Validator
+            for _, onlyIfValidatorConfig := range validatorConfig.OnlyIf {
+                newOnlyIfValidator, err := validator.NewFromConfig(validationRule.Scope, onlyIfValidatorConfig)
+			    if err != nil {
+				    return nil, fmt.Errorf("loading only if config for validator `%s` in the `%s` rule: %w", onlyIfValidatorConfig.ValidatorType, validationRule.Name, err)
+			    }
+                if newOnlyIfValidator == nil {
+                    continue
+                }
+                onlyIfValidators = append(onlyIfValidators, newOnlyIfValidator)
+            }
+
+			newRule.AddValidator(newValidator, validatorConfig.AdditionalDetails, onlyIfValidators)
 		}
 		validationRules = append(validationRules, newRule)
 	}

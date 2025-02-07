@@ -13,7 +13,7 @@ import (
 type ValidationRule interface {
 	Name() string
 	Scope() config.ValidationScope
-	ValidationTexts() []string
+	ValidationTexts() map[string][]string
 }
 
 func NewValidationReport() *ValidationReport {
@@ -163,8 +163,17 @@ func (r *ValidationReport) AsText(indentationStep int, color bool) (string, erro
 		output.AddLine("")
 		output.AddLine(rule.Name() + ":")
 		output.IncreaseIndentation()
-		for _, check := range rule.ValidationTexts() {
-			output.AddLine("- " + check)
+		for key, values := range rule.ValidationTexts() {
+			output.IncreaseIndentation()
+		    if len(values) > 0 {
+                output.AddLine("- " + key + " - only if: ")
+                for _, value := range values {
+                    output.AddLine("  - " + value)
+                }
+            } else {
+                output.AddLine("- " + key)
+            }
+            output.DecreaseIndentation()
 		}
 		output.DecreaseIndentation()
 	}

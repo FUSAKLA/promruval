@@ -57,7 +57,7 @@ var customFuncs = template.FuncMap{
 type templateRule struct {
 	Name        string
 	Scope       string
-	Validations []string
+	Validations map[string][]string
 }
 
 type templateData struct {
