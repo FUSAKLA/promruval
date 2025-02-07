@@ -34,7 +34,7 @@ type recordedMetricNameMatchesRegexp struct {
 }
 
 func (h recordedMetricNameMatchesRegexp) String() string {
-	return fmt.Sprintf("Recorded metric name matches regexp: %s", h.pattern.String())
+	return fmt.Sprintf("recorded metric name matches regexp: `%s`", h.pattern.String())
 }
 
 func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -69,7 +69,7 @@ type recordedMetricNameDoesNotMatchRegexp struct {
 }
 
 func (h recordedMetricNameDoesNotMatchRegexp) String() string {
-	return fmt.Sprintf("Recorded metric name does not match regexp: %s", h.pattern.String())
+	return fmt.Sprintf("recorded metric name does not match regexp: `%s`", h.pattern.String())
 }
 
 func (h recordedMetricNameDoesNotMatchRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {

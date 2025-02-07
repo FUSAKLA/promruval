@@ -250,7 +250,7 @@ type groupNameMatchesRegexp struct {
 }
 
 func (h groupNameMatchesRegexp) String() string {
-	return fmt.Sprintf("Group name matches regexp: %s", h.pattern.String())
+	return fmt.Sprintf("Group name matches regexp: `%s`", h.pattern.String())
 }
 
 func (h groupNameMatchesRegexp) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {

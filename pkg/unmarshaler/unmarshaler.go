@@ -8,6 +8,8 @@ import (
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"gopkg.in/yaml.v3"
+
+	"github.com/fusakla/promruval/v3/pkg/config"
 )
 
 var (
@@ -141,6 +143,13 @@ func (r *RuleWithComment) OriginalRule() rulefmt.Rule {
 		Annotations:   r.rule.Annotations,
 		KeepFiringFor: r.rule.KeepFiringFor,
 	}
+}
+
+func (r *RuleWithComment) Scope() config.ValidationScope {
+	if r.rule.Alert.Value != "" {
+		return config.AlertScope
+	}
+	return config.RecordingRuleScope
 }
 
 func (r *RuleWithComment) UnmarshalYAML(value *yaml.Node) error {

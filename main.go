@@ -51,6 +51,17 @@ func loadConfigFile(configFilePath string) (*config.Config, error) {
 	return configLoader.Load()
 }
 
+func validatorFromConfig(scope config.ValidationScope, validatorType string, validatorConfig config.ValidatorConfig) (validator.Validator, error) {
+	if err := validator.KnownValidators(scope, []string{validatorType}); err != nil {
+		return nil, fmt.Errorf("error loading config for validator `%s`: %w", validatorType, err)
+	}
+	newValidator, err := validator.NewFromConfig(scope, validatorConfig)
+	if err != nil {
+		return nil, fmt.Errorf("loading only if config for validator `%s`: %w", validatorType, err)
+	}
+	return newValidator, nil
+}
+
 func validationRulesFromConfig(validationConfig *config.Config) ([]*validationrule.ValidationRule, error) {
 	var validationRules []*validationrule.ValidationRule
 rulesIteration:
@@ -69,18 +80,26 @@ rulesIteration:
 			}
 		}
 		newRule := validationrule.New(validationRule.Name, validationRule.Scope)
-		for _, validatorConfig := range validationRule.Validations {
-			if err := validator.KnownValidators(validationRule.Scope, []string{validatorConfig.ValidatorType}); err != nil {
-				return nil, fmt.Errorf("loading config for validator `%s` in the `%s` rule: %w", validatorConfig.ValidatorType, validationRule.Name, err)
-			}
-			newValidator, err := validator.NewFromConfig(validationRule.Scope, validatorConfig)
+		for _, validatorConfig := range validationRule.OnlyIf {
+			// Do not limit the scope of onlyIf validators, will be applied only to the entities where possible
+			v, err := validatorFromConfig(config.AllScope, validatorConfig.ValidatorType, validatorConfig)
 			if err != nil {
-				return nil, fmt.Errorf("loading config for validator `%s` in the `%s` rule: %w", validatorConfig.ValidatorType, validationRule.Name, err)
+				return nil, fmt.Errorf("loading config for onlyIf validator in the `%s` rule: %w", validationRule.Name, err)
 			}
-			if newValidator == nil {
+			if v == nil {
 				continue
 			}
-			newRule.AddValidator(newValidator, validatorConfig.AdditionalDetails)
+			newRule.AddOnlyIfValidator(v, validatorConfig.AdditionalDetails)
+		}
+		for _, validatorConfig := range validationRule.Validations {
+			v, err := validatorFromConfig(validationRule.Scope, validatorConfig.ValidatorType, validatorConfig)
+			if err != nil {
+				return nil, fmt.Errorf("loading config for validator in the `%s` rule: %w", validationRule.Name, err)
+			}
+			if v == nil {
+				continue
+			}
+			newRule.AddValidator(v, validatorConfig.AdditionalDetails)
 		}
 		validationRules = append(validationRules, newRule)
 	}

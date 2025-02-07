@@ -30,7 +30,8 @@ groups:
         for: 4w
         keep_firing_for: 5m
         labels:
-          severity: critica
+          severity: critical
+          escalate: "true"
           team: sre@mail.com
           page: true
           foo: "{{ $labels.foo }}"
@@ -64,6 +65,20 @@ groups:
           team: "{{ .Labels.team }}"
           xxx: fooo
           severity: critical
+          escalate: "true"
+        annotations:
+          title: test alert
+          playbook: http://foo.bar/nonexisting/playbook
+
+  - name: testOnlyIf
+    rules:
+      - record: foo:bar:baz
+        expr: 1
+      - alert: test
+        expr: 1
+        labels:
+          xxx: fooo
+          severity: "critical"
         annotations:
           title: test alert
           playbook: http://foo.bar/nonexisting/playbook
