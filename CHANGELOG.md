@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added: New validation `expressionDoesNotUseLabelsForMetricRegexp`
 
 ## [3.6.1] - 2024-12-01
 - Fixed: FIxed the `expressionUsesOnlyAllowedLabelsForMetricRegexp` validator that might return false positives when used on more complex expressions with vector matching and functions using labels.

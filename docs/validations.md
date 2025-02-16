@@ -27,6 +27,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionDoesNotUseMetrics`](#expressiondoesnotusemetrics)
       - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
       - [`expressionUsesOnlyAllowedLabelsForMetricRegexp`](#expressionusesonlyallowedlabelsformetricregexp)
+      - [`expressionDoesNotUseLabelsForMetricRegexp`](#expressiondoesnotuselabelsformetricregexp)
       - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
       - [`expressionDoesNotUseRangeShorterThan`](#expressiondoesnotuserangeshorterthan)
       - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
@@ -279,6 +280,20 @@ The check rather ignores validation of labels, where it cannot be sure if they a
 params:
   metricNameRegexp: "kube_pod_labels" # The regexp will be fully anchored (surrounded by ^...$)
   allowedLabels: [ "pod", "cluster", "app", "team" ]
+```
+
+#### `expressionDoesNotUseLabelsForMetricRegexp`
+
+Fails if the rule uses any labels listed in `labels`, in combination with given metric regexp in its `expr` label matchers, aggregations or joins. If the metric name is omitted in the query, or matched using regexp or any negative matcher on the `__name__` label, the rule will be skipped.
+
+The check rather ignores validation of labels, where it cannot be sure if they are targeting only the metric in question, like aggregations by labels on top of vector matching expression where the labels might come from the other part of the expr.
+
+> Might be useful to make sure users does not use labels which are subject to change.
+
+```yaml
+params:
+  metricNameRegexp: "kube_.+" # The regexp will be fully anchored (surrounded by ^...$)
+  labels: [ "job", "cluster", "app", "instance" ]
 ```
 
 #### `expressionDoesNotUseOlderDataThan`
