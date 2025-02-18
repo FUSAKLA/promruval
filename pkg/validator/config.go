@@ -135,17 +135,17 @@ func KnownValidators(scope config.ValidationScope, validatorNames []string) erro
 }
 
 func Scope(validatorName string) config.ValidationScope {
-	if _, ok := registeredUniversalRuleValidators[validatorName]; ok {
-		return config.AllRulesScope
-	}
 	for scope, validators := range map[config.ValidationScope]map[string]validatorCreator{
-		config.AlertScope:         alertValidators,
-		config.RecordingRuleScope: recordingRuleValidators,
+		config.AlertScope:         registeredAlertValidators,
+		config.RecordingRuleScope: registeredRecordingRuleValidators,
 		config.GroupScope:         registeredGroupValidators,
 	} {
 		if _, ok := validators[validatorName]; ok {
 			return scope
 		}
+	}
+	if _, ok := registeredUniversalRuleValidators[validatorName]; ok {
+		return config.AllRulesScope
 	}
 	return ""
 }

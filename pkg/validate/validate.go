@@ -165,6 +165,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 								continue ruleValidationLoop
 							}
 						default:
+							log.Debugf("skipping onlyIf validation of file %s group %s because it is not applicable: validator scrope: `%s`, rule scope: `%s`", fileName, group.Name, validator.Scope(v.Name()), ruleNode.Scope())
 							continue
 						}
 					}
