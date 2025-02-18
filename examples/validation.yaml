@@ -3,6 +3,7 @@
 
 prometheus:
   url: https://prometheus.demo.do.prometheus.io
+  timeout: 0.5s
   bearerTokenFile: ./bearer.token
 
 validationRules:
@@ -19,14 +20,15 @@ validationRules:
           firstLabel: severity
           firstLabelValue: info
           secondLabel: page
-      - type: expressionCanBeEvaluated
-        params:
-          timeSeriesLimit: 20
-          evaluationDurationLimit: 10s
-      - type: expressionUsesExistingLabels
+      # FIXME: Disabled until demo.do.prometheus.io is back online, see https://github.com/prometheus/demo-site/issues/114
+      # - type: expressionCanBeEvaluated
+      #   params:
+      #     timeSeriesLimit: 20
+      #     evaluationDurationLimit: 10s
+      # - type: expressionUsesExistingLabels
+      # - type: expressionSelectorsMatchesAnything
       - type: expressionDoesNotUseIrate
         additionalDetails: "Just do as I say!"
-      - type: expressionSelectorsMatchesAnything
       - type: expressionDoesNotUseOlderDataThan
         params:
           limit: "6h"
@@ -116,3 +118,18 @@ validationRules:
         params:
           regexp: "[^:]+:[^:]+:[^:]+"
           negative: true
+
+  - name: test-onlyif
+    scope: Alert
+    onlyIf:
+      - type: labelMatchesRegexp
+        params:
+          label: "severity"
+          regexp: "^critical$"
+      - type: maxRulesPerGroup
+        params:
+          limit: 1
+    validations:
+      - type: hasLabels
+        params:
+          labels: ["escalate"]

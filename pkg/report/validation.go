@@ -10,11 +10,20 @@ import (
 var htmlTemplate = `
 <h1>Validation rules</h1>
 {{- range .Rules }}
-{{ $currentRule := . }}
+  <br/>
   <h2><a href="#{{.Name}}">{{.Name}}</a></h2>
+	  {{- if .OnlyIf }}
+  	  <h4>Only if ALL the following conditions are met:</h4>
+	  <ul>
+	  {{- range .OnlyIf }}
+		<li>{{. | backticksToCodeTag | indentedToNewLines | escape }}</li>
+	  {{- end }}
+	  </ul>
+	  {{- end }}
+	  <h4>Following conditions MUST be met:</h4>
 	  <ul>
 	  {{- range .Validations }}
-		<li>{{$currentRule.Scope}} {{. | backticksToCodeTag | indentedToNewLines | escape }}</li>
+		<li>{{. | backticksToCodeTag | indentedToNewLines | escape }}</li>
 	  {{- end }}
 	  </ul>
 {{- end }}
@@ -23,22 +32,36 @@ var htmlTemplate = `
 var markdownTemplate = `
 # Validation rules
 {{- range .Rules }}
-{{ $currentRule := . }}
+
 ## {{.Name}}
-  {{- range .Validations }}
-  - {{$currentRule.Scope}} {{.}}
-  {{- end }}
+{{- if .OnlyIf }}
+#### Only if ALL the following conditions are met:
+{{- range .OnlyIf }}
+  - {{. | escape}}
+{{- end }}
+{{- end }}
+#### Following conditions MUST be met:
+{{- range .Validations }}
+  - {{. | escape}}
+{{- end }}
 {{- end }}
 `
 
 var textTemplate = `
 Validation rules:
 {{- range .Rules }}
-{{ $currentRule := . }}
-  {{.Name}}
-	{{- range .Validations }}
-    - {{$currentRule.Scope}} {{.}}
+
+  {{.Name}} ({{.Scope}})
+	{{- if .OnlyIf }}
+    Only if ALL the following conditions are met:
+	{{- range .OnlyIf }}
+      - {{. | escape}}
 	{{- end }}
+	{{- end }}
+    Following conditions MUST be met:
+    {{- range .Validations }}
+      - {{. | escape}}
+    {{- end }}
 {{- end }}
 `
 
@@ -58,6 +81,7 @@ type templateRule struct {
 	Name        string
 	Scope       string
 	Validations []string
+	OnlyIf      []string
 }
 
 type templateData struct {
@@ -71,6 +95,7 @@ func ValidationDocs(validationRules []ValidationRule, format string) (string, er
 			Name:        rule.Name(),
 			Scope:       string(rule.Scope()),
 			Validations: rule.ValidationTexts(),
+			OnlyIf:      rule.OnlyIfValidationTexts(),
 		})
 	}
 

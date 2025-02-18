@@ -118,6 +118,7 @@ func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) erro
 type ValidationRule struct {
 	Name        string            `yaml:"name"`
 	Scope       ValidationScope   `yaml:"scope"`
+	OnlyIf      []ValidatorConfig `yaml:"onlyIf"`
 	Validations []ValidatorConfig `yaml:"validations"`
 }
 
