@@ -198,7 +198,7 @@ func (h expressionDoesNotUseLabelsForMetricRegexp) String() string {
 	for l := range h.labels {
 		labelsSlice = append(labelsSlice, l)
 	}
-	return fmt.Sprintf("expression does not use labels `%s` for metrics matching regexp %s", strings.Join(labelsSlice, "`,`"), h.metricNameRegexp)
+	return fmt.Sprintf("expression does not use labels `%s` for metrics matching regexp %s in the expr", strings.Join(labelsSlice, "`,`"), h.metricNameRegexp)
 }
 
 func (h expressionDoesNotUseLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
