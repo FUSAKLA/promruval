@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,8 +29,8 @@ func TestGetExpressionUsedLabels(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		labels, err := getExpressionUsedLabels(test.expr)
-		assert.ElementsMatch(t, labels, test.expected, "Expected labels %v, but got %v", test.expected, labels)
+		l, err := getExpressionUsedLabels(test.expr)
+		assert.ElementsMatch(t, l, test.expected, "Expected labels %v, but got %v", test.expected, l)
 		if !errors.Is(err, test.expectedErr) {
 			t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
 		}
@@ -65,8 +66,61 @@ func TestGetExpressionUsedLabelsForMetric(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test_case_%d", i), func(t *testing.T) {
-			labels, err := getExpressionUsedLabelsForMetric(test.expr, regexp.MustCompile(test.metric))
-			assert.ElementsMatch(t, labels, test.expected, "Expected labels %v, but got %v", test.expected, labels)
+			l, err := getExpressionUsedLabelsForMetric(test.expr, regexp.MustCompile(test.metric))
+			assert.ElementsMatch(t, l, test.expected, "Expected labels %v, but got %v", test.expected, l)
+			if !errors.Is(err, test.expectedErr) {
+				t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestGetLabelMatchersForMetricRegexp(t *testing.T) {
+	MustNewMatcher := func(typ labels.MatchType, label, value string) *labels.Matcher {
+		matcher, err := labels.NewMatcher(typ, label, value)
+		if err != nil {
+			t.Fatalf("failed to create matcher: %v", err)
+		}
+		return matcher
+	}
+
+	MatchersToString := func(matchers []*labels.Matcher) []string {
+		result := make([]string, 0, len(matchers))
+		for _, m := range matchers {
+			result = append(result, m.String())
+		}
+		return result
+	}
+
+	tests := []struct {
+		expr         string
+		metricRegexp string
+		expected     []*labels.Matcher
+		expectedErr  error
+	}{
+		{expr: "up{bar='foo'}", metricRegexp: "kube_pod_labels", expected: []*labels.Matcher{}, expectedErr: nil},
+		{expr: "up{bar='foo'}", metricRegexp: "up", expected: []*labels.Matcher{
+			MustNewMatcher(labels.MatchEqual, "__name__", "up"), MustNewMatcher(labels.MatchEqual, "bar", "foo"),
+		}, expectedErr: nil},
+		{expr: "up{bar!='foo'}", metricRegexp: ".*", expected: []*labels.Matcher{
+			MustNewMatcher(labels.MatchEqual, "__name__", "up"), MustNewMatcher(labels.MatchNotEqual, "bar", "foo"),
+		}, expectedErr: nil},
+		{expr: "up{bar='foo', bar2!~'foo'}", metricRegexp: "up", expected: []*labels.Matcher{
+			MustNewMatcher(labels.MatchEqual, "bar", "foo"), MustNewMatcher(labels.MatchNotRegexp, "bar2", "foo"), MustNewMatcher(labels.MatchEqual, "__name__", "up"),
+		}, expectedErr: nil},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test_case_%d", i), func(t *testing.T) {
+			metricRegexp := regexp.MustCompile(test.metricRegexp)
+			selectors, err := getLabelMatchersForMetricRegexp(test.expr, metricRegexp)
+			if err != nil {
+				t.Fatalf("failed to get label matchers for metric regexp: %v", err)
+			}
+			// Convert matchers to string for comparison, as we can not compare labels.Matcher directly due to regexp field
+			selectorsString := MatchersToString(selectors)
+			expectedMatchersString := MatchersToString(test.expected)
+			assert.ElementsMatch(t, selectorsString, expectedMatchersString, "Expected label matchers %v, but got %v", expectedMatchersString, selectorsString)
 			if !errors.Is(err, test.expectedErr) {
 				t.Errorf("Expected error %v, but got %v", test.expectedErr, err)
 			}

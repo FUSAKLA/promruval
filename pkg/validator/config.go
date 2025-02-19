@@ -27,6 +27,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 	"expressionDoesNotUseLabels":                           newExpressionDoesNotUseLabels,
 	"expressionUsesOnlyAllowedLabelsForMetricRegexp":       newExpressionUsesOnlyAllowedLabelsForMetricRegexp,
 	"expressionDoesNotUseLabelsForMetricRegexp":            newExpressionDoesNotUseLabelsForMetricRegexp,
+	"expressionUsesOnlyAllowedLabelValuesForMetricRegexp":  newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp,
 	"expressionDoesNotUseOlderDataThan":                    newExpressionDoesNotUseOlderDataThan,
 	"expressionDoesNotUseRangeShorterThan":                 newExpressionDoesNotUseRangeShorterThan,
 	"expressionDoesNotUseMetrics":                          newExpressionDoesNotUseMetrics,
