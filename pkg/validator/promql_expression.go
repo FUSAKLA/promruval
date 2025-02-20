@@ -178,20 +178,20 @@ type expressionUsesOnlyAllowedLabelValuesForMetricRegexp struct {
 
 func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		allowedLabelValues map[string][]string `yaml:"allowedLabelValues"`
+		AllowedLabelValues map[string][]string `yaml:"allowedLabelValues"`
 		MetricNameRegexp   string              `yaml:"metricNameRegexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if len(params.allowedLabelValues) == 0 {
+	if len(params.AllowedLabelValues) == 0 {
 		return nil, fmt.Errorf("missing allowed label values")
 	}
 	compiled, err := compileAnchoredRegexp(params.MetricNameRegexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
 	}
-	return &expressionUsesOnlyAllowedLabelValuesForMetricRegexp{allowedLabelValues: params.allowedLabelValues, metricNameRegexp: compiled}, nil
+	return &expressionUsesOnlyAllowedLabelValuesForMetricRegexp{allowedLabelValues: params.AllowedLabelValues, metricNameRegexp: compiled}, nil
 }
 
 func (h expressionUsesOnlyAllowedLabelValuesForMetricRegexp) String() string {
