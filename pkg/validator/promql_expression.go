@@ -142,7 +142,10 @@ func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(paramsConfig yaml.Node) (
 	if err != nil {
 		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
 	}
-	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabelsMap(params.AllowedLabels), metricNameRegexp: compiled}, nil
+	labels := labelsMap(params.AllowedLabels)
+	// Metric name label is implicitly allowed
+	labels[metricNameLabel] = struct{}{}
+	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: labels, metricNameRegexp: compiled}, nil
 }
 
 func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) String() string {
@@ -161,6 +164,51 @@ func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) Validate(_ unmarshaler.R
 	var errs []error
 	for _, l := range usedLabels {
 		if _, ok := h.allowedLabels[l]; !ok {
+			errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression in combination with metric %s (regexp)", l, h.metricNameRegexp))
+		}
+	}
+	return errs
+}
+
+type expressionDoesNotUseLabelsForMetricRegexp struct {
+	labels           map[string]struct{}
+	metricNameRegexp *regexp.Regexp
+}
+
+func newExpressionDoesNotUseLabelsForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Labels           []string `yaml:"labels"`
+		MetricNameRegexp string   `yaml:"metricNameRegexp"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if len(params.Labels) == 0 {
+		return nil, fmt.Errorf("missing labels")
+	}
+	compiled, err := compileAnchoredRegexp(params.MetricNameRegexp)
+	if err != nil {
+		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
+	}
+	return &expressionDoesNotUseLabelsForMetricRegexp{labels: labelsMap(params.Labels), metricNameRegexp: compiled}, nil
+}
+
+func (h expressionDoesNotUseLabelsForMetricRegexp) String() string {
+	labelsSlice := []string{}
+	for l := range h.labels {
+		labelsSlice = append(labelsSlice, l)
+	}
+	return fmt.Sprintf("expression does not use labels `%s` for metrics matching regexp %s in the expr", strings.Join(labelsSlice, "`,`"), h.metricNameRegexp)
+}
+
+func (h expressionDoesNotUseLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	usedLabels, err := getExpressionUsedLabelsForMetric(rule.Expr, h.metricNameRegexp)
+	if err != nil {
+		return []error{err}
+	}
+	var errs []error
+	for _, l := range usedLabels {
+		if _, ok := h.labels[l]; ok {
 			errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression in combination with metric %s (regexp)", l, h.metricNameRegexp))
 		}
 	}

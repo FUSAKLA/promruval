@@ -17,10 +17,8 @@ func init() {
 
 const metricNameLabel = "__name__"
 
-func allowedLabelsMap(l []string) map[string]struct{} {
-	m := map[string]struct{}{
-		metricNameLabel: {},
-	}
+func labelsMap(l []string) map[string]struct{} {
+	m := map[string]struct{}{}
 	for _, label := range l {
 		m[label] = struct{}{}
 	}
