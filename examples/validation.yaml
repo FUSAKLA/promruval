@@ -19,14 +19,15 @@ validationRules:
           firstLabel: severity
           firstLabelValue: info
           secondLabel: page
-      - type: expressionCanBeEvaluated
-        params:
-          timeSeriesLimit: 20
-          evaluationDurationLimit: 10s
-      - type: expressionUsesExistingLabels
+      # FIXME: Disabled until demo.do.prometheus.io is back online, see https://github.com/prometheus/demo-site/issues/114
+      # - type: expressionCanBeEvaluated
+      #   params:
+      #     timeSeriesLimit: 20
+      #     evaluationDurationLimit: 10s
+      # - type: expressionUsesExistingLabels
+      # - type: expressionSelectorsMatchesAnything
       - type: expressionDoesNotUseIrate
         additionalDetails: "Just do as I say!"
-      - type: expressionSelectorsMatchesAnything
       - type: expressionDoesNotUseOlderDataThan
         params:
           limit: "6h"
