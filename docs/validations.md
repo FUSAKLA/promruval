@@ -298,7 +298,7 @@ params:
 ```
 
 #### `expressionUsesOnlyAllowedLabelValuesForMetricRegexp`
-Fails if the metrics matching given regexp uses label selectors for given labels does not match at least one of given values. Regexp match in label selector (`=~`) is evaluated as a regexp against a given list of allowed label values. Negative matches (`!~`, `!=`) are ignored.
+Fails if the metrics matching given regexp uses label selectors for given labels does not match at least one of given values. Regexp match in label selector (`=~`) is evaluated as a regexp against a given list of allowed label values. Negative regexp matches (`!~`) are ignored.
 
 ```yaml
 params:
