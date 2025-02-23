@@ -302,7 +302,7 @@ Fails if the metrics matching given regexp uses label selectors for given labels
 
 ```yaml
 params:
-  metricNameRegexp: "kube_pod_labels" # The regexp will be fully anchored (surrounded by ^...$)
+  metricNameRegexp: "kube_pod_labels" # The regexp will be fully anchored (surrounded by ^...$), defaults to ^.*$ if not configured or empty.
   allowedLabelValues:
     cluster: ['kube1', 'kube2', 'kube3']
     team: ['sre', 'backend']
