@@ -187,7 +187,7 @@ func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(paramsConfig yaml.No
 	if len(params.AllowedLabelValues) == 0 {
 		return nil, fmt.Errorf("missing allowed label values")
 	}
-	if len(params.MetricNameRegexp) == 0 {
+	if params.MetricNameRegexp == "" {
 		// default to matching anything
 		params.MetricNameRegexp = ".*"
 	}
