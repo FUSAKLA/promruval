@@ -112,7 +112,7 @@ func newAlertNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Regexp == "" {
 		return nil, fmt.Errorf("missing pattern")
 	}
-	r, err := compileAnchoredRegexpWithDefault(params.Regexp, "")
+	r, err := compileAnchoredRegexpWithDefault(params.Regexp, emptyRegexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid pattern %s: %w", params.Regexp, err)
 	}

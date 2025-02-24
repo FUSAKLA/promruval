@@ -33,7 +33,7 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	for tenant, metrics := range params.SourceTenants {
 		m := make([]tenantMetrics, len(metrics))
 		for i, metric := range metrics {
-			compiledRegexp, err := compileAnchoredRegexpWithDefault(metric.Regexp, ".*")
+			compiledRegexp, err := compileAnchoredRegexpWithDefault(metric.Regexp, matchAnythingRegexp)
 			if err != nil {
 				return nil, fmt.Errorf("invalid metric name regexp: %s", anchorRegexp(metric.Regexp))
 			}
