@@ -18,6 +18,13 @@ func anchorRegexp(regexpString string) string {
 	return fmt.Sprintf("^%s$", regexpString)
 }
 
-func compileAnchoredRegexp(regexpString string) (*regexp.Regexp, error) {
+func compileAnchoredRegexpWithDefault(regexpString, defaultValue string) (*regexp.Regexp, error) {
+	if regexpString == "" {
+		return regexp.Compile(anchorRegexp(defaultValue))
+	}
 	return regexp.Compile(anchorRegexp(regexpString))
+}
+
+func compileAnchoredRegexp(regexpString string) (*regexp.Regexp, error) {
+	return compileAnchoredRegexpWithDefault(regexpString, "")
 }

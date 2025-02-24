@@ -124,7 +124,7 @@ func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Annotation == "" {
 		return nil, fmt.Errorf("missing annotation")
 	}
-	expr, err := regexp.Compile(params.Regexp)
+	expr, err := compileAnchoredRegexpWithDefault(params.Regexp, "")
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexp %s", params.Regexp)
 	}

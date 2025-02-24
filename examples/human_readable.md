@@ -47,8 +47,8 @@
   - Rule expression does not do any binary operations between histogram buckets, it can be dangerous because of inconsistency in the data if sent over remote write for example
 
   check-recording-rules
-    - Recording rule Recorded metric name does not match regexp: ^foo_bar$
-    - Recording rule Recorded metric name matches regexp: [^:]&#43;:[^:]&#43;:[^:]&#43;
+    - Recording rule Recorded metric name does not match regexp: ^^foo_bar$$
+    - Recording rule Recorded metric name matches regexp: ^[^:]&#43;:[^:]&#43;:[^:]&#43;$
 
   check-labels-in-expr
     - All rules for metrics matching regexp &#39;^up$&#39;, given lables use only specified values: job: [prometheus]
