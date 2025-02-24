@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Added: New validation `expressionDoesNotUseLabelsForMetricRegexp`
+- Added: New validation `expressionUsesOnlyAllowedLabelValuesForMetricRegexp`
 
 ## [3.6.2] - 2025-02-07
 - Fixed: Invalid internal name of the `newExpressionDoesNotUseClassicHistogramBucketOperations` validator causing that it wasn't possible to disable the validator

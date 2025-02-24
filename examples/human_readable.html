@@ -6,10 +6,7 @@
 		<li>Alert has labels: <code>severity</code></li>
 		<li>Alert label <code>severity</code> has one of the allowed values: <code>info</code>,<code>warning</code>,<code>critical</code></li>
 		<li>Alert if rule has label <code>severity</code> with value <code>info</code> , it cannot have label <code>page</code></li>
-		<li>Alert expression can be successfully evaluated on the live Prometheus instance</li>
-		<li>Alert expression uses only labels that are actually present in Prometheus</li>
 		<li>Alert expression does not use irate</li>
-		<li>Alert expression selectors actually matches any series in Prometheus</li>
 		<li>Alert expression does not use data older than <code>6h0m0s</code></li>
 	  </ul>
 
@@ -62,6 +59,13 @@
 	  <ul>
 		<li>Recording rule Recorded metric name does not match regexp: ^foo_bar$</li>
 		<li>Recording rule Recorded metric name matches regexp: [^:]+:[^:]+:[^:]+</li>
+	  </ul>
+
+  <h2><a href="#check-labels-in-expr">check-labels-in-expr</a></h2>
+	  <ul>
+		<li>All rules for metrics matching regexp '^up$', given lables use only specified values: job: [prometheus]
+</li>
+		<li>All rules expression does not use labels <code>app</code> for metrics matching regexp ^up$ in the expr</li>
 	  </ul>
 
   <h2><a href="#another-checks">another-checks</a></h2>

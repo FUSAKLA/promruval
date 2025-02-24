@@ -11,6 +11,7 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
@@ -142,10 +143,10 @@ func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(paramsConfig yaml.Node) (
 	if err != nil {
 		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
 	}
-	labels := labelsMap(params.AllowedLabels)
+	allowedLabels := labelsMap(params.AllowedLabels)
 	// Metric name label is implicitly allowed
-	labels[metricNameLabel] = struct{}{}
-	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: labels, metricNameRegexp: compiled}, nil
+	allowedLabels[metricNameLabel] = struct{}{}
+	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabels, metricNameRegexp: compiled}, nil
 }
 
 func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) String() string {
@@ -166,6 +167,73 @@ func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) Validate(_ unmarshaler.R
 		if _, ok := h.allowedLabels[l]; !ok {
 			errs = append(errs, fmt.Errorf("forbidden label `%s` used in expression in combination with metric %s (regexp)", l, h.metricNameRegexp))
 		}
+	}
+	return errs
+}
+
+type expressionUsesOnlyAllowedLabelValuesForMetricRegexp struct {
+	allowedLabelValues map[string][]string
+	metricNameRegexp   *regexp.Regexp
+}
+
+func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		AllowedLabelValues map[string][]string `yaml:"allowedLabelValues"`
+		MetricNameRegexp   string              `yaml:"metricNameRegexp"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if len(params.AllowedLabelValues) == 0 {
+		return nil, fmt.Errorf("missing allowed label values")
+	}
+	if params.MetricNameRegexp == "" {
+		// default to matching anything
+		params.MetricNameRegexp = ".*"
+	}
+	compiled, err := compileAnchoredRegexp(params.MetricNameRegexp)
+	if err != nil {
+		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
+	}
+	return &expressionUsesOnlyAllowedLabelValuesForMetricRegexp{allowedLabelValues: params.AllowedLabelValues, metricNameRegexp: compiled}, nil
+}
+
+func (h expressionUsesOnlyAllowedLabelValuesForMetricRegexp) String() string {
+	var allowedLabelValues string
+	for label, values := range h.allowedLabelValues {
+		allowedLabelValues += fmt.Sprintf(" %s: [%s]", label, strings.Join(values, ","))
+	}
+	return fmt.Sprintf("for metrics matching regexp '%s', given lables use only specified values:%s\n", h.metricNameRegexp, allowedLabelValues)
+}
+
+func (h expressionUsesOnlyAllowedLabelValuesForMetricRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	matchers, err := getLabelMatchersForMetricRegexp(rule.Expr, h.metricNameRegexp)
+	errs := []error{}
+	if err != nil {
+		errs = append(errs, err)
+		return errs
+	}
+	for _, matcher := range matchers {
+		var allowedLabels []string
+		var ok, matchFound bool
+		if allowedLabels, ok = h.allowedLabelValues[matcher.Name]; !ok {
+			// no whitelist is configured for this label
+			continue
+		}
+		if matcher.Type == labels.MatchNotRegexp {
+			// It does not make sense to validate label values whitelist for negative regexp matchers
+			continue
+		}
+		for _, value := range allowedLabels {
+			if matcher.Matches(value) {
+				matchFound = true
+				break
+			}
+		}
+		if !matchFound {
+			errs = append(errs, fmt.Errorf("none of the whitelisted label values matched for label %s", matcher.Name))
+		}
+
 	}
 	return errs
 }

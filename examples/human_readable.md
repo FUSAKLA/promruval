@@ -5,10 +5,7 @@ Validation rules:
     - Alert has labels: `severity`
     - Alert label `severity` has one of the allowed values: `info`,`warning`,`critical`
     - Alert if rule has label `severity` with value `info` , it cannot have label `page`
-    - Alert expression can be successfully evaluated on the live Prometheus instance
-    - Alert expression uses only labels that are actually present in Prometheus
     - Alert expression does not use irate
-    - Alert expression selectors actually matches any series in Prometheus
     - Alert expression does not use data older than `6h0m0s`
 
   check-team-label
@@ -45,6 +42,11 @@ Validation rules:
   check-recording-rules
     - Recording rule Recorded metric name does not match regexp: ^foo_bar$
     - Recording rule Recorded metric name matches regexp: [^:]&#43;:[^:]&#43;:[^:]&#43;
+
+  check-labels-in-expr
+    - All rules for metrics matching regexp &#39;^up$&#39;, given lables use only specified values: job: [prometheus]
+
+    - All rules expression does not use labels `app` for metrics matching regexp ^up$ in the expr
 
   another-checks
     - All rules labels does not have empty values

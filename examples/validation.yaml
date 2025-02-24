@@ -117,3 +117,16 @@ validationRules:
         params:
           regexp: "[^:]+:[^:]+:[^:]+"
           negative: true
+
+  - name: check-labels-in-expr
+    scope: All rules
+    validations:
+      - type: expressionUsesOnlyAllowedLabelValuesForMetricRegexp
+        params:
+          metricNameRegexp: up
+          allowedLabelValues:
+            job: ["prometheus"]
+      - type: expressionDoesNotUseLabelsForMetricRegexp
+        params:
+          metricNameRegexp: up
+          labels: ["app"]

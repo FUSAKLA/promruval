@@ -28,6 +28,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`expressionDoesNotUseLabels`](#expressiondoesnotuselabels)
       - [`expressionUsesOnlyAllowedLabelsForMetricRegexp`](#expressionusesonlyallowedlabelsformetricregexp)
       - [`expressionDoesNotUseLabelsForMetricRegexp`](#expressiondoesnotuselabelsformetricregexp)
+      - [`expressionUsesOnlyAllowedLabelValuesForMetricRegexp`](#expressionusesonlyallowedlabelvaluesformetricregexp)
       - [`expressionDoesNotUseOlderDataThan`](#expressiondoesnotuseolderdatathan)
       - [`expressionDoesNotUseRangeShorterThan`](#expressiondoesnotuserangeshorterthan)
       - [`expressionDoesNotUseIrate`](#expressiondoesnotuseirate)
@@ -294,6 +295,17 @@ The check rather ignores validation of labels, where it cannot be sure if they a
 params:
   metricNameRegexp: "kube_.+" # The regexp will be fully anchored (surrounded by ^...$)
   labels: [ "job", "cluster", "app", "instance" ]
+```
+
+#### `expressionUsesOnlyAllowedLabelValuesForMetricRegexp`
+Fails if the metrics matching given regexp uses label selectors for given labels does not match at least one of given values. Regexp match in label selector (`=~`) is evaluated as a regexp against a given list of allowed label values. Negative regexp matches (`!~`) are ignored.
+
+```yaml
+params:
+  metricNameRegexp: "kube_pod_labels" # The regexp will be fully anchored (surrounded by ^...$), defaults to ^.*$ if not configured or empty.
+  allowedLabelValues:
+    cluster: ['kube1', 'kube2', 'kube3']
+    team: ['sre', 'backend']
 ```
 
 #### `expressionDoesNotUseOlderDataThan`

@@ -44,6 +44,28 @@ func parserCallStringArgValue(e parser.Expr) string {
 	return val.Val
 }
 
+func getLabelMatchersForMetricRegexp(expr string, metricRegexp *regexp.Regexp) ([]*labels.Matcher, error) {
+	var err error
+	matchers := []*labels.Matcher{}
+
+	promQl, err := parser.ParseExpr(expr)
+	if err != nil {
+		return matchers, fmt.Errorf("failed to parse expression `%s`: %w", expr, err)
+	}
+	parser.Inspect(promQl, func(node parser.Node, _ []parser.Node) error {
+		vs, ok := node.(*parser.VectorSelector)
+		if ok {
+			name := getVectorSelectorMetricName(vs)
+			if metricRegexp.MatchString(name) {
+				matchers = append(matchers, vs.LabelMatchers...)
+			}
+			return nil
+		}
+		return nil
+	})
+	return matchers, nil
+}
+
 // Returns a list of labels which are used in given expr in relation to given metric.
 // It traverses the whole expression tree top to bottom and collects all labels used in selectors, operators, functions etc.
 // In case of vector matching, it also collects labels used in vector matching only relevant to the part of the expression where the metric is used.
