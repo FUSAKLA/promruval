@@ -139,7 +139,7 @@ func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(paramsConfig yaml.Node) (
 	if len(params.AllowedLabels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	compiled, err := compileAnchoredRegexpWithDefault(params.MetricNameRegexp, ".*")
+	compiled, err := compileAnchoredRegexpWithDefault(params.MetricNameRegexp, matchAnythingRegexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
 	}
@@ -187,7 +187,7 @@ func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(paramsConfig yaml.No
 	if len(params.AllowedLabelValues) == 0 {
 		return nil, fmt.Errorf("missing allowed label values")
 	}
-	compiled, err := compileAnchoredRegexpWithDefault(params.MetricNameRegexp, ".*")
+	compiled, err := compileAnchoredRegexpWithDefault(params.MetricNameRegexp, matchAnythingRegexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
 	}
@@ -250,7 +250,7 @@ func newExpressionDoesNotUseLabelsForMetricRegexp(paramsConfig yaml.Node) (Valid
 	if len(params.Labels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	compiled, err := compileAnchoredRegexpWithDefault(params.MetricNameRegexp, ".*")
+	compiled, err := compileAnchoredRegexpWithDefault(params.MetricNameRegexp, matchAnythingRegexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
 	}

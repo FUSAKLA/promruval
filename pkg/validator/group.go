@@ -233,7 +233,7 @@ func newGroupNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	r, err := compileAnchoredRegexpWithDefault(params.Regexp, "")
+	r, err := compileAnchoredRegexpWithDefault(params.Regexp, emptyRegexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexp %s: %w", params.Regexp, err)
 	}

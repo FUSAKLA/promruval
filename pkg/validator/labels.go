@@ -213,7 +213,7 @@ func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Label == "" {
 		return nil, fmt.Errorf("missing label name")
 	}
-	expr, err := compileAnchoredRegexpWithDefault(params.Regexp, "")
+	expr, err := compileAnchoredRegexpWithDefault(params.Regexp, emptyRegexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexp %s", params.Regexp)
 	}

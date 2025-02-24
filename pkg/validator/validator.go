@@ -14,6 +14,11 @@ type Validator interface {
 	Validate(group unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error
 }
 
+const (
+	matchAnythingRegexp = ".*"
+	emptyRegexp         = ""
+)
+
 func anchorRegexp(regexpString string) string {
 	return fmt.Sprintf("^%s$", regexpString)
 }
