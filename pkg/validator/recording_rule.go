@@ -20,7 +20,7 @@ func newRecordedMetricNameMatchesRegexp(paramsConfig yaml.Node) (Validator, erro
 	if params.Regexp == "" {
 		return nil, fmt.Errorf("missing regexp")
 	}
-	r, err := regexp.Compile(params.Regexp)
+	r, err := compileAnchoredRegexpWithDefault(params.Regexp, "")
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexp %s: %w", params.Regexp, err)
 	}
@@ -55,7 +55,7 @@ func newRecordedMetricNameDoesNotMatchRegexp(paramsConfig yaml.Node) (Validator,
 	if params.Regexp == "" {
 		return nil, fmt.Errorf("missing regexp")
 	}
-	r, err := regexp.Compile(params.Regexp)
+	r, err := compileAnchoredRegexpWithDefault(params.Regexp, "")
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexp %s: %w", params.Regexp, err)
 	}
