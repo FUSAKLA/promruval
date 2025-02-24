@@ -3,6 +3,8 @@ All the supported validations are listed here. The validations are grouped by th
 
 > If you want some sane default validations, you can look at the [default_validation.yaml](./default_validation.yaml). Those should be a good starting point for your own configuration and applicable to most of the use cases.
 
+> Please note that unless explicitly stated otherwise, all regular expressions used in configuration are fully anchored `^...$` and defaults to match everything `.*`.
+
 - [Supported validations by scopes](#supported-validations-by-scopes)
   - [Groups](#groups)
     - [`hasAllowedSourceTenants`](#hasallowedsourcetenants)
@@ -138,7 +140,7 @@ Fails if the group name does not match the specified regular expression.
 
 ```yaml
 params:
-  regexp: "[A-Z]\s+"
+  regexp: "[A-Z]\s+" # defaults to ""
 ```
 
 ### `hasAllowedQueryOffset`
@@ -198,7 +200,7 @@ Fails if rule label does not match the specified regular expression.
 ```yaml
 params:
   label: "foo"
-  regexp: ".*"
+  regexp: ".*" # defaults to ""
 ```
 
 #### `labelHasAllowedValue`
@@ -249,7 +251,7 @@ Fails if the rule expression uses any of the experimental PromQL functions.
 
 #### `expressionDoesNotUseMetrics`
 
-Fails if the rule expression uses metrics matching any of the metric name fully anchored(will be surrounded by `^...$`) regexps.
+Fails if the rule expression uses metrics matching any of the metric name regexps. Empty list does not match anything. All regexps within the list will be fully anchored (surrounded by `^...$`), empty string (`""`) **won't be converted to all match (`.*`)**.
 > If you want to avoid using some metrics in the rules, you can use this validation to make sure it won't happen.
 
 ```yaml
@@ -279,7 +281,7 @@ The check rather ignores validation of labels, where it cannot be sure if they a
 
 ```yaml
 params:
-  metricNameRegexp: "kube_pod_labels" # The regexp will be fully anchored (surrounded by ^...$)
+  metricNameRegexp: "kube_pod_labels"
   allowedLabels: [ "pod", "cluster", "app", "team" ]
 ```
 
@@ -293,7 +295,7 @@ The check rather ignores validation of labels, where it cannot be sure if they a
 
 ```yaml
 params:
-  metricNameRegexp: "kube_.+" # The regexp will be fully anchored (surrounded by ^...$)
+  metricNameRegexp: "kube_.+"
   labels: [ "job", "cluster", "app", "instance" ]
 ```
 
@@ -302,7 +304,7 @@ Fails if the metrics matching given regexp uses label selectors for given labels
 
 ```yaml
 params:
-  metricNameRegexp: "kube_pod_labels" # The regexp will be fully anchored (surrounded by ^...$), defaults to ^.*$ if not configured or empty.
+  metricNameRegexp: "kube_pod_labels"
   allowedLabelValues:
     cluster: ['kube1', 'kube2', 'kube3']
     team: ['sre', 'backend']
@@ -435,8 +437,8 @@ params:
   defaultTenant: <tenant_name> # Optional, if set, the tenant that will be assumed if the group does not have the `source_tenants` option set
   sourceTenants:
     <tenant_name>:
-      - regexp: <metric_name_regexp> # The regexp will be fully anchored (surrounded by ^...$)
-        negativeRegexp: <metric_name_regexp> # Optional, metrics matching the regexp will be excluded from the check, will be fully anchored (surrounded by ^...$)
+      - regexp: <metric_name_regexp>
+        negativeRegexp: <metric_name_regexp> # Optional, metrics matching the regexp will be excluded from the check, defaults to ""
         description: <description> # Optional, will be shown in the validator output human-readable description
   # Example:
   # k8s:
@@ -579,7 +581,7 @@ Fails if the name of the recorded metric does not match the specified regular ex
 
 ```yaml
 params:
-  regexp: "[^:]+:[^:]+:[^:]+"
+  regexp: "[^:]+:[^:]+:[^:]+" # defaults to ""
 ```
 
 #### `recordedMetricNameDoesNotMatchRegexp`
@@ -588,5 +590,5 @@ Fails if the name of the recorded metric matches the specified regular expressio
 
 ```yaml
 params:
-  regexp: "^foo_bar$"
+  regexp: "^foo_bar$" # defaults to ""
 ```
