@@ -48,6 +48,7 @@ func TestScope(t *testing.T) {
 		})
 	}
 }
+
 func TestMatchesScope(t *testing.T) {
 	tests := []struct {
 		name   string
