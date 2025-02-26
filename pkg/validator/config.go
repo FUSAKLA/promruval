@@ -14,6 +14,7 @@ type validatorCreator func(params yaml.Node) (Validator, error)
 var registeredUniversalRuleValidators = map[string]validatorCreator{
 	// Labels
 	"hasLabels":            newHasLabels,
+	"hasLabelsForEveryAggregation": newHasLabelsForEveryAggregation,
 	"doesNotHaveLabels":    newDoesNotHaveLabels,
 	"hasAnyOfLabels":       newHasAnyOfLabels,
 	"labelMatchesRegexp":   newLabelMatchesRegexp,

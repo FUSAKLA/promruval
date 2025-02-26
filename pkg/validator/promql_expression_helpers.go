@@ -159,6 +159,47 @@ func getExpressionUsedLabels(expr string) ([]string, error) {
 	return getExpressionUsedLabelsForMetric(expr, regexp.MustCompile(".*"))
 }
 
+func getExpressionUsedLabelsForEveryAggregation(expr string) (map[string]struct{}, error) {
+	promQl, err := parser.ParseExpr(expr)
+	if err != nil {
+		return map[string]struct{}{}, fmt.Errorf("failed to parse expression `%s`: %w", expr, err)
+	}
+	var usedLabels map[string]struct{}
+
+	labelsUpInExpr := func(path []parser.Node) map[string]struct{} {
+		for _, n := range path {
+			switch v := n.(type) {
+			case *parser.AggregateExpr:
+				usedLabels := map[string]struct{}{}
+				for _, l := range v.Grouping {
+					usedLabels[l] = struct{}{}
+				}
+				return usedLabels
+			}
+		}
+
+		return nil
+	}
+
+	parser.Inspect(promQl, func(n parser.Node, path []parser.Node) error {
+		usedLabelsInExpr := labelsUpInExpr(path)
+		if usedLabels == nil {
+			usedLabels = usedLabelsInExpr
+		}
+		if usedLabelsInExpr != nil {
+			for k := range usedLabels {
+				if _, exists := usedLabelsInExpr[k]; !exists {
+					delete(usedLabels, k)
+				}
+			}
+
+		}
+		return nil
+	})
+
+	return usedLabels, nil
+}
+
 func getExpressionVectorSelectors(expr string) ([]*parser.VectorSelector, error) {
 	promQl, err := parser.ParseExpr(expr)
 	if err != nil {
