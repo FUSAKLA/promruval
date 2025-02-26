@@ -158,15 +158,13 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 						}
 					}
 					for _, v := range rule.OnlyIf() {
-						switch validator.Scope(v.Name()) {
-						case config.GroupScope, ruleNode.Scope():
+						if validator.MatchesScope(originalRule, ruleNode.Scope()) {
 							if errs := validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient); len(errs) > 0 {
 								log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
 								continue ruleValidationLoop
 							}
-						default:
+						} else {
 							log.Debugf("skipping onlyIf validation of file %s group %s because it is not applicable: validator scrope: `%s`, rule scope: `%s`", fileName, group.Name, validator.Scope(v.Name()), ruleNode.Scope())
-							continue
 						}
 					}
 					for _, v := range rule.Validators() {

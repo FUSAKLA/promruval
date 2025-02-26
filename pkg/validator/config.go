@@ -5,6 +5,7 @@ import (
 	"maps"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	"gopkg.in/yaml.v3"
 )
 
@@ -148,4 +149,18 @@ func Scope(validatorName string) config.ValidationScope {
 		return config.AllRulesScope
 	}
 	return ""
+}
+
+func MatchesScope(rule rulefmt.Rule, scope config.ValidationScope) bool {
+	switch scope {
+	case config.GroupScope:
+		return true
+	case config.AlertScope:
+		return rule.Alert != ""
+	case config.RecordingRuleScope:
+		return rule.Record != ""
+	case config.AllRulesScope:
+		return true
+	}
+	return false
 }
