@@ -14,6 +14,7 @@ type ValidationRule interface {
 	Name() string
 	Scope() config.ValidationScope
 	ValidationTexts() []string
+	OnlyIfValidationTexts() []string
 }
 
 func NewValidationReport() *ValidationReport {
@@ -118,7 +119,7 @@ func (r *GroupReport) AsText(output *IndentedOutput) {
 		output.AddLine("Skipped")
 		return
 	}
-	if r.Errors != nil {
+	if len(r.Errors) > 0 {
 		output.AddLine("Group level errors:")
 		output.IncreaseIndentation()
 		output.WriteErrors(r.Errors)
@@ -157,18 +158,11 @@ func (r *RuleReport) AsText(output *IndentedOutput) {
 
 func (r *ValidationReport) AsText(indentationStep int, color bool) (string, error) {
 	output := NewIndentedOutput(indentationStep, color)
-	output.AddLine("Validation rules used:")
-	output.IncreaseIndentation()
-	for _, rule := range r.ValidationRules {
-		output.AddLine("")
-		output.AddLine(rule.Name() + ":")
-		output.IncreaseIndentation()
-		for _, check := range rule.ValidationTexts() {
-			output.AddLine("- " + check)
-		}
-		output.DecreaseIndentation()
+	validationText, err := ValidationDocs(r.ValidationRules, "text")
+	if err != nil {
+		return "", err
 	}
-	output.DecreaseIndentation()
+	output.AddLine(validationText)
 	output.AddLine("\n")
 	output.AddLine("Result: ")
 

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added: New option `onlyIf` to the validation rule config allowing to specify conditions that must be met for the rule to be applied. See [the docs](README.md#configuration) or [examples](./examples/validation.yaml).
+- Fixed: Unified text validation description in running `promruval validate` and `promruval validation-docs -o text`
+- Fixed: Some minor validations descriptions fixes
+- Fixed: In the validation description use `Rule` instead of `All rules` for the all rules scope
 
 ## [3.7.0] - 2025-02-25
 - Added: New validation `expressionDoesNotUseLabelsForMetricRegexp`
@@ -15,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: Invalid internal name of the `newExpressionDoesNotUseClassicHistogramBucketOperations` validator causing that it wasn't possible to disable the validator
 
 ## [3.6.1] - 2024-12-01
-- Fixed: FIxed the `expressionUsesOnlyAllowedLabelsForMetricRegexp` validator that might return false positives when used on more complex expressions with vector matching and functions using labels.
+- Fixed: Fixed the `expressionUsesOnlyAllowedLabelsForMetricRegexp` validator that might return false positives when used on more complex expressions with vector matching and functions using labels.
 
 ## [3.6.0] - 2024-11-29
 - Added: Configuration file can now be in Jsonnet format if the config file name ends with `.jsonnet` and it will get automatically evaluated.

@@ -3,6 +3,7 @@
 
 prometheus:
   url: https://prometheus.demo.do.prometheus.io
+  timeout: 0.5s
   bearerTokenFile: ./bearer.token
 
 validationRules:
@@ -130,3 +131,18 @@ validationRules:
         params:
           metricNameRegexp: up
           labels: ["app"]
+
+  - name: test-onlyif
+    scope: Alert
+    onlyIf:
+      - type: labelMatchesRegexp
+        params:
+          label: "severity"
+          regexp: "^critical$"
+      - type: maxRulesPerGroup
+        params:
+          limit: 1
+    validations:
+      - type: hasLabels
+        params:
+          labels: ["escalate"]

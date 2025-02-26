@@ -5,6 +5,7 @@ import (
 	"maps"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
+	"github.com/prometheus/prometheus/model/rulefmt"
 	"gopkg.in/yaml.v3"
 )
 
@@ -132,4 +133,34 @@ func KnownValidators(scope config.ValidationScope, validatorNames []string) erro
 		}
 	}
 	return nil
+}
+
+func Scope(validatorName string) config.ValidationScope {
+	for scope, validators := range map[config.ValidationScope]map[string]validatorCreator{
+		config.AlertScope:         registeredAlertValidators,
+		config.RecordingRuleScope: registeredRecordingRuleValidators,
+		config.GroupScope:         registeredGroupValidators,
+	} {
+		if _, ok := validators[validatorName]; ok {
+			return scope
+		}
+	}
+	if _, ok := registeredUniversalRuleValidators[validatorName]; ok {
+		return config.AllRulesScope
+	}
+	return ""
+}
+
+func MatchesScope(rule rulefmt.Rule, scope config.ValidationScope) bool {
+	switch scope {
+	case config.GroupScope:
+		return true
+	case config.AlertScope:
+		return rule.Alert != ""
+	case config.RecordingRuleScope:
+		return rule.Record != ""
+	case config.AllRulesScope:
+		return true
+	}
+	return false
 }

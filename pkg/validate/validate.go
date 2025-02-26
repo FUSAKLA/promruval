@@ -98,9 +98,19 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				groupReport.Errors = append(groupReport.Errors, fmt.Errorf("invalid disabled validators: %w", err))
 			}
 			groupDisabledValidators = slices.Concat(groupDisabledValidators, fileDisabledValidators, allGroupsDisabledValidators)
+		groupValidationLoop:
 			for _, rule := range validationRules {
 				if rule.Scope() != config.GroupScope {
 					continue
+				}
+				for _, v := range rule.OnlyIf() {
+					if validator.Scope(v.Name()) != config.GroupScope {
+						continue
+					}
+					if errs := validateWithDetails(v, group.RuleGroup, rulefmt.Rule{}, prometheusClient); len(errs) > 0 {
+						log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+						continue groupValidationLoop
+					}
 				}
 				for _, v := range rule.Validators() {
 					if slices.Contains(groupDisabledValidators, v.Name()) {
@@ -118,9 +128,10 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				validationReport.RulesCount++
 				originalRule := ruleNode.OriginalRule()
 				var ruleReport *report.RuleReport
-				if originalRule.Alert != "" {
+				switch ruleNode.Scope() {
+				case config.AlertScope:
 					ruleReport = groupReport.NewRuleReport(originalRule.Alert, config.AlertScope)
-				} else {
+				case config.RecordingRuleScope:
 					ruleReport = groupReport.NewRuleReport(originalRule.Record, config.RecordingRuleScope)
 				}
 				var excludedRules []string
@@ -133,21 +144,28 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 					ruleReport.Errors = append(ruleReport.Errors, fmt.Errorf("invalid disabled validators: %w", err))
 				}
 				disabledValidators = append(disabledValidators, groupDisabledValidators...)
+			ruleValidationLoop:
 				for _, rule := range validationRules {
 					if rule.Scope() == config.GroupScope {
 						continue
 					}
-					skipRule := false
 					if (rule.Scope() != ruleReport.RuleType) && (rule.Scope() != config.AllRulesScope) {
-						skipRule = true
+						continue
 					}
 					for _, excludedRuleName := range excludedRules {
 						if excludedRuleName == rule.Name() {
-							skipRule = true
+							continue ruleValidationLoop
 						}
 					}
-					if skipRule {
-						continue
+					for _, v := range rule.OnlyIf() {
+						if validator.MatchesScope(originalRule, ruleNode.Scope()) {
+							if errs := validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient); len(errs) > 0 {
+								log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+								continue ruleValidationLoop
+							}
+						} else {
+							log.Debugf("skipping onlyIf validation of file %s group %s because it is not applicable: validator scrope: `%s`, rule scope: `%s`", fileName, group.Name, validator.Scope(v.Name()), ruleNode.Scope())
+						}
 					}
 					for _, v := range rule.Validators() {
 						validatorName := v.Name()
