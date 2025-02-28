@@ -1,101 +1,97 @@
-<h1>Validation rules</h1>
-<br />
-<h2><a href="#check-severity-label">check-severity-label</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Alert has labels: <code>severity</code></li>
-	<li>Alert label <code>severity</code> has one of the allowed values:
-		<code>info</code>,<code>warning</code>,<code>critical</code></li>
-	<li>Alert if rule has label <code>severity</code> with value <code>info</code> , it cannot have label
-		<code>page</code></li>
-	<li>Alert expression does not use irate</li>
-	<li>Alert expression does not use data older than <code>6h0m0s</code></li>
-</ul>
-<br />
-<h2><a href="#check-team-label">check-team-label</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Alert has labels: <code>xxx</code></li>
-	<li>Alert label <code>team</code> has one of the allowed values: <code>sre@company.com</code> (templated values are
-		ignored)</li>
-</ul>
-<br />
-<h2><a href="#check-playbook-annotation">check-playbook-annotation</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Alert has any of these annotations: <code>playbook</code>,<code>link</code></li>
-	<li>Alert Annotation <code>link</code> is a valid URL and does not return HTTP status 404</li>
-</ul>
-<br />
-<h2><a href="#check-alert-title">check-alert-title</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Alert has all of these annotations: <code>title</code></li>
-</ul>
-<br />
-<h2><a href="#check-prometheus-limitations">check-prometheus-limitations</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Rule expression does not use any experimental PromQL functions</li>
-	<li>Rule expression uses underscores as separators in large numbers in PromQL expression. Example: 1_000_000</li>
-	<li>Rule expression does not use data older than <code>6h0m0s</code></li>
-	<li>Rule does not use any of the
-		<code>cluster</code>,<code>locality</code>,<code>prometheus-type</code>,<code>replica</code> labels is in its
-		expression</li>
-</ul>
-<br />
-<h2><a href="#check-metric-name">check-metric-name</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Alert expression uses metric name in selectors</li>
-	<li>Alert labels are valid templates</li>
-	<li>Alert <code>keep_firing_for</code> is not longer than <code>1h</code></li>
-</ul>
-<br />
-<h2><a href="#check-groups">check-groups</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Group evaluation interval is between <code>20s</code> and <code>106751d23h47m16s854ms</code> if set</li>
-	<li>Group has at most 10 rules</li>
-	<li>Group does not have higher <code>limit</code> configured then 100</li>
-</ul>
-<br />
-<h2><a href="#check-formatting">check-formatting</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Rule expression is well formatted as would <code>promtool promql format</code> do or similar online tool such as
-		https://o11y.tools/promqlparser/</li>
-	<li>Rule expression does not do any binary operations between histogram buckets, it can be dangerous because of
-		inconsistency in the data if sent over remote write for example</li>
-</ul>
-<br />
-<h2><a href="#check-recording-rules">check-recording-rules</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Recording rule recorded metric name does not match regexp: <code>^foo_bar$</code></li>
-	<li>Recording rule recorded metric name matches regexp: <code>[^:]+:[^:]+:[^:]+</code></li>
-</ul>
-<br />
-<h2><a href="#test-onlyif">test-onlyif</a></h2>
-<h4>Only if ALL the following conditions are met:</h4>
-<ul>
-	<li>Rule label <code>severity</code> matches regexp <code>^critical$</code></li>
-	<li>Group has at most 1 rules</li>
-</ul>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Alert has labels: <code>escalate</code></li>
-</ul>
-<br />
-<h2><a href="#check-labels-in-expr">check-labels-in-expr</a></h2>
-<ul>
-	<li>All rules for metrics matching regexp '^up$', given lables use only specified values: job: [prometheus]
-	</li>
-	<li>All rules expression does not use labels <code>app</code> for metrics matching regexp ^up$ in the expr</li>
-</ul>
 
-<h2><a href="#another-checks">another-checks</a></h2>
-<h4>Following conditions MUST be met:</h4>
-<ul>
-	<li>Rule labels does not have empty values</li>
-</ul>
+<h1>Validation rules</h1>
+  <br/>
+  <h2><a href="#check-severity-label">check-severity-label</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Alert has labels: <code>severity</code></li>
+		<li>Alert label <code>severity</code> has one of the allowed values: <code>info</code>,<code>warning</code>,<code>critical</code></li>
+		<li>Alert if rule has label <code>severity</code> with value <code>info</code> , it cannot have label <code>page</code></li>
+		<li>Alert expression does not use irate</li>
+		<li>Alert expression does not use data older than <code>6h0m0s</code></li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-team-label">check-team-label</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Alert has labels: <code>xxx</code></li>
+		<li>Alert label <code>team</code> has one of the allowed values: <code>sre@company.com</code> (templated values are ignored)</li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-playbook-annotation">check-playbook-annotation</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Alert has any of these annotations: <code>playbook</code>,<code>link</code></li>
+		<li>Alert Annotation <code>link</code> is a valid URL and does not return HTTP status 404</li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-alert-title">check-alert-title</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Alert has all of these annotations: <code>title</code></li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-prometheus-limitations">check-prometheus-limitations</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Rule expression does not use any experimental PromQL functions</li>
+		<li>Rule expression uses underscores as separators in large numbers in PromQL expression. Example: 1_000_000</li>
+		<li>Rule expression does not use data older than <code>6h0m0s</code></li>
+		<li>Rule does not use any of the <code>cluster</code>,<code>locality</code>,<code>prometheus-type</code>,<code>replica</code> labels is in its expression</li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-metric-name">check-metric-name</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Alert expression uses metric name in selectors</li>
+		<li>Alert labels are valid templates</li>
+		<li>Alert <code>keep_firing_for</code> is not longer than <code>1h</code></li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-groups">check-groups</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Group evaluation interval is between <code>20s</code> and <code>106751d23h47m16s854ms</code> if set</li>
+		<li>Group has at most 10 rules</li>
+		<li>Group does not have higher <code>limit</code> configured then 100</li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-formatting">check-formatting</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Rule expression is well formatted as would <code>promtool promql format</code> do or similar online tool such as https://o11y.tools/promqlparser/</li>
+		<li>Rule expression does not do any binary operations between histogram buckets, it can be dangerous because of inconsistency in the data if sent over remote write for example</li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-recording-rules">check-recording-rules</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Recording rule recorded metric name does not match regexp: <code>^foo_bar$</code></li>
+		<li>Recording rule recorded metric name matches regexp: <code>^[^:]+:[^:]+:[^:]+$</code></li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-labels-in-expr">check-labels-in-expr</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Rule for metrics matching regexp '^up$', given lables use only specified values: job: [prometheus]
+</li>
+		<li>Rule expression does not use labels <code>app</code> for metrics matching regexp ^up$ in the expr</li>
+	  </ul>
+  <br/>
+  <h2><a href="#test-onlyif">test-onlyif</a></h2>
+  	  <h4>Only if ALL the following conditions are met:</h4>
+	  <ul>
+		<li>Rule label <code>severity</code> matches regexp <code>^critical$</code></li>
+		<li>Group has at most 1 rules</li>
+	  </ul>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Alert has labels: <code>escalate</code></li>
+	  </ul>
+  <br/>
+  <h2><a href="#another-checks">another-checks</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Rule labels does not have empty values</li>
+	  </ul>
+

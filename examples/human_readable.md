@@ -1,12 +1,13 @@
 
 # Validation rules
 
-  check-severity-label
-    - Alert has labels: `severity`
-    - Alert label `severity` has one of the allowed values: `info`,`warning`,`critical`
-    - Alert if rule has label `severity` with value `info` , it cannot have label `page`
-    - Alert expression does not use irate
-    - Alert expression does not use data older than `6h0m0s`
+## check-severity-label
+#### Following conditions MUST be met:
+  - Alert has labels: `severity`
+  - Alert label `severity` has one of the allowed values: `info`,`warning`,`critical`
+  - Alert if rule has label `severity` with value `info` , it cannot have label `page`
+  - Alert expression does not use irate
+  - Alert expression does not use data older than `6h0m0s`
 
 ## check-team-label
 #### Following conditions MUST be met:
@@ -46,15 +47,25 @@
   - Rule expression is well formatted as would `promtool promql format` do or similar online tool such as https://o11y.tools/promqlparser/
   - Rule expression does not do any binary operations between histogram buckets, it can be dangerous because of inconsistency in the data if sent over remote write for example
 
-  check-recording-rules
-    - Recording rule Recorded metric name does not match regexp: ^^foo_bar$$
-    - Recording rule Recorded metric name matches regexp: ^[^:]&#43;:[^:]&#43;:[^:]&#43;$
+## check-recording-rules
+#### Following conditions MUST be met:
+  - Recording rule recorded metric name does not match regexp: `^foo_bar$`
+  - Recording rule recorded metric name matches regexp: `^[^:]+:[^:]+:[^:]+$`
 
-  check-labels-in-expr
-    - All rules for metrics matching regexp &#39;^up$&#39;, given lables use only specified values: job: [prometheus]
+## check-labels-in-expr
+#### Following conditions MUST be met:
+  - Rule for metrics matching regexp '^up$', given lables use only specified values: job: [prometheus]
 
-    - All rules expression does not use labels `app` for metrics matching regexp ^up$ in the expr
+  - Rule expression does not use labels `app` for metrics matching regexp ^up$ in the expr
 
-  another-checks
-    - All rules labels does not have empty values
+## test-onlyif
+#### Only if ALL the following conditions are met:
+  - Rule label `severity` matches regexp `^critical$`
+  - Group has at most 1 rules
+#### Following conditions MUST be met:
+  - Alert has labels: `escalate`
+
+## another-checks
+#### Following conditions MUST be met:
+  - Rule labels does not have empty values
 
