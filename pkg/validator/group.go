@@ -228,12 +228,12 @@ func (h hasAllowedQueryOffset) Validate(group unmarshaler.RuleGroup, _ rulefmt.R
 
 func newGroupNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Regexp string `yaml:"regexp"`
+		Regexp RegexpEmptyDefault `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	r, err := compileAnchoredRegexpWithDefault(params.Regexp, emptyRegexp)
+	r, err := compileAnchoredRegexp(params.Regexp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid regexp %s: %w", params.Regexp, err)
 	}

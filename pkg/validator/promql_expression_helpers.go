@@ -156,7 +156,7 @@ func getExpressionUsedLabelsForMetric(expr string, metricRegexp *regexp.Regexp) 
 }
 
 func getExpressionUsedLabels(expr string) ([]string, error) {
-	return getExpressionUsedLabelsForMetric(expr, regexp.MustCompile(matchAnythingRegexp))
+	return getExpressionUsedLabelsForMetric(expr, regexp.MustCompile(".*"))
 }
 
 func getExpressionVectorSelectors(expr string) ([]*parser.VectorSelector, error) {

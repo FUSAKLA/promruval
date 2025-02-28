@@ -16,20 +16,37 @@ type Validator interface {
 
 const (
 	matchAnythingRegexp = ".*"
-	emptyRegexp         = ""
 )
+
+type RegexpString interface {
+	String() string
+}
+
+// Custom unmarhsalling for regexps.
+type RegexpEmptyDefault string
+
+func (r RegexpEmptyDefault) String() string { return string(r) }
+
+type RegexpWildcardDefault string
+
+func (r RegexpWildcardDefault) String() string { return string(r) }
+
+func (r *RegexpWildcardDefault) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var value string
+	if err := unmarshal(&value); err != nil {
+		return err
+	}
+	if value == "" {
+		value = matchAnythingRegexp
+	}
+	*r = RegexpWildcardDefault(value)
+	return nil
+}
 
 func anchorRegexp(regexpString string) string {
 	return fmt.Sprintf("^%s$", regexpString)
 }
 
-func compileAnchoredRegexpWithDefault(regexpString, defaultValue string) (*regexp.Regexp, error) {
-	if regexpString == "" {
-		return regexp.Compile(anchorRegexp(defaultValue))
-	}
-	return regexp.Compile(anchorRegexp(regexpString))
-}
-
-func compileAnchoredRegexp(regexpString string) (*regexp.Regexp, error) {
-	return compileAnchoredRegexpWithDefault(regexpString, "")
+func compileAnchoredRegexp(regexpString RegexpString) (*regexp.Regexp, error) {
+	return regexp.Compile(anchorRegexp(regexpString.String()))
 }
