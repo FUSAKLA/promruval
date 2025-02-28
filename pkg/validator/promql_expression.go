@@ -615,7 +615,7 @@ func newExpressionDoesNotUseMetrics(paramsConfig yaml.Node) (Validator, error) {
 	}
 	v := expressionDoesNotUseMetrics{}
 	for _, r := range params.MetricNameRegexps {
-		compiled, err := compileAnchoredRegexpWithDefault(r, "")
+		compiled, err := compileAnchoredRegexpWithDefault(r, emptyRegexp)
 		if err != nil {
 			return nil, err
 		}
