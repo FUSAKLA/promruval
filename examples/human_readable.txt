@@ -50,7 +50,13 @@ Validation rules:
   check-recording-rules (Recording rule)
     Following conditions MUST be met:
       - Recording rule recorded metric name does not match regexp: `^foo_bar$`
-      - Recording rule recorded metric name matches regexp: `[^:]+:[^:]+:[^:]+`
+      - Recording rule recorded metric name matches regexp: `^[^:]+:[^:]+:[^:]+$`
+
+  check-labels-in-expr (All rules)
+    Following conditions MUST be met:
+      - Rule for metrics matching regexp '^up$', given lables use only specified values: job: [prometheus]
+
+      - Rule expression does not use labels `app` for metrics matching regexp ^up$ in the expr
 
   test-onlyif (Alert)
     Only if ALL the following conditions are met:

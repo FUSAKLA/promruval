@@ -115,8 +115,8 @@ func (h hasAnyOfAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule
 
 func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Annotation string `yaml:"annotation"`
-		Regexp     string `yaml:"regexp"`
+		Annotation string             `yaml:"annotation"`
+		Regexp     RegexpEmptyDefault `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -124,12 +124,7 @@ func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Annotation == "" {
 		return nil, fmt.Errorf("missing annotation")
 	}
-	expr, err := regexp.Compile(params.Regexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid regexp %s", params.Regexp)
-	}
-
-	return &annotationMatchesRegexp{annotation: params.Annotation, regexp: expr}, nil
+	return &annotationMatchesRegexp{annotation: params.Annotation, regexp: params.Regexp.Regexp}, nil
 }
 
 type annotationMatchesRegexp struct {

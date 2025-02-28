@@ -104,20 +104,13 @@ func (h validateLabelTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 
 func newAlertNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Regexp string `yaml:"regexp"`
+		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Regexp == "" {
-		return nil, fmt.Errorf("missing pattern")
-	}
-	r, err := regexp.Compile(params.Regexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid pattern %s: %w", params.Regexp, err)
-	}
 	return &alertNameMatchesRegexp{
-		pattern: r,
+		pattern: params.Regexp.Regexp,
 	}, nil
 }
 

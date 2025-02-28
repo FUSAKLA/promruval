@@ -204,8 +204,8 @@ func (h labelHasAllowedValue) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 
 func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Label  string `yaml:"label"`
-		Regexp string `yaml:"regexp"`
+		Label  string             `yaml:"label"`
+		Regexp RegexpEmptyDefault `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -213,11 +213,7 @@ func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Label == "" {
 		return nil, fmt.Errorf("missing label name")
 	}
-	expr, err := regexp.Compile(params.Regexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid regexp %s", params.Regexp)
-	}
-	return &labelMatchesRegexp{label: params.Label, regexp: expr}, nil
+	return &labelMatchesRegexp{label: params.Label, regexp: params.Regexp.Regexp}, nil
 }
 
 type labelMatchesRegexp struct {

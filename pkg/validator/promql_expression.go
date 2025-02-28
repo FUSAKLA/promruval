@@ -130,8 +130,8 @@ type expressionUsesOnlyAllowedLabelsForMetricRegexp struct {
 
 func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		AllowedLabels    []string `yaml:"allowedLabels"`
-		MetricNameRegexp string   `yaml:"metricNameRegexp"`
+		AllowedLabels    []string              `yaml:"allowedLabels"`
+		MetricNameRegexp RegexpWildcardDefault `yaml:"metricNameRegexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -139,14 +139,10 @@ func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(paramsConfig yaml.Node) (
 	if len(params.AllowedLabels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	compiled, err := compileAnchoredRegexp(params.MetricNameRegexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
-	}
 	allowedLabels := labelsMap(params.AllowedLabels)
 	// Metric name label is implicitly allowed
 	allowedLabels[metricNameLabel] = struct{}{}
-	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabels, metricNameRegexp: compiled}, nil
+	return &expressionUsesOnlyAllowedLabelsForMetricRegexp{allowedLabels: allowedLabels, metricNameRegexp: params.MetricNameRegexp.Regexp}, nil
 }
 
 func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) String() string {
@@ -178,8 +174,8 @@ type expressionUsesOnlyAllowedLabelValuesForMetricRegexp struct {
 
 func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		AllowedLabelValues map[string][]string `yaml:"allowedLabelValues"`
-		MetricNameRegexp   string              `yaml:"metricNameRegexp"`
+		AllowedLabelValues map[string][]string   `yaml:"allowedLabelValues"`
+		MetricNameRegexp   RegexpWildcardDefault `yaml:"metricNameRegexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -187,15 +183,7 @@ func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(paramsConfig yaml.No
 	if len(params.AllowedLabelValues) == 0 {
 		return nil, fmt.Errorf("missing allowed label values")
 	}
-	if params.MetricNameRegexp == "" {
-		// default to matching anything
-		params.MetricNameRegexp = ".*"
-	}
-	compiled, err := compileAnchoredRegexp(params.MetricNameRegexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
-	}
-	return &expressionUsesOnlyAllowedLabelValuesForMetricRegexp{allowedLabelValues: params.AllowedLabelValues, metricNameRegexp: compiled}, nil
+	return &expressionUsesOnlyAllowedLabelValuesForMetricRegexp{allowedLabelValues: params.AllowedLabelValues, metricNameRegexp: params.MetricNameRegexp.Regexp}, nil
 }
 
 func (h expressionUsesOnlyAllowedLabelValuesForMetricRegexp) String() string {
@@ -245,8 +233,8 @@ type expressionDoesNotUseLabelsForMetricRegexp struct {
 
 func newExpressionDoesNotUseLabelsForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Labels           []string `yaml:"labels"`
-		MetricNameRegexp string   `yaml:"metricNameRegexp"`
+		Labels           []string              `yaml:"labels"`
+		MetricNameRegexp RegexpWildcardDefault `yaml:"metricNameRegexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -254,11 +242,7 @@ func newExpressionDoesNotUseLabelsForMetricRegexp(paramsConfig yaml.Node) (Valid
 	if len(params.Labels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	compiled, err := compileAnchoredRegexp(params.MetricNameRegexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid metric name regexp %s: %w", params.MetricNameRegexp, err)
-	}
-	return &expressionDoesNotUseLabelsForMetricRegexp{labels: labelsMap(params.Labels), metricNameRegexp: compiled}, nil
+	return &expressionDoesNotUseLabelsForMetricRegexp{labels: labelsMap(params.Labels), metricNameRegexp: params.MetricNameRegexp.Regexp}, nil
 }
 
 func (h expressionDoesNotUseLabelsForMetricRegexp) String() string {
@@ -612,18 +596,14 @@ func (e expressionWithNoMetricName) Validate(_ unmarshaler.RuleGroup, rule rulef
 
 func newExpressionDoesNotUseMetrics(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		MetricNameRegexps []string `yaml:"metricNameRegexps"`
+		MetricNameRegexps []RegexpEmptyDefault `yaml:"metricNameRegexps"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
 	v := expressionDoesNotUseMetrics{}
 	for _, r := range params.MetricNameRegexps {
-		compiled, err := compileAnchoredRegexp(r)
-		if err != nil {
-			return nil, err
-		}
-		v.metricNameRegexps = append(v.metricNameRegexps, compiled)
+		v.metricNameRegexps = append(v.metricNameRegexps, r.Regexp)
 	}
 	return &v, nil
 }
