@@ -12,20 +12,13 @@ import (
 
 func newRecordedMetricNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Regexp RegexpEmptyDefault `yaml:"regexp"`
+		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Regexp == "" {
-		return nil, fmt.Errorf("missing regexp")
-	}
-	r, err := compileAnchoredRegexp(params.Regexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid regexp %s: %w", params.Regexp, err)
-	}
 	return &recordedMetricNameMatchesRegexp{
-		pattern: r,
+		pattern: params.Regexp.Regexp,
 	}, nil
 }
 
@@ -47,20 +40,13 @@ func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule 
 
 func newRecordedMetricNameDoesNotMatchRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Regexp RegexpEmptyDefault `yaml:"regexp"`
+		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	if params.Regexp == "" {
-		return nil, fmt.Errorf("missing regexp")
-	}
-	r, err := compileAnchoredRegexp(params.Regexp)
-	if err != nil {
-		return nil, fmt.Errorf("invalid regexp %s: %w", params.Regexp, err)
-	}
 	return &recordedMetricNameDoesNotMatchRegexp{
-		pattern: r,
+		pattern: params.Regexp.Regexp,
 	}, nil
 }
 

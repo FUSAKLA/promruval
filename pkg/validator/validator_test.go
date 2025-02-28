@@ -15,7 +15,7 @@ import (
 )
 
 func mustCompileAnchoredRegexp(regexpString string) *regexp.Regexp {
-	compiled, err := compileAnchoredRegexp(RegexpEmptyDefault(regexpString))
+	compiled, err := compileAnchoredRegexp(regexpString)
 	if err != nil {
 		panic(err)
 	}

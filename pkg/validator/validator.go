@@ -18,18 +18,46 @@ const (
 	matchAnythingRegexp = ".*"
 )
 
-type RegexpString interface {
-	String() string
+type RegexpForbidEmpty struct {
+	Regexp *regexp.Regexp
 }
 
-// Custom unmarhsalling for regexps.
-type RegexpEmptyDefault string
+func (r *RegexpForbidEmpty) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var value string
+	if err := unmarshal(&value); err != nil {
+		return err
+	}
+	if value == "" {
+		return fmt.Errorf("regexp cannot be empty")
+	}
+	re, err := compileAnchoredRegexp(value)
+	if err != nil {
+		return err
+	}
+	*r = RegexpForbidEmpty{Regexp: re}
+	return nil
+}
 
-func (r RegexpEmptyDefault) String() string { return string(r) }
+type RegexpEmptyDefault struct {
+	Regexp *regexp.Regexp
+}
 
-type RegexpWildcardDefault string
+func (r *RegexpEmptyDefault) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var value string
+	if err := unmarshal(&value); err != nil {
+		return err
+	}
+	re, err := compileAnchoredRegexp(value)
+	if err != nil {
+		return err
+	}
+	*r = RegexpEmptyDefault{Regexp: re}
+	return nil
+}
 
-func (r RegexpWildcardDefault) String() string { return string(r) }
+type RegexpWildcardDefault struct {
+	Regexp *regexp.Regexp
+}
 
 func (r *RegexpWildcardDefault) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var value string
@@ -39,7 +67,11 @@ func (r *RegexpWildcardDefault) UnmarshalYAML(unmarshal func(interface{}) error)
 	if value == "" {
 		value = matchAnythingRegexp
 	}
-	*r = RegexpWildcardDefault(value)
+	re, err := compileAnchoredRegexp(value)
+	if err != nil {
+		return err
+	}
+	*r = RegexpWildcardDefault{Regexp: re}
 	return nil
 }
 
@@ -47,6 +79,6 @@ func anchorRegexp(regexpString string) string {
 	return fmt.Sprintf("^%s$", regexpString)
 }
 
-func compileAnchoredRegexp(regexpString RegexpString) (*regexp.Regexp, error) {
-	return regexp.Compile(anchorRegexp(regexpString.String()))
+func compileAnchoredRegexp(regexpString string) (*regexp.Regexp, error) {
+	return regexp.Compile(anchorRegexp(regexpString))
 }
