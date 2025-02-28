@@ -39,7 +39,7 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 			}
 			compiledNegativeRegexp := (*regexp.Regexp)(nil)
 			if metric.NegativeRegexp != "" {
-				compiledNegativeRegexp, err = compileAnchoredRegexpWithDefault(metric.NegativeRegexp, "")
+				compiledNegativeRegexp, err = compileAnchoredRegexpWithDefault(metric.NegativeRegexp, emptyRegexp)
 				if err != nil {
 					return nil, fmt.Errorf("invalid metric name regexp: %s", anchorRegexp(metric.NegativeRegexp))
 				}
