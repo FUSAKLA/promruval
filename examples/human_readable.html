@@ -67,7 +67,15 @@
 	  <h4>Following conditions MUST be met:</h4>
 	  <ul>
 		<li>Recording rule recorded metric name does not match regexp: <code>^foo_bar$</code></li>
-		<li>Recording rule recorded metric name matches regexp: <code>[^:]+:[^:]+:[^:]+</code></li>
+		<li>Recording rule recorded metric name matches regexp: <code>^[^:]+:[^:]+:[^:]+$</code></li>
+	  </ul>
+  <br/>
+  <h2><a href="#check-labels-in-expr">check-labels-in-expr</a></h2>
+	  <h4>Following conditions MUST be met:</h4>
+	  <ul>
+		<li>Rule for metrics matching regexp '^up$', given lables use only specified values: job: [prometheus]
+</li>
+		<li>Rule expression does not use labels <code>app</code> for metrics matching regexp ^up$ in the expr</li>
 	  </ul>
   <br/>
   <h2><a href="#test-onlyif">test-onlyif</a></h2>
@@ -81,13 +89,6 @@
 		<li>Alert has labels: <code>escalate</code></li>
 	  </ul>
   <br/>
-  <h2><a href="#check-labels-in-expr">check-labels-in-expr</a></h2>
-	  <ul>
-		<li>All rules for metrics matching regexp '^up$', given lables use only specified values: job: [prometheus]
-</li>
-		<li>All rules expression does not use labels <code>app</code> for metrics matching regexp ^up$ in the expr</li>
-	  </ul>
-
   <h2><a href="#another-checks">another-checks</a></h2>
 	  <h4>Following conditions MUST be met:</h4>
 	  <ul>

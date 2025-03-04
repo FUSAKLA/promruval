@@ -102,7 +102,7 @@ func TestGetLabelMatchersForMetricRegexp(t *testing.T) {
 		{expr: "up{bar='foo'}", metricRegexp: "up", expected: []*labels.Matcher{
 			MustNewMatcher(labels.MatchEqual, "__name__", "up"), MustNewMatcher(labels.MatchEqual, "bar", "foo"),
 		}, expectedErr: nil},
-		{expr: "up{bar!='foo'}", metricRegexp: ".*", expected: []*labels.Matcher{
+		{expr: "up{bar!='foo'}", metricRegexp: matchAnythingRegexp, expected: []*labels.Matcher{
 			MustNewMatcher(labels.MatchEqual, "__name__", "up"), MustNewMatcher(labels.MatchNotEqual, "bar", "foo"),
 		}, expectedErr: nil},
 		{expr: "up{bar='foo', bar2!~'foo'}", metricRegexp: "up", expected: []*labels.Matcher{

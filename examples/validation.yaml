@@ -113,7 +113,7 @@ validationRules:
     validations:
       - type: recordedMetricNameDoesNotMatchRegexp
         params:
-          regexp: "^foo_bar$"
+          regexp: "foo_bar"
       - type: recordedMetricNameMatchesRegexp
         params:
           regexp: "[^:]+:[^:]+:[^:]+"
@@ -138,7 +138,7 @@ validationRules:
       - type: labelMatchesRegexp
         params:
           label: "severity"
-          regexp: "^critical$"
+          regexp: "critical"
       - type: maxRulesPerGroup
         params:
           limit: 1

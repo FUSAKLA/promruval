@@ -13,9 +13,9 @@ import (
 )
 
 type SourceTenantMetrics struct {
-	Regexp         string `yaml:"regexp"`
-	NegativeRegexp string `yaml:"negativeRegexp"`
-	Description    string `yaml:"description"`
+	Regexp         RegexpWildcardDefault `yaml:"regexp"`
+	NegativeRegexp RegexpEmptyDefault    `yaml:"negativeRegexp"`
+	Description    string                `yaml:"description"`
 }
 
 func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
@@ -33,20 +33,9 @@ func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
 	for tenant, metrics := range params.SourceTenants {
 		m := make([]tenantMetrics, len(metrics))
 		for i, metric := range metrics {
-			compiledRegexp, err := compileAnchoredRegexp(metric.Regexp)
-			if err != nil {
-				return nil, fmt.Errorf("invalid metric name regexp: %s", anchorRegexp(metric.Regexp))
-			}
-			compiledNegativeRegexp := (*regexp.Regexp)(nil)
-			if metric.NegativeRegexp != "" {
-				compiledNegativeRegexp, err = compileAnchoredRegexp(metric.NegativeRegexp)
-				if err != nil {
-					return nil, fmt.Errorf("invalid metric name regexp: %s", anchorRegexp(metric.NegativeRegexp))
-				}
-			}
 			m[i] = tenantMetrics{
-				regexp:         compiledRegexp,
-				negativeRegexp: compiledNegativeRegexp,
+				regexp:         metric.Regexp.Regexp,
+				negativeRegexp: metric.NegativeRegexp.Regexp,
 				description:    metric.Description,
 			}
 		}
