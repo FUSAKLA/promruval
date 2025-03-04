@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: Unified text validation description in running `promruval validate` and `promruval validation-docs -o text`
 - Fixed: Some minor validations descriptions fixes
 - Fixed: In the validation description use `Rule` instead of `All rules` for the all rules scope
+- Refactor: Improve unmarshaling, validation and defaults for regexp params of validators
 
 ## [3.7.0] - 2025-02-25
 - Added: New validation `expressionDoesNotUseLabelsForMetricRegexp`
