@@ -2,7 +2,7 @@
 # customDisableComment: my_disable_comment
 
 prometheus:
-  url: https://prometheus.demo.do.prometheus.io
+  url: https://prometheus.demo.prometheus.io
   timeout: 0.5s
   bearerTokenFile: ./bearer.token
 
@@ -20,13 +20,12 @@ validationRules:
           firstLabel: severity
           firstLabelValue: info
           secondLabel: page
-      # FIXME: Disabled until demo.do.prometheus.io is back online, see https://github.com/prometheus/demo-site/issues/114
-      # - type: expressionCanBeEvaluated
-      #   params:
-      #     timeSeriesLimit: 20
-      #     evaluationDurationLimit: 10s
-      # - type: expressionUsesExistingLabels
-      # - type: expressionSelectorsMatchesAnything
+      - type: expressionCanBeEvaluated
+        params:
+          timeSeriesLimit: 20
+          evaluationDurationLimit: 10s
+      - type: expressionUsesExistingLabels
+      - type: expressionSelectorsMatchesAnything
       - type: expressionDoesNotUseIrate
         additionalDetails: "Just do as I say!"
       - type: expressionDoesNotUseOlderDataThan
