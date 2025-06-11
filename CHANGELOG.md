@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Fixed: JSON and Yaml output format of the `promruval validate` command.
 
 ## [3.8.0] - 2025-03-06
 - Added: New option `onlyIf` to the validation rule config allowing to specify conditions that must be met for the rule to be applied. See [the docs](README.md#configuration) or [examples](./examples/validation.yaml).
