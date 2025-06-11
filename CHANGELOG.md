@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Fixed: JSON and Yaml output format of the `promruval validate` command.
+- Changed: Bump go version to 1.24.1
 
 ## [3.8.0] - 2025-03-06
 - Added: New option `onlyIf` to the validation rule config allowing to specify conditions that must be met for the rule to be applied. See [the docs](README.md#configuration) or [examples](./examples/validation.yaml).
