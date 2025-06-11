@@ -72,9 +72,9 @@ func (o *IndentedOutput) AddTooPreviousLine(line string) {
 	o.output = o.output[:len(o.output)-1] + line + "\n"
 }
 
-func (o *IndentedOutput) WriteErrors(errors []error) {
+func (o *IndentedOutput) WriteErrors(errors []*Error) {
 	for _, err := range errors {
-		o.AddErrorLine("- " + err.Error())
+		o.AddErrorLine("- " + err.String())
 	}
 }
 
