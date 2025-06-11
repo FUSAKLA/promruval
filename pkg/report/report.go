@@ -3,6 +3,7 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -15,6 +16,8 @@ type ValidationRule interface {
 	Scope() config.ValidationScope
 	ValidationTexts() []string
 	OnlyIfValidationTexts() []string
+	json.Marshaler
+	yaml.Marshaler
 }
 
 func NewValidationReport() *ValidationReport {
@@ -25,30 +28,61 @@ func NewValidationReport() *ValidationReport {
 	}
 }
 
+func NewErrorf(format string, args ...any) *Error {
+	return &Error{
+		error: fmt.Errorf(format, args...),
+	}
+}
+
+func NewError(msg string) *Error {
+	return &Error{
+		error: errors.New(msg),
+	}
+}
+
+type Error struct {
+	error
+}
+
+func (e *Error) MarshalJSON() ([]byte, error) {
+	return json.Marshal(e.String())
+}
+
+func (e *Error) MarshalYAML() (any, error) {
+	return e.String(), nil
+}
+
+func (e *Error) String() string {
+	if e.error == nil {
+		return "null"
+	}
+	return e.error.Error()
+}
+
 type ValidationReport struct {
-	Failed      bool
-	Duration    time.Duration
-	ErrorsCount int
+	Failed      bool          `json:"report_failed" yaml:"report_failed"`
+	Duration    time.Duration `json:"duration" yaml:"duration"`
+	ErrorsCount int           `json:"errors_count" yaml:"errors_count"`
 
-	FilesCount         int
-	FilesExcludedCount int
+	FilesCount         int `json:"files_count" yaml:"files_count"`
+	FilesExcludedCount int `json:"excluded_files_count" yaml:"excluded_files_count"`
 
-	GroupsCount         int
-	GroupsExcludedCount int
+	GroupsCount         int `json:"groups_count" yaml:"groups_count"`
+	GroupsExcludedCount int `json:"excluded_groups_count" yaml:"excluded_groups_count"`
 
-	RulesCount         int
-	RulesExcludedCount int
+	RulesCount         int `json:"rules_count" yaml:"rules_count"`
+	RulesExcludedCount int `json:"excluded_rules_count" yaml:"excluded_rules_count"`
 
-	ValidationRules []ValidationRule
+	ValidationRules []ValidationRule `json:"validation_rules" yaml:"validation_rules"`
 
-	FilesReports []*FileReport
+	FilesReports []*FileReport `json:"files_reports" yaml:"files_reports"`
 }
 
 func (r *ValidationReport) NewFileReport(name string) *FileReport {
 	newReport := FileReport{
 		Name:         name,
 		Valid:        true,
-		Errors:       []error{},
+		Errors:       []*Error{},
 		GroupReports: []*GroupReport{},
 	}
 	r.FilesReports = append(r.FilesReports, &newReport)
@@ -56,12 +90,12 @@ func (r *ValidationReport) NewFileReport(name string) *FileReport {
 }
 
 type FileReport struct {
-	Name                    string
-	Valid                   bool
-	Excluded                bool
-	Errors                  []error
-	HasRuleValidationErrors bool
-	GroupReports            []*GroupReport
+	Name                    string         `json:"file_name" yaml:"file_name"`
+	Valid                   bool           `json:"valid" yaml:"valid"`
+	Excluded                bool           `json:"excluded" yaml:"excluded"`
+	Errors                  []*Error       `json:"errors" yaml:"errors"`
+	HasRuleValidationErrors bool           `json:"has_rule_validation_errors" yaml:"has_rule_validation_errors"`
+	GroupReports            []*GroupReport `json:"group_reports" yaml:"group_reports"`
 }
 
 func (r *FileReport) NewGroupReport(name string) *GroupReport {
@@ -69,7 +103,7 @@ func (r *FileReport) NewGroupReport(name string) *GroupReport {
 		Name:        name,
 		Valid:       true,
 		RuleReports: []*RuleReport{},
-		Errors:      []error{},
+		Errors:      []*Error{},
 	}
 	r.GroupReports = append(r.GroupReports, &newReport)
 	return &newReport
@@ -90,11 +124,11 @@ func (r *FileReport) AsText(output *IndentedOutput) {
 }
 
 type GroupReport struct {
-	Valid       bool
-	Name        string
-	Excluded    bool
-	RuleReports []*RuleReport
-	Errors      []error
+	Valid       bool          `json:"valid" yaml:"valid"`
+	Name        string        `json:"group_name" yaml:"group_name"`
+	Excluded    bool          `json:"excluded" yaml:"excluded"`
+	RuleReports []*RuleReport `json:"rule_reports" yaml:"rule_reports"`
+	Errors      []*Error      `json:"errors" yaml:"errors"`
 }
 
 func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope) *RuleReport {
@@ -102,7 +136,7 @@ func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope
 		Name:     name,
 		Valid:    true,
 		RuleType: ruleType,
-		Errors:   []error{},
+		Errors:   []*Error{},
 	}
 	r.RuleReports = append(r.RuleReports, &newReport)
 	return &newReport
@@ -135,11 +169,11 @@ func (r *GroupReport) AsText(output *IndentedOutput) {
 }
 
 type RuleReport struct {
-	Valid    bool
-	RuleType config.ValidationScope
-	Name     string
-	Excluded bool
-	Errors   []error
+	Valid    bool                   `json:"valid" yaml:"valid"`
+	RuleType config.ValidationScope `json:"rule_type" yaml:"rule_type"`
+	Name     string                 `json:"name" yaml:"name"`
+	Excluded bool                   `json:"excluded" yaml:"excluded"`
+	Errors   []*Error               `json:"errors" yaml:"errors"`
 }
 
 func (r *RuleReport) AsText(output *IndentedOutput) {

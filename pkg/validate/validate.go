@@ -21,17 +21,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []error {
-	var reportedError error
+func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshaler.RuleGroup, rule rulefmt.Rule, prometheusClient *prometheus.Client) []*report.Error {
+	var reportedError *report.Error
 	validatorName := v.Name()
 	additionalDetails := v.AdditionalDetails()
 	validationErrors := v.Validate(group, rule, prometheusClient)
-	errs := make([]error, 0, len(validationErrors))
+	errs := make([]*report.Error, 0, len(validationErrors))
 	for _, err := range validationErrors {
 		if additionalDetails != "" {
-			reportedError = fmt.Errorf("%s: %w (%s)", validatorName, err, additionalDetails)
+			reportedError = report.NewErrorf("%s: %w (%s)", validatorName, err, additionalDetails)
 		} else {
-			reportedError = fmt.Errorf("%s: %w", validatorName, err)
+			reportedError = report.NewErrorf("%s: %w", validatorName, err)
 		}
 		errs = append(errs, reportedError)
 	}
@@ -61,7 +61,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			if err != nil {
 				validationReport.Failed = true
 				fileReport.Valid = false
-				fileReport.Errors = []error{fmt.Errorf("cannot evaluate jsonnet file %s: %w", fileName, err)}
+				fileReport.Errors = []*report.Error{report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err)}
 				continue
 			}
 			yamlReader = strings.NewReader(jsonnetOutput)
@@ -71,7 +71,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			if err != nil {
 				validationReport.Failed = true
 				fileReport.Valid = false
-				fileReport.Errors = []error{fmt.Errorf("cannot read file %s: %w", fileName, err)}
+				fileReport.Errors = []*report.Error{report.NewErrorf("cannot read file %s: %w", fileName, err)}
 				continue
 			}
 		}
@@ -85,7 +85,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			}
 			validationReport.Failed = true
 			fileReport.Valid = false
-			fileReport.Errors = []error{fmt.Errorf("invalid file %s: %w", fileName, err)}
+			fileReport.Errors = []*report.Error{report.NewErrorf("invalid file %s: %w", fileName, err)}
 			continue
 		}
 		fileDisabledValidators := rf.DisabledValidators(disableValidationsComment)
@@ -95,7 +95,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			groupReport := fileReport.NewGroupReport(group.Name)
 			groupDisabledValidators := group.DisabledValidators(disableValidationsComment)
 			if err := validator.KnownValidators(config.AllScope, groupDisabledValidators); err != nil {
-				groupReport.Errors = append(groupReport.Errors, fmt.Errorf("invalid disabled validators: %w", err))
+				groupReport.Errors = append(groupReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
 			}
 			groupDisabledValidators = slices.Concat(groupDisabledValidators, fileDisabledValidators, allGroupsDisabledValidators)
 		groupValidationLoop:
@@ -141,7 +141,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				}
 				disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
 				if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
-					ruleReport.Errors = append(ruleReport.Errors, fmt.Errorf("invalid disabled validators: %w", err))
+					ruleReport.Errors = append(ruleReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
 				}
 				disabledValidators = append(disabledValidators, groupDisabledValidators...)
 			ruleValidationLoop:
