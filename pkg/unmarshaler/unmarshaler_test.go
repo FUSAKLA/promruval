@@ -58,9 +58,9 @@ groups:
 									QueryOffset: model.Duration(time.Second * 5),
 									Rules: []RuleWithComment{
 										{
-											rule: rulefmt.RuleNode{
-												Alert:         yaml.Node{Kind: yaml.ScalarNode, Value: "alert1"},
-												Expr:          yaml.Node{Kind: yaml.ScalarNode, Value: "expr1"},
+											rule: rulefmt.Rule{
+												Alert:         "alert1",
+												Expr:          "expr1",
 												For:           model.Duration(time.Minute * 10),
 												Labels:        map[string]string{"foo": "bar"},
 												Annotations:   map[string]string{"foo": "bar"},
@@ -75,9 +75,9 @@ groups:
 									Name: "group2",
 									Rules: []RuleWithComment{
 										{
-											rule: rulefmt.RuleNode{
-												Record: yaml.Node{Kind: yaml.ScalarNode, Value: "record1"},
-												Expr:   yaml.Node{Kind: yaml.ScalarNode, Value: "expr1"},
+											rule: rulefmt.Rule{
+												Record: "record1",
+												Expr:   "expr1",
 												Labels: map[string]string{"foo": "bar"},
 											},
 										},
