@@ -61,7 +61,7 @@ func (r *RulesFileWithComment) UnmarshalYAML(value *yaml.Node) error {
 			r.groupsComments = strings.Split(field.HeadComment, "\n")
 		}
 	}
-	return unmarshalToNodeAndStruct(value, &r.node, &r.RulesFile, r.knownFields())
+	return unmarshalToNodeAndStruct(value, &r.node, &r.RulesFile, r.RulesFile.knownFields()) //nolint:staticcheck
 }
 
 func (r *RulesFileWithComment) DisabledValidators(commentPrefix string) []string {
@@ -116,7 +116,7 @@ type RuleGroupWithComment struct {
 }
 
 func (r *RuleGroupWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup, r.knownFields())
+	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup, r.RuleGroup.knownFields()) //nolint:staticcheck
 }
 
 func (r *RuleGroupWithComment) DisabledValidators(commentPrefix string) []string {
