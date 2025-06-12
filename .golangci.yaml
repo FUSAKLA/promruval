@@ -1,18 +1,12 @@
+version: "2"
 linters:
   enable:
     - contextcheck
     - durationcheck
-    - errcheck
     - errname
     - errorlint
     - gocritic
     - godot
-    - gofmt
-    - gofumpt
-    - goimports
-    - gosimple
-    - govet
-    - ineffassign
     - misspell
     - nakedret
     - nilerr
@@ -22,47 +16,52 @@ linters:
     - promlinter
     - revive
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
-    - unused
     - usestdlibvars
-
-linters-settings:
-  # I'm biased and I'm enabling more than 100 checks
-  # Might be too much for you. See https://go-critic.com/overview.html
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      # These 3 will detect many cases, but they do sense
-      # if it's performance oriented code
-      - hugeParam
-      - rangeExprCopy
-      - rangeValCopy
-
-  errcheck:
-    # Report `a := b.(MyStruct)` when `a, ok := ...` should be.
-    check-type-assertions: true # Default: false
-
-    # Report skipped checks:`num, _ := strconv.Atoi(numStr)`.
-    check-blank: true # Default: false
-
-    # Function to skip.
-    exclude-functions:
-      - io/ioutil.ReadFile
-      - io.Copy(*bytes.Buffer)
-      - io.Copy(os.Stdout)
-
-  govet:
-    disable:
-      - fieldalignment # I'm ok to waste some bytes
-
-  nakedret:
-    # No naked returns, ever.
-    max-func-lines: 1 # Default: 30
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+      exclude-functions:
+        - io/ioutil.ReadFile
+        - io.Copy(*bytes.Buffer)
+        - io.Copy(os.Stdout)
+    gocritic:
+      disabled-checks:
+        - hugeParam
+        - rangeExprCopy
+        - rangeValCopy
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    govet:
+      disable:
+        - fieldalignment
+    nakedret:
+      max-func-lines: 1
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
