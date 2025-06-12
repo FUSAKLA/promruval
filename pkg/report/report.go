@@ -56,7 +56,7 @@ func (e *Error) String() string {
 	if e.error == nil {
 		return "null"
 	}
-	return e.error.Error()
+	return e.Error()
 }
 
 type ValidationReport struct {
