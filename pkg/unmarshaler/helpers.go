@@ -61,7 +61,7 @@ func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}, 
 		}
 		for k := range m {
 			if !slices.Contains(knownFields, k) {
-				return fmt.Errorf("unknown field %q when unmarshalling the %T, only supported fields are: %s", k, dstStruct, strings.Join(knownFields, ","))
+				return fmt.Errorf("unknown field %q when unmarshaling the %T, only supported fields are: %s", k, dstStruct, strings.Join(knownFields, ","))
 			}
 		}
 	}

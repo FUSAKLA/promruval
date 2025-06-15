@@ -82,3 +82,9 @@ groups:
         annotations:
           title: test alert
           playbook: http://foo.bar/nonexisting/playbook
+
+  # ignore_validations: labelHasAllowedValue,expressionUsesExistingLabels,expressionSelectorsMatchesAnything,hasAnyOfAnnotations,hasAnnotations,hasLabels,expressionIsWellFormatted
+  - name: testUTF8
+    rules:
+      - alert: ⚠️test
+        expr: '{"metric.🔥","label^💩"="baz 🤌"} > (3d + 1h)'
