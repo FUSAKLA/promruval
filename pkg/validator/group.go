@@ -3,13 +3,13 @@ package validator
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 

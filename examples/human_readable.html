@@ -34,6 +34,10 @@
   <h2><a href="#check-prometheus-limitations">check-prometheus-limitations</a></h2>
 	  <h4>Following conditions MUST be met:</h4>
 	  <ul>
+		<li>Rule rule does not contain typos in typos in well known:
+<br/>        Annotations: <code>playbook</code>, <code>dashboard</code>
+<br/>        Rule labels: <code>do_not_inhibit</code>
+<br/>        Series labels: <code>pod</code>, <code>locality</code>, <code>cluster</code></li>
 		<li>Rule expression does not use any experimental PromQL functions</li>
 		<li>Rule expression uses underscores as separators in large numbers in PromQL expression. Example: 1_000_000</li>
 		<li>Rule expression does not use data older than <code>6h0m0s</code></li>

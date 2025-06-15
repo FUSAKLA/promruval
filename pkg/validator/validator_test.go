@@ -348,6 +348,13 @@ var testCases = []struct {
 	{name: "expressionDoesNotUseClassicHistogramBucketOperations_valid", validator: expressionDoesNotUseClassicHistogramBucketOperations{}, rule: rulefmt.Rule{Expr: `foo_bucket{le="+Inf"} - bar_bucket{le="1"}`}, expectedErrors: 0},
 	{name: "expressionDoesNotUseClassicHistogramBucketOperations_invalid", validator: expressionDoesNotUseClassicHistogramBucketOperations{}, rule: rulefmt.Rule{Expr: `request_duration_seconds_bucket{le="+Inf"} - ignoring(le) request_duration_seconds_bucket{le="1"}`}, expectedErrors: 1},
 	{name: "expressionDoesNotUseClassicHistogramBucketOperations_complicated_valid", validator: expressionDoesNotUseClassicHistogramBucketOperations{}, rule: rulefmt.Rule{Expr: `(request_duration_seconds_bucket{app="foo", le="+Inf"} * up{app="foo"}) - ignoring(le) request_duration_seconds_bucket{le="1"}`}, expectedErrors: 0},
+
+	{name: "doesNotContainTypos_no_typos", validator: doesNotContainTypos{maxLevenshteinDistance: 1, wellKnownAnnotations: []string{"title"}, wellKnownRuleLabels: []string{"cluster"}, wellKnownSeriesLabels: []string{"pod"}}, rule: rulefmt.Rule{Expr: `kube_pod_info{pod="foo"}`, Labels: map[string]string{"cluster": "inframon3.ko"}, Annotations: map[string]string{"title": "xxx"}}, expectedErrors: 0},
+	{name: "doesNotContainTypos_typos_in_expr_levenshtein_dst", validator: doesNotContainTypos{maxLevenshteinDistance: 1, wellKnownSeriesLabels: []string{"pod"}}, rule: rulefmt.Rule{Expr: `kube_pod_info{pot="foo"}`}, expectedErrors: 1},
+	{name: "doesNotContainTypos_typos_in_label_levenshtein_dst", validator: doesNotContainTypos{maxLevenshteinDistance: 1, wellKnownRuleLabels: []string{"cluster"}}, rule: rulefmt.Rule{Labels: map[string]string{"clustr": "inframon3.ko"}}, expectedErrors: 1},
+	{name: "doesNotContainTypos_typos_in_annotation_levenshtein_dst", validator: doesNotContainTypos{maxLevenshteinDistance: 1, wellKnownAnnotations: []string{"title"}}, rule: rulefmt.Rule{Annotations: map[string]string{"tittle": "xxx"}}, expectedErrors: 1},
+	{name: "doesNotContainTypos_typos_in_expr_ratio_dst_high_ratio", validator: doesNotContainTypos{maxDifferenceRatio: 0.1, wellKnownSeriesLabels: []string{"pod"}}, rule: rulefmt.Rule{Expr: `kube_pod_info{pot="foo"}`}, expectedErrors: 0},
+	{name: "doesNotContainTypos_typos_in_expr_ratio_dst_low_ratio", validator: doesNotContainTypos{maxDifferenceRatio: 0.1, wellKnownSeriesLabels: []string{"pooooooood"}}, rule: rulefmt.Rule{Expr: `kube_pod_info{poooooooot="foo"}`}, expectedErrors: 1},
 }
 
 func Test(t *testing.T) {

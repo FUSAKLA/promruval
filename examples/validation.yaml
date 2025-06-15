@@ -66,6 +66,12 @@ validationRules:
   - name: check-prometheus-limitations
     scope: All rules
     validations:
+      - type: doesNotContainTypos
+        params:
+          maxLevenshteinDistance: 1
+          wellKnownAnnotations: ["playbook", "dashboard"]
+          wellKnownRuleLabels: ["do_not_inhibit"]
+          wellKnownSeriesLabels: ["pod", "locality", "cluster"]
       - type: expressionDoesNotUseExperimentalFunctions
       - type: expressionUsesUnderscoresInLargeNumbers
       - type: expressionDoesNotUseOlderDataThan
