@@ -7,6 +7,9 @@
 		<li>Alert has labels: <code>severity</code></li>
 		<li>Alert label <code>severity</code> has one of the allowed values: <code>info</code>,<code>warning</code>,<code>critical</code></li>
 		<li>Alert if rule has label <code>severity</code> with value <code>info</code> , it cannot have label <code>page</code></li>
+		<li>Alert expression can be successfully evaluated on the live Prometheus instance</li>
+		<li>Alert expression uses only labels that are actually present in Prometheus</li>
+		<li>Alert expression selectors actually matches any series in Prometheus</li>
 		<li>Alert expression does not use irate</li>
 		<li>Alert expression does not use data older than <code>6h0m0s</code></li>
 	  </ul>

@@ -116,7 +116,8 @@ type RuleGroupWithComment struct {
 }
 
 func (r *RuleGroupWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup, r.RuleGroup.knownFields()) //nolint:staticcheck // must be called on the RuleGroup so the yaml marshalling works
+	//nolint:staticcheck // the knownFields must be called on the RuleGroup not the RuleGroupWithComment
+	return unmarshalToNodeAndStruct(value, &r.node, &r.RuleGroup, r.RuleGroup.knownFields())
 }
 
 func (r *RuleGroupWithComment) DisabledValidators(commentPrefix string) []string {
@@ -125,19 +126,19 @@ func (r *RuleGroupWithComment) DisabledValidators(commentPrefix string) []string
 
 type RuleWithComment struct {
 	node yaml.Node
-	rule rulefmt.RuleNode
+	rule rulefmt.Rule
 }
 
 func (r *RuleWithComment) knownFields() []string {
 	// Struct fields marked as omitempty MUST be set to non-default value so they appear in marshalled yaml.
-	return mustListStructYamlFieldNames(rulefmt.RuleNode{Record: yaml.Node{Kind: yaml.SequenceNode}, Alert: yaml.Node{Kind: yaml.SequenceNode}, For: model.Duration(1), Labels: map[string]string{"foo": "bar"}, Annotations: map[string]string{"foo": "bar"}, KeepFiringFor: model.Duration(1)}, []string{})
+	return mustListStructYamlFieldNames(rulefmt.Rule{Record: "foo", Alert: "bar", For: model.Duration(1), Labels: map[string]string{"foo": "bar"}, Annotations: map[string]string{"foo": "bar"}, KeepFiringFor: model.Duration(1)}, []string{})
 }
 
 func (r *RuleWithComment) OriginalRule() rulefmt.Rule {
 	return rulefmt.Rule{
-		Record:        r.rule.Record.Value,
-		Alert:         r.rule.Alert.Value,
-		Expr:          r.rule.Expr.Value,
+		Record:        r.rule.Record,
+		Alert:         r.rule.Alert,
+		Expr:          r.rule.Expr,
 		For:           r.rule.For,
 		Labels:        r.rule.Labels,
 		Annotations:   r.rule.Annotations,
@@ -146,7 +147,7 @@ func (r *RuleWithComment) OriginalRule() rulefmt.Rule {
 }
 
 func (r *RuleWithComment) Scope() config.ValidationScope {
-	if r.rule.Alert.Value != "" {
+	if r.rule.Alert != "" {
 		return config.AlertScope
 	}
 	return config.RecordingRuleScope
@@ -158,6 +159,6 @@ func (r *RuleWithComment) UnmarshalYAML(value *yaml.Node) error {
 
 func (r *RuleWithComment) DisabledValidators(commentPrefix string) []string {
 	ruleComments := getYamlNodeComments(r.node, commentPrefix)
-	exprComments := getExpressionComments(r.rule.Expr.Value, commentPrefix)
+	exprComments := getExpressionComments(r.rule.Expr, commentPrefix)
 	return disabledValidatorsFromComments(slices.Concat(ruleComments, exprComments), commentPrefix)
 }

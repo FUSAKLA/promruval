@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed: JSON and Yaml output format of the `promruval validate` command.
 - Changed: Bump go version to 1.24.1
 - Changed: Switch to golangci-lint v2
-- Upgrade Prometheus dependencies to 3.3.1
+- :warning: Changed: Upgrade Prometheus dependencies to 3.3.1
   - UTF-8 support for label names, rule names, and label_replace(). (enjoy your `{"metric.🔥","label^💩"="baz 🤌"}`)
   - Support for using go duration in PromQL and doing operations on it, e.g. `(uptime - time()) > 1h+5m`.
 - Added: New validation `doesNotContainTypos` to check for typos in well known terms, see its [documentation](./docs/validations.md#doesnotcontaintypos).
