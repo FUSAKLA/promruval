@@ -16,10 +16,11 @@ require (
 	github.com/prometheus/prometheus v0.303.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools v2.2.0+incompatible
 )
+
+require golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476 // indirect
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
@@ -82,6 +83,7 @@ require (
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mdlayher/socket v0.5.1 // indirect

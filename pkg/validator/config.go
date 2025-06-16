@@ -49,6 +49,7 @@ var registeredUniversalRuleValidators = map[string]validatorCreator{
 
 	// Other
 	"hasSourceTenantsForMetrics": newHasSourceTenantsForMetrics,
+	"doesNotContainTypos":        newDoesNotContainTypos,
 }
 
 var registeredRecordingRuleValidators = map[string]validatorCreator{

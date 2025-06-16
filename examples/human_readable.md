@@ -28,6 +28,10 @@
 
 ## check-prometheus-limitations
 #### Following conditions MUST be met:
+  - Rule rule does not contain typos in typos in well known:
+        Annotations: `playbook`, `dashboard`
+        Rule labels: `do_not_inhibit`
+        Series labels: `pod`, `locality`, `cluster`
   - Rule expression does not use any experimental PromQL functions
   - Rule expression uses underscores as separators in large numbers in PromQL expression. Example: 1_000_000
   - Rule expression does not use data older than `6h0m0s`

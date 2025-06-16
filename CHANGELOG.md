@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - :warning: Changed: Upgrade Prometheus dependencies to 3.3.1
   - UTF-8 support for label names, rule names, and label_replace(). (enjoy your `{"metric.🔥","label^💩"="baz 🤌"}`)
   - Support for using go duration in PromQL and doing operations on it, e.g. `(uptime - time()) > 1h+5m`.
+- Added: New validation `doesNotContainTypos` to check for typos in well known terms, see its [documentation](./docs/validations.md#doesnotcontaintypos).
 
 ## [3.8.0] - 2025-03-06
 - Added: New option `onlyIf` to the validation rule config allowing to specify conditions that must be met for the rule to be applied. See [the docs](README.md#configuration) or [examples](./examples/validation.yaml).

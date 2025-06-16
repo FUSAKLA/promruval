@@ -49,6 +49,7 @@ All the supported validations are listed here. The validations are grouped by th
       - [`logQlExpressionUsesRangeAggregation`](#logqlexpressionusesrangeaggregation)
     - [Other](#other)
       - [`hasSourceTenantsForMetrics`](#hassourcetenantsformetrics)
+      - [`doesNotContainTypos`](#doesnotcontaintypos)
   - [Alert validators](#alert-validators)
     - [Labels](#labels-1)
       - [`validateLabelTemplates`](#validatelabeltemplates)
@@ -453,6 +454,22 @@ params:
   #   - regexp: "kafka_.*"
   #     negativeRegexp: "kafka_(consumer|producer)_.*"
   #     description: "Metrics from Kafka"
+```
+
+#### `doesNotContainTypos`
+
+Fails, if any of the well-known labels, annotations or its values does contains a typo (cace sensitive).
+Typo is identified by computing the [Levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance) between the actual and well-known value.
+You can specify either maximum distance or maximum ratio of the distance to the length of the actual value. If the distance is lower then the threshold, the validation will fail assuming it is a typo.
+
+```yaml
+params:
+  # Only maxLevenshteinDistance or maxDifferenceRatio can be set, not both
+  maxLevenshteinDistance: <int> #  Optional, configures maximum distance, below is considered a typo
+  maxDifferenceRatio: <float> # Optional, configures maximum ratio (0-1) of the distance to the length of the actual value, below is considered a typo
+  wellKnownAnnotations: ['playbook', 'dashboard', 'title', 'description'] # Optional, well-known values to check rule annotations names
+  wellKnownRuleLabels: ['do_not_inhibit']  # Optional, well-known values to check rule labels names
+  wellKnownSeriesLabels: ['pod', 'locality', 'cluster']  # Optional, well-known values to check series labels names
 ```
 
 ## Alert validators
