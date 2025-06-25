@@ -12,7 +12,6 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
-
 func newHasLabels(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Labels       []string `yaml:"labels"`
@@ -60,6 +59,58 @@ func (h hasLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prome
 			if foundInExpr {
 				continue
 			}
+			errs = append(errs, fmt.Errorf("missing label `%s`", label))
+		}
+	}
+	return errs
+}
+
+func newHasLabelsForEveryAggregation(paramsConfig yaml.Node) (Validator, error) {
+	params := struct {
+		Labels       []string `yaml:"labels"`
+		ExcludeRuleLabels bool `yaml:"exclude_rule_labels"`
+	}{}
+	if err := paramsConfig.Decode(&params); err != nil {
+		return nil, err
+	}
+	if len(params.Labels) == 0 {
+		return nil, fmt.Errorf("missing labels")
+	}
+	return &hasLabelsForEveryAggregation{labels: params.Labels, excludeRuleLabels: params.ExcludeRuleLabels}, nil
+}
+
+type hasLabelsForEveryAggregation struct {
+	labels       []string
+	excludeRuleLabels bool
+}
+
+func (h hasLabelsForEveryAggregation) String() string {
+	return fmt.Sprintf("every aggregation has labels: `%s`", strings.Join(h.labels, "`,`"))
+}
+
+func (h hasLabelsForEveryAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
+	var (
+		errs       []error
+		err        error
+		exprLabels map[string]struct{}
+	)
+
+	exprLabels, err = getExpressionUsedLabelsForEveryAggregation(rule.Expr)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	if exprLabels == nil {
+		return errs
+	}
+
+	if h.excludeRuleLabels {
+		for label, _ := range rule.Labels {
+			exprLabels[label] = struct{}{}
+		}
+	}
+
+	for _, label := range h.labels {
+		if _, ok := exprLabels[label]; !ok {
 			errs = append(errs, fmt.Errorf("missing label `%s`", label))
 		}
 	}
