@@ -202,6 +202,7 @@ func newAnnotationIsValidURL(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Annotation string `yaml:"annotation"`
 		ResolveURL bool   `yaml:"resolveUrl"`
+		AsTemplate bool   `yaml:"asTemplate"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -209,16 +210,20 @@ func newAnnotationIsValidURL(paramsConfig yaml.Node) (Validator, error) {
 	if params.Annotation == "" {
 		return nil, fmt.Errorf("missing annotation name")
 	}
-	return &annotationIsValidURL{annotation: params.Annotation, resolveURL: params.ResolveURL}, nil
+	return &annotationIsValidURL{annotation: params.Annotation, resolveURL: params.ResolveURL, asTemplate: params.AsTemplate}, nil
 }
 
 type annotationIsValidURL struct {
 	annotation string
 	resolveURL bool
+	asTemplate bool
 }
 
 func (h annotationIsValidURL) String() string {
 	text := fmt.Sprintf("Annotation `%s` is a valid URL", h.annotation)
+	if h.asTemplate {
+		text += " (when parsed as a Go text template)"
+	}
 	if h.resolveURL {
 		text += " and does not return HTTP status 404"
 	}
@@ -230,8 +235,15 @@ func (h annotationIsValidURL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 	if !ok {
 		return []error{}
 	}
+	if h.asTemplate {
+		var err error
+		value, err = newTemplateExpander(value).Expand()
+		if err != nil {
+			return []error{fmt.Errorf("template expansion of annotation `%s` failed: %w", h.annotation, err)}
+		}
+	}
 	if !govalidator.IsURL(value) {
-		return []error{fmt.Errorf("annotation `%s` is not valid URL", h.annotation)}
+		return []error{fmt.Errorf("annotation `%s` is not valid URL: `%s`", h.annotation, value)}
 	}
 	if !h.resolveURL {
 		return []error{}
@@ -294,18 +306,30 @@ func (h validateAnnotationTemplates) String() string {
 
 func (h validateAnnotationTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	data := template.AlertTemplateData(map[string]string{}, map[string]string{}, "", promql.Sample{})
+	for k, v := range rule.Annotations {
+		if _, err := newTemplateExpander(v).Expand(); err != nil && !strings.Contains(err.Error(), "error executing template") {
+			errs = append(errs, fmt.Errorf("invalid template of annotation %s: %w", k, err))
+		}
+	}
+	return errs
+}
+
+func newTemplateExpander(text string) *template.Expander {
+	data := template.AlertTemplateData(nil, nil, "", promql.Sample{})
 	defs := []string{
 		"{{$labels := .Labels}}",
 		"{{$externalLabels := .ExternalLabels}}",
 		"{{$externalURL := .ExternalURL}}",
 		"{{$value := .Value}}",
 	}
-	for k, v := range rule.Annotations {
-		t := template.NewTemplateExpander(context.Background(), strings.Join(append(defs, v), ""), k, data, model.Now(), func(_ context.Context, _ string, _ time.Time) (promql.Vector, error) { return nil, nil }, &url.URL{}, []string{})
-		if _, err := t.Expand(); err != nil && !strings.Contains(err.Error(), "error executing template") {
-			errs = append(errs, fmt.Errorf("invalid template of annotation %s: %w", k, err))
-		}
-	}
-	return errs
+	return template.NewTemplateExpander(
+		context.Background(),
+		strings.Join(append(defs, text), ""),
+		"",
+		data,
+		model.TimeFromUnix(0),
+		func(context.Context, string, time.Time) (promql.Vector, error) { return nil, nil },
+		&url.URL{},
+		nil,
+	)
 }
