@@ -535,7 +535,7 @@ params:
 
 #### `annotationIsValidURL`
 
-Fails if annotation value is not a valid URL. If `resolveURL` is enabled, tries to make an HTTP request to the specified
+Fails if annotation value is not a valid URL. If `resolveUrl` is enabled, tries to make an HTTP request to the specified
 URL and fails if the request does not succeed or returns 404 HTTP status code.
 > It's common practice to link a playbook with guide how to solve the alert in the alert itself.
 > This way you can verify it's a working URL and possibly if it really exists.
@@ -550,7 +550,7 @@ executed, it is just parsed.
 > templated; when the whole schema or hostname part of the URL is templated,
 > the validation will fail.
 
-`asTemplate` and `resolveURL` cannot be both enabled at the same time.
+`asTemplate` and `resolveUrl` cannot be both enabled at the same time.
 
 ```yaml
 params:
