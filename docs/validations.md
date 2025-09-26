@@ -541,16 +541,16 @@ URL and fails if the request does not succeed or returns 404 HTTP status code.
 > This way you can verify it's a working URL and possibly if it really exists.
 
 If `asTemplate` is enabled, the annotation is parsed as a [Go text template](
-https://pkg.go.dev/text/template). If the parsing fails (which can happen when
-incorrect syntax is used, for example) the validation fails immediately.
-Otherwise all templated parts of the annotation are replaced with an empty
-string and the result must be a valid URL. Note that the template is never
-executed, it is just parsed.
+https://pkg.go.dev/text/template) and executed with empty/zero data. If the
+parsing or execution fails, the validation fails. Otherwise the result of the
+execution must be a valid URL for the validation to pass.
 > This works best when the path and/or query parameters of the URL are
-> templated; when the whole schema or hostname part of the URL is templated,
-> the validation will fail.
+> templated; when the whole schema or hostname part of the URL is templated
+> from a label value, the validation will fail because the validator provides
+> empty values.
 
-`asTemplate` and `resolveUrl` cannot be both enabled at the same time.
+If `asTemplate` and `resolveUrl` are both enabled, the template is executed
+first and the HTTP request is performed on the result.
 
 ```yaml
 params:
