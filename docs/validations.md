@@ -544,7 +544,7 @@ If `asTemplate` is enabled, the annotation is parsed as a [Go text template](
 https://pkg.go.dev/text/template). If the parsing fails (which can happen when
 incorrect syntax is used, for example) the validation fails immediately.
 Otherwise all templated parts of the annotation are replaced with an empty
-string an the result must be a valid URL. Note that the template is never
+string and the result must be a valid URL. Note that the template is never
 executed, it is just parsed.
 > This works best when the path and/or query parameters of the URL are
 > templated; when the whole schema or hostname part of the URL is templated,
