@@ -540,10 +540,23 @@ URL and fails if the request does not succeed or returns 404 HTTP status code.
 > It's common practice to link a playbook with guide how to solve the alert in the alert itself.
 > This way you can verify it's a working URL and possibly if it really exists.
 
+If `asTemplate` is enabled, the annotation is parsed as a [Go text template](
+https://pkg.go.dev/text/template). If the parsing fails (which can happen when
+incorrect syntax is used, for example) the validation fails immediately.
+Otherwise all templated parts of the annotation are replaced with an empty
+string an the result must be a valid URL. Note that the template is never
+executed, it is just parsed.
+> This works best when the path and/or query parameters of the URL are
+> templated; when the whole schema or hostname part of the URL is templated,
+> the validation will fail.
+
+`asTemplate` and `resolveURL` cannot be both enabled at the same time.
+
 ```yaml
 params:
   annotation: "playbook"
   resolveUrl: true
+  asTamplate: false
 ```
 
 #### `annotationIsValidPromQL`

@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	textTemplate "text/template"
+	"text/template/parse"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -202,6 +204,7 @@ func newAnnotationIsValidURL(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Annotation string `yaml:"annotation"`
 		ResolveURL bool   `yaml:"resolveUrl"`
+		AsTemplate bool   `yaml:"asTemplate"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -209,16 +212,23 @@ func newAnnotationIsValidURL(paramsConfig yaml.Node) (Validator, error) {
 	if params.Annotation == "" {
 		return nil, fmt.Errorf("missing annotation name")
 	}
-	return &annotationIsValidURL{annotation: params.Annotation, resolveURL: params.ResolveURL}, nil
+	if params.ResolveURL && params.AsTemplate {
+		return nil, fmt.Errorf("`resolveUrl` and `asTemplate` cannot be both true")
+	}
+	return &annotationIsValidURL{annotation: params.Annotation, resolveURL: params.ResolveURL, asTemplate: params.AsTemplate}, nil
 }
 
 type annotationIsValidURL struct {
 	annotation string
 	resolveURL bool
+	asTemplate bool
 }
 
 func (h annotationIsValidURL) String() string {
 	text := fmt.Sprintf("Annotation `%s` is a valid URL", h.annotation)
+	if h.asTemplate {
+		text += " (when parsed as a Go text template)"
+	}
 	if h.resolveURL {
 		text += " and does not return HTTP status 404"
 	}
@@ -230,8 +240,21 @@ func (h annotationIsValidURL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 	if !ok {
 		return []error{}
 	}
+	if h.asTemplate {
+		tmpl, err := textTemplate.New("").Parse(value)
+		if err != nil {
+			return []error{fmt.Errorf("annotation `%s` cannot be parsed as a text template: %w", h.annotation, err)}
+		}
+		sb := strings.Builder{}
+		for _, n := range tmpl.Root.Nodes {
+			if n.Type() == parse.NodeText {
+				sb.WriteString(n.String())
+			}
+		}
+		value = sb.String()
+	}
 	if !govalidator.IsURL(value) {
-		return []error{fmt.Errorf("annotation `%s` is not valid URL", h.annotation)}
+		return []error{fmt.Errorf("annotation `%s` is not valid URL: `%s`", h.annotation, value)}
 	}
 	if !h.resolveURL {
 		return []error{}
