@@ -556,7 +556,7 @@ executed, it is just parsed.
 params:
   annotation: "playbook"
   resolveUrl: true
-  asTamplate: false
+  asTemplate: false
 ```
 
 #### `annotationIsValidPromQL`
