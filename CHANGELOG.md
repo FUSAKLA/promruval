@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.9.0] - 2025-09-29
 - Fixed: JSON and Yaml output format of the `promruval validate` command.
 - Changed: Bump go version to 1.24.1
 - Changed: Switch to golangci-lint v2
