@@ -211,6 +211,8 @@ to true, the label value is split by a comma, and the distinct values are checke
 Since the labels can be templated, but Promruval cannot tell if the resulting value will be valid,
 there is the `ignoreTemplatedValues` option, that allows you to ignore the templated values.
 
+If a rule doesn't explicitly set the configured label at all, the validation succeeds.
+
 > It's quite common to have well known severities for alerts which can be important even in the
 > Alertmanager routing tree. Ths is how you can make sure only the well-known severities are used.
 
@@ -525,6 +527,8 @@ params:
 #### `annotationHasAllowedValue`
 
 Fails if rule annotation value is not one of the allowed values.
+
+If a rule doesn't explicitly set the configured annotation at all, the validation succeeds.
 
 ```yaml
 params:
