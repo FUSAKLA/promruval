@@ -626,7 +626,7 @@ Validators that can be used on `Recording rule` scope.
 
 Fails if the name of the recorded metric does not match the specified regular expression.
 If `negate` is set to `true`, the condition is negated: the validation fails if
-the recorder metric matches.
+the recorded metric matches.
 
 ```yaml
 params:
