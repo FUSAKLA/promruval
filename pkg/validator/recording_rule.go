@@ -36,7 +36,7 @@ func (h recordedMetricNameMatchesRegexp) String() string {
 func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	if h.pattern.MatchString(rule.Record) == h.negate {
-		errs = append(errs, fmt.Errorf("recorded metric name `%s` %s regexp `%s`", rule.Alert, matches(!h.negate), h.pattern.String()))
+		errs = append(errs, fmt.Errorf("recorded metric name `%s` %s regexp `%s`", rule.Record, matches(!h.negate), h.pattern.String()))
 	}
 	return errs
 }
