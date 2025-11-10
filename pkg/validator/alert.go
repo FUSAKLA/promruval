@@ -105,27 +105,30 @@ func (h validateLabelTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 func newAlertNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Regexp RegexpForbidEmpty `yaml:"regexp"`
+		Negate bool              `yaml:"negate"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
 	return &alertNameMatchesRegexp{
 		pattern: params.Regexp.Regexp,
+		negate:  params.Negate,
 	}, nil
 }
 
 type alertNameMatchesRegexp struct {
 	pattern *regexp.Regexp
+	negate  bool
 }
 
 func (h alertNameMatchesRegexp) String() string {
-	return fmt.Sprintf("Alert name matches regexp: %s", h.pattern.String())
+	return fmt.Sprintf("Alert name %s regexp: `%s`", matches(h.negate), h.pattern.String())
 }
 
 func (h alertNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	if !h.pattern.MatchString(rule.Alert) {
-		errs = append(errs, fmt.Errorf("alert name %s does not match pattern %s", rule.Alert, h.pattern.String()))
+	if h.pattern.MatchString(rule.Alert) == h.negate {
+		errs = append(errs, fmt.Errorf("alert name `%s` %s pattern `%s`", rule.Alert, matches(!h.negate), h.pattern.String()))
 	}
 	return errs
 }

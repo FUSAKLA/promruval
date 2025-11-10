@@ -206,6 +206,7 @@ func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Label  string             `yaml:"label"`
 		Regexp RegexpEmptyDefault `yaml:"regexp"`
+		Negate bool               `yaml:"negate"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -213,16 +214,17 @@ func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Label == "" {
 		return nil, fmt.Errorf("missing label name")
 	}
-	return &labelMatchesRegexp{label: params.Label, regexp: params.Regexp.Regexp}, nil
+	return &labelMatchesRegexp{label: params.Label, regexp: params.Regexp.Regexp, negate: params.Negate}, nil
 }
 
 type labelMatchesRegexp struct {
 	label  string
 	regexp *regexp.Regexp
+	negate bool
 }
 
 func (h labelMatchesRegexp) String() string {
-	return fmt.Sprintf("label `%s` matches regexp `%s`", h.label, h.regexp)
+	return fmt.Sprintf("label `%s` %s regexp `%s`", h.label, matches(h.negate), h.regexp)
 }
 
 func (h labelMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -230,8 +232,8 @@ func (h labelMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule,
 	if !ok {
 		return []error{}
 	}
-	if !h.regexp.MatchString(value) {
-		return []error{fmt.Errorf("label `%s` does not match the regular expression `%s`", h.label, h.regexp)}
+	if h.regexp.MatchString(value) == h.negate {
+		return []error{fmt.Errorf("label `%s` %s the regular expression `%s`", h.label, matches(!h.negate), h.regexp)}
 	}
 	return []error{}
 }

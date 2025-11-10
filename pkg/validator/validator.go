@@ -82,3 +82,11 @@ func anchorRegexp(regexpString string) string {
 func compileAnchoredRegexp(regexpString string) (*regexp.Regexp, error) {
 	return regexp.Compile(anchorRegexp(regexpString))
 }
+
+// matches returns "matches" or "doesn't match" based on the given bool.
+func matches(negate bool) string {
+	if negate {
+		return "does not match"
+	}
+	return "matches"
+}

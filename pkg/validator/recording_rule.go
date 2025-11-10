@@ -13,27 +13,30 @@ import (
 func newRecordedMetricNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Regexp RegexpForbidEmpty `yaml:"regexp"`
+		Negate bool              `yaml:"negate"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
 	return &recordedMetricNameMatchesRegexp{
 		pattern: params.Regexp.Regexp,
+		negate:  params.Negate,
 	}, nil
 }
 
 type recordedMetricNameMatchesRegexp struct {
 	pattern *regexp.Regexp
+	negate  bool
 }
 
 func (h recordedMetricNameMatchesRegexp) String() string {
-	return fmt.Sprintf("recorded metric name matches regexp: `%s`", h.pattern.String())
+	return fmt.Sprintf("recorded metric name %s regexp: `%s`", matches(h.negate), h.pattern.String())
 }
 
 func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	if !h.pattern.MatchString(rule.Record) {
-		errs = append(errs, fmt.Errorf("recorded metric name %s does not match pattern %s", rule.Alert, h.pattern.String()))
+	if h.pattern.MatchString(rule.Record) == h.negate {
+		errs = append(errs, fmt.Errorf("recorded metric name `%s` %s regexp `%s`", rule.Alert, matches(!h.negate), h.pattern.String()))
 	}
 	return errs
 }
@@ -45,23 +48,8 @@ func newRecordedMetricNameDoesNotMatchRegexp(paramsConfig yaml.Node) (Validator,
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	return &recordedMetricNameDoesNotMatchRegexp{
+	return &recordedMetricNameMatchesRegexp{
 		pattern: params.Regexp.Regexp,
+		negate:  true,
 	}, nil
-}
-
-type recordedMetricNameDoesNotMatchRegexp struct {
-	pattern *regexp.Regexp
-}
-
-func (h recordedMetricNameDoesNotMatchRegexp) String() string {
-	return fmt.Sprintf("recorded metric name does not match regexp: `%s`", h.pattern.String())
-}
-
-func (h recordedMetricNameDoesNotMatchRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
-	var errs []error
-	if h.pattern.MatchString(rule.Record) {
-		errs = append(errs, fmt.Errorf("recorded metric name %s matches regexp %s", rule.Alert, h.pattern.String()))
-	}
-	return errs
 }
