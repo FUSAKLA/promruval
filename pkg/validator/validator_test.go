@@ -62,11 +62,15 @@ var testCases = []struct {
 	{name: "ruleLabelMatchesRegexp", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(matchAnythingRegexp)}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
 	{name: "ruleLabelMissingRegexValidatedLabel", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(matchAnythingRegexp)}, rule: rulefmt.Rule{}, expectedErrors: 0},
 	{name: "ruleLabelDoesNotMatchRegexp", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(`\d+`)}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 1},
+	{name: "ruleLabelMatchesRegexpNegate", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(`\d+`), negative: true}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
+	{name: "ruleLabelMatchesRegexpNegateFail", validator: labelMatchesRegexp{label: "foo", regexp: regexp.MustCompile(matchAnythingRegexp), negative: true}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 1},
 
 	// annotationMatchesRegexp
 	{name: "ruleAnnotationMatchesRegexp", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(matchAnythingRegexp)}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 0},
 	{name: "ruleAnnotationMissingRegexValidatedLabel", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(matchAnythingRegexp)}, rule: rulefmt.Rule{}, expectedErrors: 0},
 	{name: "ruleAnnotationDoesNotMatchRegexp", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(`\d+`)}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 1},
+	{name: "ruleAnnotationMatchesRegexpNegate", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(`\d+`), negative: true}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 0},
+	{name: "ruleAnnotationMatchesRegexpNegateFail", validator: annotationMatchesRegexp{annotation: "foo", regexp: regexp.MustCompile(matchAnythingRegexp), negative: true}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "bar"}}, expectedErrors: 1},
 
 	// labelHasAllowedValue
 	{name: "ruleHasLabelWithAllowedValue", validator: labelHasAllowedValue{label: "foo", allowedValues: []string{"bar"}}, rule: rulefmt.Rule{Labels: map[string]string{"foo": "bar"}}, expectedErrors: 0},
@@ -324,14 +328,14 @@ var testCases = []struct {
 	// alertNameMatchesRegexp
 	{name: "alertNameMatchesRegexp_Valid", validator: alertNameMatchesRegexp{pattern: regexp.MustCompile("Foo.*")}, rule: rulefmt.Rule{Alert: `FooBAr`}, expectedErrors: 0},
 	{name: "alertNameMatchesRegexp_NotMatch", validator: alertNameMatchesRegexp{pattern: regexp.MustCompile("Foo.*")}, rule: rulefmt.Rule{Alert: `Bar`}, expectedErrors: 1},
+	{name: "alertNameMatchesRegexpNegate", validator: alertNameMatchesRegexp{pattern: regexp.MustCompile("Foo.*"), negative: true}, rule: rulefmt.Rule{Alert: `Bar`}, expectedErrors: 0},
+	{name: "alertNameMatchesRegexpNegateFail", validator: alertNameMatchesRegexp{pattern: regexp.MustCompile("Foo.*"), negative: true}, rule: rulefmt.Rule{Alert: `FooBAr`}, expectedErrors: 1},
 
 	// recordedMetricNameMatchesRegexp
 	{name: "recordedMetricNameMatchesRegexp_Matches", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+")}, rule: rulefmt.Rule{Record: `cluster:foo_bar:avg`}, expectedErrors: 0},
 	{name: "recordedMetricNameMatchesRegexp_notMatches", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+")}, rule: rulefmt.Rule{Record: `foo_bar`}, expectedErrors: 1},
-
-	// recordedMetricNameDoesNotMatchRegexp
-	{name: "recordedMetricNameDoesNotMatchRegexp_Matches", validator: recordedMetricNameDoesNotMatchRegexp{pattern: regexp.MustCompile("^foo_bar$")}, rule: rulefmt.Rule{Record: `cluster:foo_bar:avg`}, expectedErrors: 0},
-	{name: "recordedMetricNameDoesNotMatchRegexp_notMatches", validator: recordedMetricNameDoesNotMatchRegexp{pattern: regexp.MustCompile("^foo_bar$")}, rule: rulefmt.Rule{Record: `foo_bar`}, expectedErrors: 1},
+	{name: "recordedMetricNameMatchesRegexpNegate", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+"), negative: true}, rule: rulefmt.Rule{Record: `foo_bar`}, expectedErrors: 0},
+	{name: "recordedMetricNameMatchesRegexpNegateFail", validator: recordedMetricNameMatchesRegexp{pattern: regexp.MustCompile("[^:]+:[^:]+:[^:]+"), negative: true}, rule: rulefmt.Rule{Record: `cluster:foo_bar:avg`}, expectedErrors: 1},
 
 	// hasAllowedQueryOffset
 	{name: "hasAllowedQueryOffset_valid", validator: hasAllowedQueryOffset{min: model.Duration(time.Second), max: model.Duration(time.Minute)}, group: unmarshaler.RuleGroup{QueryOffset: model.Duration(time.Second * 30)}, expectedErrors: 0},
@@ -341,6 +345,8 @@ var testCases = []struct {
 	// groupNameMatchesRegexp
 	{name: "groupNameMatchesRegexp_valid", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`)}, group: unmarshaler.RuleGroup{Name: "TestGroup"}, expectedErrors: 0},
 	{name: "groupNameMatchesRegexp_invalid", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`)}, group: unmarshaler.RuleGroup{Name: "Test Group"}, expectedErrors: 1},
+	{name: "groupNameMatchesRegexpNegate", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`), negative: true}, group: unmarshaler.RuleGroup{Name: "Test Group"}, expectedErrors: 0},
+	{name: "groupNameMatchesRegexpNegateFail", validator: groupNameMatchesRegexp{pattern: regexp.MustCompile(`^[A-Z]\S+$`), negative: true}, group: unmarshaler.RuleGroup{Name: "TestGroup"}, expectedErrors: 1},
 
 	// expressionDoesNotUseExperimentalFunctions
 	{name: "expressionDoesNotUseExperimentalFunctions_valid", validator: expressionDoesNotUseExperimentalFunctions{}, rule: rulefmt.Rule{Expr: `sort_desc(up)`}, expectedErrors: 0},

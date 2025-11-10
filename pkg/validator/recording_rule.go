@@ -12,28 +12,31 @@ import (
 
 func newRecordedMetricNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Regexp RegexpForbidEmpty `yaml:"regexp"`
+		Regexp   RegexpForbidEmpty `yaml:"regexp"`
+		Negative bool              `yaml:"negative"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
 	return &recordedMetricNameMatchesRegexp{
-		pattern: params.Regexp.Regexp,
+		pattern:  params.Regexp.Regexp,
+		negative: params.Negative,
 	}, nil
 }
 
 type recordedMetricNameMatchesRegexp struct {
-	pattern *regexp.Regexp
+	pattern  *regexp.Regexp
+	negative bool
 }
 
 func (h recordedMetricNameMatchesRegexp) String() string {
-	return fmt.Sprintf("recorded metric name matches regexp: `%s`", h.pattern.String())
+	return fmt.Sprintf("recorded metric name %s regexp: `%s`", matches(h.negative), h.pattern.String())
 }
 
 func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	if !h.pattern.MatchString(rule.Record) {
-		errs = append(errs, fmt.Errorf("recorded metric name %s does not match pattern %s", rule.Alert, h.pattern.String()))
+	if h.pattern.MatchString(rule.Record) == h.negative {
+		errs = append(errs, fmt.Errorf("recorded metric name `%s` %s regexp `%s`", rule.Record, matches(!h.negative), h.pattern.String()))
 	}
 	return errs
 }
@@ -45,23 +48,8 @@ func newRecordedMetricNameDoesNotMatchRegexp(paramsConfig yaml.Node) (Validator,
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
-	return &recordedMetricNameDoesNotMatchRegexp{
-		pattern: params.Regexp.Regexp,
+	return &recordedMetricNameMatchesRegexp{
+		pattern:  params.Regexp.Regexp,
+		negative: true,
 	}, nil
-}
-
-type recordedMetricNameDoesNotMatchRegexp struct {
-	pattern *regexp.Regexp
-}
-
-func (h recordedMetricNameDoesNotMatchRegexp) String() string {
-	return fmt.Sprintf("recorded metric name does not match regexp: `%s`", h.pattern.String())
-}
-
-func (h recordedMetricNameDoesNotMatchRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
-	var errs []error
-	if h.pattern.MatchString(rule.Record) {
-		errs = append(errs, fmt.Errorf("recorded metric name %s matches regexp %s", rule.Alert, h.pattern.String()))
-	}
-	return errs
 }

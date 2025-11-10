@@ -122,7 +122,6 @@ validationRules:
       - type: recordedMetricNameMatchesRegexp
         params:
           regexp: "[^:]+:[^:]+:[^:]+"
-          negative: true
 
   - name: check-labels-in-expr
     scope: All rules
