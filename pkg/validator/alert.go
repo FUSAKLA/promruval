@@ -128,7 +128,7 @@ func (h alertNameMatchesRegexp) String() string {
 func (h alertNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
 	if h.pattern.MatchString(rule.Alert) == h.negate {
-		errs = append(errs, fmt.Errorf("alert name `%s` %s pattern `%s`", rule.Alert, matches(!h.negate), h.pattern.String()))
+		errs = append(errs, fmt.Errorf("alert name `%s` %s regexp `%s`", rule.Alert, matches(!h.negate), h.pattern.String()))
 	}
 	return errs
 }
