@@ -117,7 +117,7 @@ func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
 		Annotation string             `yaml:"annotation"`
 		Regexp     RegexpEmptyDefault `yaml:"regexp"`
-		Negate     bool               `yaml:"negate"`
+		Negative   bool               `yaml:"negative"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
@@ -125,17 +125,17 @@ func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	if params.Annotation == "" {
 		return nil, fmt.Errorf("missing annotation")
 	}
-	return &annotationMatchesRegexp{annotation: params.Annotation, regexp: params.Regexp.Regexp, negate: params.Negate}, nil
+	return &annotationMatchesRegexp{annotation: params.Annotation, regexp: params.Regexp.Regexp, negative: params.Negative}, nil
 }
 
 type annotationMatchesRegexp struct {
 	annotation string
 	regexp     *regexp.Regexp
-	negate     bool
+	negative   bool
 }
 
 func (h annotationMatchesRegexp) String() string {
-	return fmt.Sprintf("annotation `%s` %s regexp `%s`", h.annotation, matches(h.negate), h.regexp)
+	return fmt.Sprintf("annotation `%s` %s regexp `%s`", h.annotation, matches(h.negative), h.regexp)
 }
 
 func (h annotationMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
@@ -143,8 +143,8 @@ func (h annotationMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 	if !ok {
 		return []error{}
 	}
-	if h.regexp.MatchString(value) == h.negate {
-		return []error{fmt.Errorf("annotation `%s` %s the regular expression `%s`", h.annotation, matches(!h.negate), h.regexp)}
+	if h.regexp.MatchString(value) == h.negative {
+		return []error{fmt.Errorf("annotation `%s` %s the regular expression `%s`", h.annotation, matches(!h.negative), h.regexp)}
 	}
 	return []error{}
 }

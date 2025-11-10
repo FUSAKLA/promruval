@@ -228,31 +228,31 @@ func (h hasAllowedQueryOffset) Validate(group unmarshaler.RuleGroup, _ rulefmt.R
 
 func newGroupNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Regexp RegexpEmptyDefault `yaml:"regexp"`
-		Negate bool               `yaml:"negate"`
+		Regexp   RegexpEmptyDefault `yaml:"regexp"`
+		Negative bool               `yaml:"negative"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
 	return &groupNameMatchesRegexp{
-		pattern: params.Regexp.Regexp,
-		negate:  params.Negate,
+		pattern:  params.Regexp.Regexp,
+		negative: params.Negative,
 	}, nil
 }
 
 type groupNameMatchesRegexp struct {
-	pattern *regexp.Regexp
-	negate  bool
+	pattern  *regexp.Regexp
+	negative bool
 }
 
 func (h groupNameMatchesRegexp) String() string {
-	return fmt.Sprintf("Group name %s regexp: `%s`", matches(h.negate), h.pattern.String())
+	return fmt.Sprintf("Group name %s regexp: `%s`", matches(h.negative), h.pattern.String())
 }
 
 func (h groupNameMatchesRegexp) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	if h.pattern.MatchString(group.Name) == h.negate {
-		errs = append(errs, fmt.Errorf("group name `%s` %s regexp `%s`", group.Name, matches(!h.negate), h.pattern.String()))
+	if h.pattern.MatchString(group.Name) == h.negative {
+		errs = append(errs, fmt.Errorf("group name `%s` %s regexp `%s`", group.Name, matches(!h.negative), h.pattern.String()))
 	}
 	return errs
 }

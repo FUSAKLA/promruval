@@ -12,31 +12,31 @@ import (
 
 func newRecordedMetricNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
 	params := struct {
-		Regexp RegexpForbidEmpty `yaml:"regexp"`
-		Negate bool              `yaml:"negate"`
+		Regexp   RegexpForbidEmpty `yaml:"regexp"`
+		Negative bool              `yaml:"negative"`
 	}{}
 	if err := paramsConfig.Decode(&params); err != nil {
 		return nil, err
 	}
 	return &recordedMetricNameMatchesRegexp{
-		pattern: params.Regexp.Regexp,
-		negate:  params.Negate,
+		pattern:  params.Regexp.Regexp,
+		negative: params.Negative,
 	}, nil
 }
 
 type recordedMetricNameMatchesRegexp struct {
-	pattern *regexp.Regexp
-	negate  bool
+	pattern  *regexp.Regexp
+	negative bool
 }
 
 func (h recordedMetricNameMatchesRegexp) String() string {
-	return fmt.Sprintf("recorded metric name %s regexp: `%s`", matches(h.negate), h.pattern.String())
+	return fmt.Sprintf("recorded metric name %s regexp: `%s`", matches(h.negative), h.pattern.String())
 }
 
 func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {
 	var errs []error
-	if h.pattern.MatchString(rule.Record) == h.negate {
-		errs = append(errs, fmt.Errorf("recorded metric name `%s` %s regexp `%s`", rule.Record, matches(!h.negate), h.pattern.String()))
+	if h.pattern.MatchString(rule.Record) == h.negative {
+		errs = append(errs, fmt.Errorf("recorded metric name `%s` %s regexp `%s`", rule.Record, matches(!h.negative), h.pattern.String()))
 	}
 	return errs
 }
@@ -49,7 +49,7 @@ func newRecordedMetricNameDoesNotMatchRegexp(paramsConfig yaml.Node) (Validator,
 		return nil, err
 	}
 	return &recordedMetricNameMatchesRegexp{
-		pattern: params.Regexp.Regexp,
-		negate:  true,
+		pattern:  params.Regexp.Regexp,
+		negative: true,
 	}, nil
 }

@@ -138,13 +138,13 @@ params:
 ### `groupNameMatchesRegexp`
 
 Fails if the group name does not match the specified regular expression.
-If `negate` is set to `true`, the condition is negated: the validation fails if
+If `negative` is set to `true`, the condition is negated: the validation fails if
 the group name matches.
 
 ```yaml
 params:
   regexp: "[A-Z]\s+" # defaults to ""
-  negate: <bool> # defaults to false
+  negative: <bool> # defaults to false
 ```
 
 ### `hasAllowedQueryOffset`
@@ -198,7 +198,7 @@ params:
 #### `labelMatchesRegexp`
 
 Fails if rule label does not match the specified regular expression.
-If `negate` is set to `true`, the condition is negated: the validation fails if
+If `negative` is set to `true`, the condition is negated: the validation fails if
 the label value matches.
 
 > If you for example use a `team` label containing email of the specific team,
@@ -208,7 +208,7 @@ the label value matches.
 params:
   label: "foo"
   regexp: ".*" # defaults to ""
-  negate: <bool> # defaults to false
+  negative: <bool> # defaults to false
 ```
 
 #### `labelHasAllowedValue`
@@ -524,14 +524,14 @@ params:
 #### `annotationMatchesRegexp`
 
 Fails if rule annotation value does not match the specified regular expression.
-If `negate` is set to `true`, the condition is negated: the validation fails if
+If `negative` is set to `true`, the condition is negated: the validation fails if
 the annotation value matches.
 
 ```yaml
 params:
   annotation: "foo"
   regexp: ".*"
-  negate: <bool> # defaults to false
+  negative: <bool> # defaults to false
 ```
 
 #### `annotationHasAllowedValue`
@@ -610,13 +610,13 @@ params:
 #### `alertNameMatchesRegexp`
 
 Fails if the alert name does not match the specified regular expression.
-If `negate` is set to `true`, the condition is negated: the validation fails if
+If `negative` is set to `true`, the condition is negated: the validation fails if
 the alert name matches.
 
 ```yaml
 params:
   regexp: "[A-Z]\s+"
-  negate: <bool> # defaults to false
+  negative: <bool> # defaults to false
 ```
 
 ## Recording rules validators
@@ -625,13 +625,13 @@ Validators that can be used on `Recording rule` scope.
 #### `recordedMetricNameMatchesRegexp`
 
 Fails if the name of the recorded metric does not match the specified regular expression.
-If `negate` is set to `true`, the condition is negated: the validation fails if
+If `negative` is set to `true`, the condition is negated: the validation fails if
 the recorded metric matches.
 
 ```yaml
 params:
   regexp: "[^:]+:[^:]+:[^:]+" # defaults to ""
-  negate: <bool> # defaults to false
+  negative: <bool> # defaults to false
 ```
 
 #### `recordedMetricNameDoesNotMatchRegexp`
@@ -640,7 +640,7 @@ Fails if the name of the recorded metric matches the specified regular expressio
 
 Equivalent to
 [`recordedMetricNameMatchesRegexp`](#recordedmetricnamematchesregexp)
-with `negate` set to `true`.
+with `negative` set to `true`.
 
 ```yaml
 params:
