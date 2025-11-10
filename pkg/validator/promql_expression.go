@@ -15,10 +15,13 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
-func newExpressionIsValidPromQL(_ yaml.Node) (Validator, error) {
+func newExpressionIsValidPromQL(unmarshal func(interface{}) error) (Validator, error) {
+	params := struct{}{}
+	if err := unmarshal(&params); err != nil {
+		return nil, err
+	}
 	return &expressionIsValidPromQL{}, nil
 }
 
@@ -35,11 +38,11 @@ func (h expressionIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 	return []error{}
 }
 
-func newExpressionDoesNotUseOlderDataThan(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseOlderDataThan(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Limit == 0 {
@@ -86,11 +89,11 @@ func (h expressionDoesNotUseOlderDataThan) Validate(_ unmarshaler.RuleGroup, rul
 	return errs
 }
 
-func newExpressionDoesNotUseLabels(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Labels []string `yaml:"labels"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Labels) == 0 {
@@ -128,12 +131,12 @@ type expressionUsesOnlyAllowedLabelsForMetricRegexp struct {
 	metricNameRegexp *regexp.Regexp
 }
 
-func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		AllowedLabels    []string              `yaml:"allowedLabels"`
 		MetricNameRegexp RegexpWildcardDefault `yaml:"metricNameRegexp"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.AllowedLabels) == 0 {
@@ -172,12 +175,12 @@ type expressionUsesOnlyAllowedLabelValuesForMetricRegexp struct {
 	metricNameRegexp   *regexp.Regexp
 }
 
-func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		AllowedLabelValues map[string][]string   `yaml:"allowedLabelValues"`
 		MetricNameRegexp   RegexpWildcardDefault `yaml:"metricNameRegexp"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.AllowedLabelValues) == 0 {
@@ -231,12 +234,12 @@ type expressionDoesNotUseLabelsForMetricRegexp struct {
 	metricNameRegexp *regexp.Regexp
 }
 
-func newExpressionDoesNotUseLabelsForMetricRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseLabelsForMetricRegexp(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Labels           []string              `yaml:"labels"`
 		MetricNameRegexp RegexpWildcardDefault `yaml:"metricNameRegexp"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Labels) == 0 {
@@ -267,11 +270,11 @@ func (h expressionDoesNotUseLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGr
 	return errs
 }
 
-func newExpressionDoesNotUseRangeShorterThan(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseRangeShorterThan(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Limit == model.Duration(0) {
@@ -310,7 +313,11 @@ func (h expressionDoesNotUseRangeShorterThan) Validate(_ unmarshaler.RuleGroup, 
 	return errs
 }
 
-func newExpressionDoesNotUseIrate(_ yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseIrate(unmarshal func(interface{}) error) (Validator, error) {
+	params := struct{}{}
+	if err := unmarshal(&params); err != nil {
+		return nil, err
+	}
 	return &expressionDoesNotUseIrate{}, nil
 }
 
@@ -337,12 +344,12 @@ func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	return errs
 }
 
-func newValidFunctionsOnCounters(paramsConfig yaml.Node) (Validator, error) {
+func newValidFunctionsOnCounters(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		AllowHistograms bool `yaml:"allowHistograms"`
 	}{}
 	params.AllowHistograms = true
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &validFunctionsOnCounters{allowHistograms: params.AllowHistograms}, nil
@@ -392,7 +399,11 @@ func (h validFunctionsOnCounters) Validate(_ unmarshaler.RuleGroup, rule rulefmt
 	return errs
 }
 
-func newRateBeforeAggregation(_ yaml.Node) (Validator, error) {
+func newRateBeforeAggregation(unmarshal func(interface{}) error) (Validator, error) {
+	params := struct{}{}
+	if err := unmarshal(&params); err != nil {
+		return nil, err
+	}
 	return &rateBeforeAggregation{}, nil
 }
 
@@ -428,17 +439,17 @@ func (h rateBeforeAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Ru
 	return errs
 }
 
-func newExpressionCanBeEvaluated(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionCanBeEvaluated(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
-		timeSeriesLimit         int           `yaml:"timeSeriesLimit"`
-		evaluationDurationLimit time.Duration `yaml:"evaluationDurationLimit"`
+		TimeSeriesLimit         int           `yaml:"timeSeriesLimit"`
+		EvaluationDurationLimit time.Duration `yaml:"evaluationDurationLimit"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionCanBeEvaluated{
-		timeSeriesLimit:         params.timeSeriesLimit,
-		evaluationDurationLimit: params.evaluationDurationLimit,
+		timeSeriesLimit:         params.TimeSeriesLimit,
+		evaluationDurationLimit: params.EvaluationDurationLimit,
 	}, nil
 }
 
@@ -477,9 +488,9 @@ func (h expressionCanBeEvaluated) Validate(group unmarshaler.RuleGroup, rule rul
 	return errs
 }
 
-func newExpressionUsesExistingLabels(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionUsesExistingLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionUsesExistingLabels{}, nil
@@ -520,11 +531,11 @@ func (h expressionUsesExistingLabels) Validate(group unmarshaler.RuleGroup, rule
 	return errs
 }
 
-func newExpressionSelectorsMatchesAnything(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionSelectorsMatchesAnything(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		maximumMatchingSeries int `yaml:"maximumMatchingSeries"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionSelectorsMatchesAnything{
@@ -566,9 +577,9 @@ func (h expressionSelectorsMatchesAnything) Validate(group unmarshaler.RuleGroup
 	return errs
 }
 
-func newExpressionWithNoMetricName(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionWithNoMetricName(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionWithNoMetricName{}, nil
@@ -594,11 +605,11 @@ func (e expressionWithNoMetricName) Validate(_ unmarshaler.RuleGroup, rule rulef
 	return errs
 }
 
-func newExpressionDoesNotUseMetrics(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseMetrics(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		MetricNameRegexps []RegexpEmptyDefault `yaml:"metricNameRegexps"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	v := expressionDoesNotUseMetrics{}
@@ -642,12 +653,12 @@ func (h expressionDoesNotUseMetrics) Validate(_ unmarshaler.RuleGroup, rule rule
 	return errs
 }
 
-func newExpressionIsWellFormatted(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionIsWellFormatted(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		SkipExpressionsWithComments bool `yaml:"skipExpressionsWithComments"`
 		ShowFormatted               bool `yaml:"showExpectedForm"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionIsWellFormatted{showFormatted: params.ShowFormatted, skipExpressionsWithComments: params.SkipExpressionsWithComments}, nil
@@ -684,9 +695,9 @@ func (h expressionIsWellFormatted) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	return []error{errors.New(errorText)}
 }
 
-func newExpressionDoesNotUseExperimentalFunctions(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseExperimentalFunctions(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionDoesNotUseExperimentalFunctions{}, nil
@@ -718,9 +729,9 @@ func (h expressionDoesNotUseExperimentalFunctions) Validate(_ unmarshaler.RuleGr
 	return []error{}
 }
 
-func newExpressionUsesUnderscoresInLargeNumbers(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionUsesUnderscoresInLargeNumbers(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionUsesUnderscoresInLargeNumbers{}, nil
@@ -756,9 +767,9 @@ func (h expressionUsesUnderscoresInLargeNumbers) Validate(_ unmarshaler.RuleGrou
 	return []error{}
 }
 
-func newExpressionDoesNotUseClassicHistogramBucketOperations(paramsConfig yaml.Node) (Validator, error) {
+func newExpressionDoesNotUseClassicHistogramBucketOperations(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionDoesNotUseClassicHistogramBucketOperations{}, nil

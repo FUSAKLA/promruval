@@ -6,19 +6,17 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
-func newHasLabels(paramsConfig yaml.Node) (Validator, error) {
+func newHasLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Labels       []string `yaml:"labels"`
 		SearchInExpr bool     `yaml:"searchInExpr"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Labels) == 0 {
@@ -66,12 +64,12 @@ func (h hasLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prome
 	return errs
 }
 
-func newDoesNotHaveLabels(paramsConfig yaml.Node) (Validator, error) {
+func newDoesNotHaveLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Labels       []string `yaml:"labels"`
 		searchInExpr bool     `yaml:"searchInExpr"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Labels) == 0 {
@@ -112,11 +110,11 @@ func (h doesNotHaveLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, 
 	return errs
 }
 
-func newHasAnyOfLabels(paramsConfig yaml.Node) (Validator, error) {
+func newHasAnyOfLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Labels []string `yaml:"labels"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Labels) == 0 {
@@ -142,14 +140,14 @@ func (h hasAnyOfLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *
 	return []error{fmt.Errorf("missing any of these labels `%s`", strings.Join(h.labels, "`,`"))}
 }
 
-func newLabelHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
+func newLabelHasAllowedValue(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Label                 string   `yaml:"label"`
 		AllowedValues         []string `yaml:"allowedValues"`
 		CommaSeparatedValue   bool     `yaml:"commaSeparatedValue"`
 		IgnoreTemplatedValues bool     `yaml:"ignoreTemplatedValues"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Label == "" {
@@ -202,12 +200,12 @@ func (h labelHasAllowedValue) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 	return []error{fmt.Errorf("label `%s` value `%s` is not one of the allowed values: `%s`", h.label, ruleValue, strings.Join(h.allowedValues, "`,`"))}
 }
 
-func newLabelMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newLabelMatchesRegexp(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Label  string             `yaml:"label"`
 		Regexp RegexpEmptyDefault `yaml:"regexp"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Label == "" {
@@ -236,9 +234,9 @@ func (h labelMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule,
 	return []error{}
 }
 
-func newNonEmptyLabels(paramsConfig yaml.Node) (Validator, error) {
+func newNonEmptyLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &nonEmptyLabels{}, nil
@@ -260,14 +258,14 @@ func (h nonEmptyLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *
 	return errs
 }
 
-func newExclusiveLabels(paramsConfig yaml.Node) (Validator, error) {
+func newExclusiveLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Label1      string `yaml:"firstLabel"`
 		Label1Value string `yaml:"firstLabelValue"`
 		Label2      string `yaml:"secondLabel"`
 		Label2Value string `yaml:"secondLabelValue"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Label1 == "" {

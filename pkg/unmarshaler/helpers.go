@@ -1,8 +1,11 @@
 package unmarshaler
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"slices"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -52,31 +55,47 @@ func disabledValidatorsFromComments(comments []string, commentPrefix string) []s
 }
 
 func unmarshalToNodeAndStruct(value, dstNode *yaml.Node, dstStruct interface{}, knownFields []string) error {
+	if t := reflect.TypeOf(dstStruct); t == nil || t.Kind() != reflect.Pointer || t.Elem().Kind() != reflect.Struct {
+		return fmt.Errorf("BUG: dstStruct is not a pointer to a struct: %T", dstStruct)
+	}
 	// Since yaml/v3 Node.Decode doesn't support setting decode options like KnownFields (see https://github.com/go-yaml/yaml/issues/460)
 	// we need to check the fields manually, thus the function requires a list of known fields.
-	if value.Kind == yaml.MappingNode {
+	switch {
+	case value.Kind == yaml.MappingNode:
 		m := map[string]any{}
 		if err := value.Decode(m); err != nil {
 			return err
 		}
 		for k := range m {
 			if !slices.Contains(knownFields, k) {
-				return fmt.Errorf("unknown field %q when unmarshaling the %T, only supported fields are: %s", k, dstStruct, strings.Join(knownFields, ","))
+				if knownFields == nil {
+					// Make the error message more readable:
+					knownFields = []string{}
+				}
+				return fmt.Errorf("line %d: unknown field %q when unmarshaling into %T, supported fields are: %q", value.Line, k, dstStruct, knownFields)
 			}
 		}
+	case value.Kind == yaml.DocumentNode && len(value.Content) == 1:
+		return unmarshalToNodeAndStruct(value.Content[0], dstNode, dstStruct, knownFields)
+	case value.IsZero():
+		// ok, empty input
+	case value.Kind == yaml.ScalarNode && value.ShortTag() == "!!null":
+		// ok, literal null or nothing
+	default:
+		b, err := yaml.Marshal(value)
+		return errors.Join(err, fmt.Errorf("not a YAML mapping on line %d: %q", value.Line, b))
 	}
-	err := value.Decode(dstNode)
-	if err != nil {
-		return err
+	if dstNode != nil {
+		err := value.Decode(dstNode)
+		if err != nil {
+			return err
+		}
 	}
-	err = value.Decode(dstStruct)
-	if err != nil {
-		return err
-	}
-	return nil
+	return value.Decode(dstStruct)
 }
 
 // mustListStructYamlFieldNames returns a list of yaml field names for the given struct.
+// Fields that have the "omitempty" option in their yaml tag are never returned.
 func mustListStructYamlFieldNames(s interface{}, ignoreFields []string) []string {
 	y, err := yaml.Marshal(s)
 	if err != nil {
@@ -85,7 +104,7 @@ func mustListStructYamlFieldNames(s interface{}, ignoreFields []string) []string
 	}
 	m := map[string]any{}
 	if err := yaml.Unmarshal(y, m); err != nil {
-		fmt.Println("failed to marshal", err)
+		fmt.Println("failed to unmarshal", err)
 		panic(err)
 	}
 	names := []string{}
@@ -95,5 +114,6 @@ func mustListStructYamlFieldNames(s interface{}, ignoreFields []string) []string
 		}
 		names = append(names, k)
 	}
+	sort.Strings(names)
 	return names
 }

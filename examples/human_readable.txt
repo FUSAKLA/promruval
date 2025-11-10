@@ -6,7 +6,7 @@ Validation rules:
       - Alert has labels: `severity`
       - Alert label `severity` has one of the allowed values: `info`,`warning`,`critical`
       - Alert if rule has label `severity` with value `info` , it cannot have label `page`
-      - Alert expression can be successfully evaluated on the live Prometheus instance
+      - Alert expression can be successfully evaluated on the live Prometheus instance and the number of time series in the result is not higher than 20 and the evaluation is not longer than 10s
       - Alert expression uses only labels that are actually present in Prometheus
       - Alert expression selectors actually matches any series in Prometheus
       - Alert expression does not use irate

@@ -14,14 +14,13 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql"
 	"github.com/prometheus/prometheus/template"
-	"gopkg.in/yaml.v3"
 )
 
-func newForIsNotLongerThan(paramsConfig yaml.Node) (Validator, error) {
+func newForIsNotLongerThan(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Limit == model.Duration(0) {
@@ -45,11 +44,11 @@ func (h forIsNotLongerThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule,
 	return nil
 }
 
-func newKeepFiringForIsNotLongerThan(paramsConfig yaml.Node) (Validator, error) {
+func newKeepFiringForIsNotLongerThan(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &keepFiringForIsNotLongerThan{limit: params.Limit}, nil
@@ -70,9 +69,9 @@ func (h keepFiringForIsNotLongerThan) Validate(_ unmarshaler.RuleGroup, rule rul
 	return nil
 }
 
-func newValidateLabelTemplates(paramsConfig yaml.Node) (Validator, error) {
+func newValidateLabelTemplates(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &validateLabelTemplates{}, nil
@@ -102,11 +101,11 @@ func (h validateLabelTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 	return errs
 }
 
-func newAlertNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newAlertNameMatchesRegexp(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &alertNameMatchesRegexp{

@@ -26,6 +26,7 @@ validationRules:
           evaluationDurationLimit: 10s
       - type: expressionUsesExistingLabels
       - type: expressionSelectorsMatchesAnything
+        params:
       - type: expressionDoesNotUseIrate
         additionalDetails: "Just do as I say!"
       - type: expressionDoesNotUseOlderDataThan
@@ -122,7 +123,6 @@ validationRules:
       - type: recordedMetricNameMatchesRegexp
         params:
           regexp: "[^:]+:[^:]+:[^:]+"
-          negative: true
 
   - name: check-labels-in-expr
     scope: All rules

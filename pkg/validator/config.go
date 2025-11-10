@@ -5,11 +5,11 @@ import (
 	"maps"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
+	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	"gopkg.in/yaml.v3"
 )
 
-type validatorCreator func(params yaml.Node) (Validator, error)
+type validatorCreator func(unmarshal func(interface{}) error) (Validator, error)
 
 var registeredUniversalRuleValidators = map[string]validatorCreator{
 	// Labels
@@ -106,7 +106,9 @@ func NewFromConfig(scope config.ValidationScope, validatorConfig config.Validato
 	if !ok {
 		return nil, fmt.Errorf("unknown validator type `%s`", validatorConfig.ValidatorType)
 	}
-	return factory(validatorConfig.Params)
+	return factory(func(v interface{}) error {
+		return unmarshaler.UnmarshalNodeToStruct(&validatorConfig.Params, v)
+	})
 }
 
 func creator(scope config.ValidationScope, name string) (validatorCreator, bool) {
