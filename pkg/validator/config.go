@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 
@@ -106,9 +107,15 @@ func NewFromConfig(scope config.ValidationScope, validatorConfig config.Validato
 	if !ok {
 		return nil, fmt.Errorf("unknown validator type `%s`", validatorConfig.ValidatorType)
 	}
-	return factory(func(v interface{}) error {
+	unmarshaled := false
+	validator, err := factory(func(v interface{}) error {
+		unmarshaled = true
 		return unmarshaler.UnmarshalNodeToStruct(&validatorConfig.Params, v)
 	})
+	if !unmarshaled {
+		err = errors.Join(err, fmt.Errorf("BUG: unmarshal() not called when creating validator type %q", validatorConfig.ValidatorType))
+	}
+	return validator, err
 }
 
 func creator(scope config.ValidationScope, name string) (validatorCreator, bool) {
