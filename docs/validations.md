@@ -144,7 +144,7 @@ the group name matches.
 ```yaml
 params:
   regexp: "[A-Z]\s+" # defaults to ""
-  negate: <bool> # defaults fo false
+  negate: <bool> # defaults to false
 ```
 
 ### `hasAllowedQueryOffset`
@@ -208,7 +208,7 @@ the label value matches.
 params:
   label: "foo"
   regexp: ".*" # defaults to ""
-  negate: <bool> # defaults fo false
+  negate: <bool> # defaults to false
 ```
 
 #### `labelHasAllowedValue`
@@ -531,7 +531,7 @@ the annotation value matches.
 params:
   annotation: "foo"
   regexp: ".*"
-  negate: <bool> # defaults fo false
+  negate: <bool> # defaults to false
 ```
 
 #### `annotationHasAllowedValue`
@@ -616,7 +616,7 @@ the alert name matches.
 ```yaml
 params:
   regexp: "[A-Z]\s+"
-  negate: <bool> # defaults fo false
+  negate: <bool> # defaults to false
 ```
 
 ## Recording rules validators
@@ -631,7 +631,7 @@ the recorder metric matches.
 ```yaml
 params:
   regexp: "[^:]+:[^:]+:[^:]+" # defaults to ""
-  negate: <bool> # defaults fo false
+  negate: <bool> # defaults to false
 ```
 
 #### `recordedMetricNameDoesNotMatchRegexp`
