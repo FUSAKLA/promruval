@@ -356,7 +356,7 @@ func newValidFunctionsOnCounters(unmarshal func(interface{}) error) (Validator, 
 }
 
 type validFunctionsOnCounters struct {
-	allowHistograms bool `yaml:"allowHistograms"`
+	allowHistograms bool
 }
 
 func (h validFunctionsOnCounters) String() string {
@@ -454,8 +454,8 @@ func newExpressionCanBeEvaluated(unmarshal func(interface{}) error) (Validator, 
 }
 
 type expressionCanBeEvaluated struct {
-	timeSeriesLimit         int           `yaml:"timeSeriesLimit"`
-	evaluationDurationLimit time.Duration `yaml:"evaluationDurationLimit"`
+	timeSeriesLimit         int
+	evaluationDurationLimit time.Duration
 }
 
 func (h expressionCanBeEvaluated) String() string {
@@ -533,18 +533,18 @@ func (h expressionUsesExistingLabels) Validate(group unmarshaler.RuleGroup, rule
 
 func newExpressionSelectorsMatchesAnything(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
-		maximumMatchingSeries int `yaml:"maximumMatchingSeries"`
+		MaximumMatchingSeries int `yaml:"maximumMatchingSeries"`
 	}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &expressionSelectorsMatchesAnything{
-		maximumMatchingSeries: params.maximumMatchingSeries,
+		maximumMatchingSeries: params.MaximumMatchingSeries,
 	}, nil
 }
 
 type expressionSelectorsMatchesAnything struct {
-	maximumMatchingSeries int `yaml:"maximumMatchingSeries"`
+	maximumMatchingSeries int
 }
 
 func (h expressionSelectorsMatchesAnything) String() string {

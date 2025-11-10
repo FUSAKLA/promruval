@@ -67,7 +67,7 @@ func (h hasLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prome
 func newDoesNotHaveLabels(unmarshal func(interface{}) error) (Validator, error) {
 	params := struct {
 		Labels       []string `yaml:"labels"`
-		searchInExpr bool     `yaml:"searchInExpr"`
+		SearchInExpr bool     `yaml:"searchInExpr"`
 	}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func newDoesNotHaveLabels(unmarshal func(interface{}) error) (Validator, error) 
 	if len(params.Labels) == 0 {
 		return nil, fmt.Errorf("missing labels")
 	}
-	return &doesNotHaveLabels{labels: params.Labels, searchInExpr: params.searchInExpr}, nil
+	return &doesNotHaveLabels{labels: params.Labels, searchInExpr: params.SearchInExpr}, nil
 }
 
 type doesNotHaveLabels struct {
