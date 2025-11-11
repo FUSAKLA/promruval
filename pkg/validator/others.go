@@ -12,7 +12,6 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	"gopkg.in/yaml.v3"
 )
 
 type SourceTenantMetrics struct {
@@ -21,12 +20,12 @@ type SourceTenantMetrics struct {
 	Description    string                `yaml:"description"`
 }
 
-func newHasSourceTenantsForMetrics(paramsConfig yaml.Node) (Validator, error) {
+func newHasSourceTenantsForMetrics(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		SourceTenants map[string][]SourceTenantMetrics `yaml:"sourceTenants"`
 		DefaultTenant string                           `yaml:"defaultTenant"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.SourceTenants) == 0 {
@@ -101,7 +100,7 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 	return errs
 }
 
-func newDoesNotContainTypos(paramsConfig yaml.Node) (Validator, error) {
+func newDoesNotContainTypos(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		MaxLevenshteinDistance int      `yaml:"maxLevenshteinDistance"`
 		MaxDifferenceRatio     float64  `yaml:"maxDifferenceRatio"`
@@ -109,7 +108,7 @@ func newDoesNotContainTypos(paramsConfig yaml.Node) (Validator, error) {
 		WellKnownRuleLabels    []string `yaml:"wellKnownRuleLabels"`
 		WellKnownSeriesLabels  []string `yaml:"wellKnownSeriesLabels"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.MaxLevenshteinDistance > 0 && params.MaxDifferenceRatio > 0 {

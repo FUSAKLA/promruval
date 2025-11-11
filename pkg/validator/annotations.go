@@ -18,14 +18,13 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
 	"github.com/prometheus/prometheus/template"
-	"gopkg.in/yaml.v3"
 )
 
-func newHasAnnotations(paramsConfig yaml.Node) (Validator, error) {
+func newHasAnnotations(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotations []string `yaml:"annotations"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Annotations) == 0 {
@@ -52,11 +51,11 @@ func (h hasAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *
 	return errs
 }
 
-func newDoesNotHaveAnnotations(paramsConfig yaml.Node) (Validator, error) {
+func newDoesNotHaveAnnotations(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotations []string `yaml:"annotations"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Annotations) == 0 {
@@ -83,11 +82,11 @@ func (h doesNotHaveAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 	return errs
 }
 
-func newHasAnyOfAnnotations(paramsConfig yaml.Node) (Validator, error) {
+func newHasAnyOfAnnotations(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotations []string `yaml:"annotations"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if len(params.Annotations) == 0 {
@@ -113,13 +112,13 @@ func (h hasAnyOfAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule
 	return []error{fmt.Errorf("missing any of these annotations `%s`", strings.Join(h.annotations, "`,`"))}
 }
 
-func newAnnotationMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newAnnotationMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation string             `yaml:"annotation"`
 		Regexp     RegexpEmptyDefault `yaml:"regexp"`
 		Negative   bool               `yaml:"negative"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Annotation == "" {
@@ -149,13 +148,13 @@ func (h annotationMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 	return []error{}
 }
 
-func newAnnotationHasAllowedValue(paramsConfig yaml.Node) (Validator, error) {
+func newAnnotationHasAllowedValue(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation          string   `yaml:"annotation"`
 		AllowedValues       []string `yaml:"allowedValues"`
 		CommaSeparatedValue bool     `yaml:"commaSeparatedValue"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Annotation == "" {
@@ -200,13 +199,13 @@ func (h annotationHasAllowedValue) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	return []error{fmt.Errorf("annotation `%s` value `%s` is not one of the allowed values: `%s`", h.annotation, ruleValue, strings.Join(h.allowedValues, "`,`"))}
 }
 
-func newAnnotationIsValidURL(paramsConfig yaml.Node) (Validator, error) {
+func newAnnotationIsValidURL(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation string `yaml:"annotation"`
 		ResolveURL bool   `yaml:"resolveUrl"`
 		AsTemplate bool   `yaml:"asTemplate"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Annotation == "" {
@@ -260,11 +259,11 @@ func (h annotationIsValidURL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 	return []error{}
 }
 
-func newAnnotationIsValidPromQL(paramsConfig yaml.Node) (Validator, error) {
+func newAnnotationIsValidPromQL(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation string `yaml:"annotation"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Annotation == "" {
@@ -292,9 +291,9 @@ func (h annotationIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 	return []error{}
 }
 
-func newValidateAnnotationTemplates(paramsConfig yaml.Node) (Validator, error) {
+func newValidateAnnotationTemplates(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &validateAnnotationTemplates{}, nil

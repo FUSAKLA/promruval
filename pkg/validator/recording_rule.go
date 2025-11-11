@@ -7,15 +7,14 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	"gopkg.in/yaml.v3"
 )
 
-func newRecordedMetricNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newRecordedMetricNameMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Regexp   RegexpForbidEmpty `yaml:"regexp"`
 		Negative bool              `yaml:"negative"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &recordedMetricNameMatchesRegexp{
@@ -41,11 +40,11 @@ func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule 
 	return errs
 }
 
-func newRecordedMetricNameDoesNotMatchRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newRecordedMetricNameDoesNotMatchRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &recordedMetricNameMatchesRegexp{

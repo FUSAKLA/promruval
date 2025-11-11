@@ -10,14 +10,13 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	"gopkg.in/yaml.v3"
 )
 
-func newHasAllowedSourceTenants(paramsConfig yaml.Node) (Validator, error) {
+func newHasAllowedSourceTenants(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		AllowedSourceTenants []string `yaml:"allowedSourceTenants"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &hasAllowedSourceTenants{allowedSourceTenants: params.AllowedSourceTenants}, nil
@@ -44,13 +43,13 @@ func (h hasAllowedSourceTenants) Validate(group unmarshaler.RuleGroup, _ rulefmt
 	return []error{fmt.Errorf("group has invalid source_tenants: `%s`", strings.Join(invalidTenants, "`,`"))}
 }
 
-func newHasAllowedEvaluationInterval(paramsConfig yaml.Node) (Validator, error) {
+func newHasAllowedEvaluationInterval(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Minimum   model.Duration `yaml:"minimum"`
 		Maximum   model.Duration `yaml:"maximum"`
 		MustBeSet bool           `yaml:"intervalMustBeSet"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Maximum == 0 {
@@ -97,11 +96,11 @@ func (h hasAllowedEvaluationInterval) Validate(group unmarshaler.RuleGroup, _ ru
 	return []error{}
 }
 
-func newHasValidPartialResponseStrategy(paramsConfig yaml.Node) (Validator, error) {
+func newHasValidPartialResponseStrategy(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		MustBeSet bool `yaml:"mustBeSet"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &hasValidPartialResponseStrategy{mustBeSet: params.MustBeSet}, nil
@@ -134,11 +133,11 @@ func (h hasValidPartialResponseStrategy) Validate(group unmarshaler.RuleGroup, _
 	return []error{}
 }
 
-func newMaxRulesPerGroup(paramsConfig yaml.Node) (Validator, error) {
+func newMaxRulesPerGroup(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit int `yaml:"limit"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &maxRulesPerGroup{limit: params.Limit}, nil
@@ -159,11 +158,11 @@ func (h maxRulesPerGroup) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, 
 	return []error{}
 }
 
-func newHasAllowedLimit(paramsConfig yaml.Node) (Validator, error) {
+func newHasAllowedLimit(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit int `yaml:"limit"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &hasAllowedLimit{limit: params.Limit}, nil
@@ -187,12 +186,12 @@ func (h hasAllowedLimit) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _
 	return []error{}
 }
 
-func newHasAllowedQueryOffset(paramsConfig yaml.Node) (Validator, error) {
+func newHasAllowedQueryOffset(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Minimum model.Duration `yaml:"minimum"`
 		Maximum model.Duration `yaml:"maximum"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	if params.Minimum > params.Maximum {
@@ -226,12 +225,12 @@ func (h hasAllowedQueryOffset) Validate(group unmarshaler.RuleGroup, _ rulefmt.R
 	return []error{}
 }
 
-func newGroupNameMatchesRegexp(paramsConfig yaml.Node) (Validator, error) {
+func newGroupNameMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Regexp   RegexpEmptyDefault `yaml:"regexp"`
 		Negative bool               `yaml:"negative"`
 	}{}
-	if err := paramsConfig.Decode(&params); err != nil {
+	if err := unmarshal(&params); err != nil {
 		return nil, err
 	}
 	return &groupNameMatchesRegexp{

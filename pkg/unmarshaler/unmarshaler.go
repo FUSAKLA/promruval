@@ -70,11 +70,15 @@ func (r *RulesFileWithComment) DisabledValidators(commentPrefix string) []string
 
 type GroupsWithComment struct {
 	node   yaml.Node
-	Groups []RuleGroupWithComment `yaml:"groups"`
+	Groups []RuleGroupWithComment `yaml:"-"` // never unmarshaled via the struct
 }
 
 func (g *GroupsWithComment) UnmarshalYAML(value *yaml.Node) error {
-	return unmarshalToNodeAndStruct(value, &g.node, &g.Groups, mustListStructYamlFieldNames(g, []string{}))
+	err := value.Decode(&g.node)
+	if err != nil {
+		return err
+	}
+	return value.Decode(&g.Groups)
 }
 
 func (g *GroupsWithComment) DisabledValidators(commentPrefix string) []string {
@@ -161,4 +165,8 @@ func (r *RuleWithComment) DisabledValidators(commentPrefix string) []string {
 	ruleComments := getYamlNodeComments(r.node, commentPrefix)
 	exprComments := getExpressionComments(r.rule.Expr, commentPrefix)
 	return disabledValidatorsFromComments(slices.Concat(ruleComments, exprComments), commentPrefix)
+}
+
+func UnmarshalNodeToStruct(value *yaml.Node, s interface{}) error {
+	return unmarshalToNodeAndStruct(value, nil, s, mustListStructYamlFieldNames(s, nil))
 }

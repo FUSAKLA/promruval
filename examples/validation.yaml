@@ -26,6 +26,7 @@ validationRules:
           evaluationDurationLimit: 10s
       - type: expressionUsesExistingLabels
       - type: expressionSelectorsMatchesAnything
+        params:
       - type: expressionDoesNotUseIrate
         additionalDetails: "Just do as I say!"
       - type: expressionDoesNotUseOlderDataThan
