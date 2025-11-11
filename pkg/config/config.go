@@ -32,10 +32,6 @@ var (
 	configDirMtx sync.Mutex
 )
 
-func init() {
-	configDirMtx = sync.Mutex{}
-}
-
 func BaseDirPath() string {
 	configDirMtx.Lock()
 	defer configDirMtx.Unlock()

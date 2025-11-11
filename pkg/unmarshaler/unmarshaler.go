@@ -42,11 +42,11 @@ type RulesFile struct {
 }
 
 func (r *RulesFile) knownFields() []string {
-	ignoredFileds := []string{}
+	var ignoredFields []string
 	if !supportLoki {
-		ignoredFileds = append(ignoredFileds, "namespace")
+		ignoredFields = append(ignoredFields, "namespace")
 	}
-	return mustListStructYamlFieldNames(r, ignoredFileds)
+	return mustListStructYamlFieldNames(r, ignoredFields)
 }
 
 type RulesFileWithComment struct {
@@ -101,17 +101,17 @@ type RuleGroup struct {
 }
 
 func (r *RuleGroup) knownFields() []string {
-	ignoredFileds := []string{}
+	var ignoredFields []string
 	if !supportLoki {
-		ignoredFileds = append(ignoredFileds, "remote_write")
+		ignoredFields = append(ignoredFields, "remote_write")
 	}
 	if !supportThanos {
-		ignoredFileds = append(ignoredFileds, "partial_response_strategy")
+		ignoredFields = append(ignoredFields, "partial_response_strategy")
 	}
 	if !supportMimir {
-		ignoredFileds = append(ignoredFileds, "source_tenants")
+		ignoredFields = append(ignoredFields, "source_tenants")
 	}
-	return mustListStructYamlFieldNames(r, ignoredFileds)
+	return mustListStructYamlFieldNames(r, ignoredFields)
 }
 
 type RuleGroupWithComment struct {
