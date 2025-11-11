@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.0] - 2025-11-11
+ - :warning: Changed: `params` field of all validators from now on **does not allow unknown fields**, to avoid typos and mistakes.
+ - Added: New param `negative` to all validators that does regexp matching named `*MatchesRegexp` to invert the matching logic.
+   For example with `negative: true` the `alertNameMatchesRegexp` validator will check that the alert name does NOT match the regexp.
+ - Fix: Some params were not loaded correctly from the config file in some validators, this is now fixed.
+ - Changed: Bump go version to 1.25.4
+
 ## [3.9.0] - 2025-09-29
 - Fixed: JSON and Yaml output format of the `promruval validate` command.
 - Changed: Bump go version to 1.24.1
