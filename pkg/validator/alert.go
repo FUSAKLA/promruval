@@ -16,7 +16,7 @@ import (
 	"github.com/prometheus/prometheus/template"
 )
 
-func newForIsNotLongerThan(unmarshal func(interface{}) error) (Validator, error) {
+func newForIsNotLongerThan(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
@@ -44,7 +44,7 @@ func (h forIsNotLongerThan) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule,
 	return nil
 }
 
-func newKeepFiringForIsNotLongerThan(unmarshal func(interface{}) error) (Validator, error) {
+func newKeepFiringForIsNotLongerThan(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
@@ -69,7 +69,7 @@ func (h keepFiringForIsNotLongerThan) Validate(_ unmarshaler.RuleGroup, rule rul
 	return nil
 }
 
-func newValidateLabelTemplates(unmarshal func(interface{}) error) (Validator, error) {
+func newValidateLabelTemplates(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (h validateLabelTemplates) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 	return errs
 }
 
-func newAlertNameMatchesRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newAlertNameMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}

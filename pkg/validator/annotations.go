@@ -20,7 +20,7 @@ import (
 	"github.com/prometheus/prometheus/template"
 )
 
-func newHasAnnotations(unmarshal func(interface{}) error) (Validator, error) {
+func newHasAnnotations(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotations []string `yaml:"annotations"`
 	}{}
@@ -51,7 +51,7 @@ func (h hasAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *
 	return errs
 }
 
-func newDoesNotHaveAnnotations(unmarshal func(interface{}) error) (Validator, error) {
+func newDoesNotHaveAnnotations(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotations []string `yaml:"annotations"`
 	}{}
@@ -82,7 +82,7 @@ func (h doesNotHaveAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 	return errs
 }
 
-func newHasAnyOfAnnotations(unmarshal func(interface{}) error) (Validator, error) {
+func newHasAnyOfAnnotations(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotations []string `yaml:"annotations"`
 	}{}
@@ -112,7 +112,7 @@ func (h hasAnyOfAnnotations) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule
 	return []error{fmt.Errorf("missing any of these annotations `%s`", strings.Join(h.annotations, "`,`"))}
 }
 
-func newAnnotationMatchesRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newAnnotationMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation string             `yaml:"annotation"`
 		Regexp     RegexpEmptyDefault `yaml:"regexp"`
@@ -146,7 +146,7 @@ func (h annotationMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 	return []error{}
 }
 
-func newAnnotationHasAllowedValue(unmarshal func(interface{}) error) (Validator, error) {
+func newAnnotationHasAllowedValue(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation          string   `yaml:"annotation"`
 		AllowedValues       []string `yaml:"allowedValues"`
@@ -197,7 +197,7 @@ func (h annotationHasAllowedValue) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	return []error{fmt.Errorf("annotation `%s` value `%s` is not one of the allowed values: `%s`", h.annotation, ruleValue, strings.Join(h.allowedValues, "`,`"))}
 }
 
-func newAnnotationIsValidURL(unmarshal func(interface{}) error) (Validator, error) {
+func newAnnotationIsValidURL(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation string `yaml:"annotation"`
 		ResolveURL bool   `yaml:"resolveUrl"`
@@ -257,7 +257,7 @@ func (h annotationIsValidURL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 	return []error{}
 }
 
-func newAnnotationIsValidPromQL(unmarshal func(interface{}) error) (Validator, error) {
+func newAnnotationIsValidPromQL(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Annotation string `yaml:"annotation"`
 	}{}
@@ -289,7 +289,7 @@ func (h annotationIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 	return []error{}
 }
 
-func newValidateAnnotationTemplates(unmarshal func(interface{}) error) (Validator, error) {
+func newValidateAnnotationTemplates(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err

@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func newExpressionIsValidPromQL(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionIsValidPromQL(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (h expressionIsValidPromQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.
 	return []error{}
 }
 
-func newExpressionDoesNotUseOlderDataThan(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseOlderDataThan(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
@@ -89,7 +89,7 @@ func (h expressionDoesNotUseOlderDataThan) Validate(_ unmarshaler.RuleGroup, rul
 	return errs
 }
 
-func newExpressionDoesNotUseLabels(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseLabels(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Labels []string `yaml:"labels"`
 	}{}
@@ -131,7 +131,7 @@ type expressionUsesOnlyAllowedLabelsForMetricRegexp struct {
 	metricNameRegexp *regexp.Regexp
 }
 
-func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		AllowedLabels    []string              `yaml:"allowedLabels"`
 		MetricNameRegexp RegexpWildcardDefault `yaml:"metricNameRegexp"`
@@ -175,7 +175,7 @@ type expressionUsesOnlyAllowedLabelValuesForMetricRegexp struct {
 	metricNameRegexp   *regexp.Regexp
 }
 
-func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionUsesOnlyAllowedLabelValuesForMetricRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		AllowedLabelValues map[string][]string   `yaml:"allowedLabelValues"`
 		MetricNameRegexp   RegexpWildcardDefault `yaml:"metricNameRegexp"`
@@ -234,7 +234,7 @@ type expressionDoesNotUseLabelsForMetricRegexp struct {
 	metricNameRegexp *regexp.Regexp
 }
 
-func newExpressionDoesNotUseLabelsForMetricRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseLabelsForMetricRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Labels           []string              `yaml:"labels"`
 		MetricNameRegexp RegexpWildcardDefault `yaml:"metricNameRegexp"`
@@ -270,7 +270,7 @@ func (h expressionDoesNotUseLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGr
 	return errs
 }
 
-func newExpressionDoesNotUseRangeShorterThan(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseRangeShorterThan(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit model.Duration `yaml:"limit"`
 	}{}
@@ -313,7 +313,7 @@ func (h expressionDoesNotUseRangeShorterThan) Validate(_ unmarshaler.RuleGroup, 
 	return errs
 }
 
-func newExpressionDoesNotUseIrate(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseIrate(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -344,7 +344,7 @@ func (h expressionDoesNotUseIrate) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	return errs
 }
 
-func newValidFunctionsOnCounters(unmarshal func(interface{}) error) (Validator, error) {
+func newValidFunctionsOnCounters(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		AllowHistograms bool `yaml:"allowHistograms"`
 	}{}
@@ -399,7 +399,7 @@ func (h validFunctionsOnCounters) Validate(_ unmarshaler.RuleGroup, rule rulefmt
 	return errs
 }
 
-func newRateBeforeAggregation(unmarshal func(interface{}) error) (Validator, error) {
+func newRateBeforeAggregation(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -439,7 +439,7 @@ func (h rateBeforeAggregation) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Ru
 	return errs
 }
 
-func newExpressionCanBeEvaluated(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionCanBeEvaluated(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		TimeSeriesLimit         int           `yaml:"timeSeriesLimit"`
 		EvaluationDurationLimit time.Duration `yaml:"evaluationDurationLimit"`
@@ -488,7 +488,7 @@ func (h expressionCanBeEvaluated) Validate(group unmarshaler.RuleGroup, rule rul
 	return errs
 }
 
-func newExpressionUsesExistingLabels(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionUsesExistingLabels(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -531,7 +531,7 @@ func (h expressionUsesExistingLabels) Validate(group unmarshaler.RuleGroup, rule
 	return errs
 }
 
-func newExpressionSelectorsMatchesAnything(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionSelectorsMatchesAnything(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		MaximumMatchingSeries int `yaml:"maximumMatchingSeries"`
 	}{}
@@ -577,7 +577,7 @@ func (h expressionSelectorsMatchesAnything) Validate(group unmarshaler.RuleGroup
 	return errs
 }
 
-func newExpressionWithNoMetricName(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionWithNoMetricName(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -605,7 +605,7 @@ func (e expressionWithNoMetricName) Validate(_ unmarshaler.RuleGroup, rule rulef
 	return errs
 }
 
-func newExpressionDoesNotUseMetrics(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseMetrics(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		MetricNameRegexps []RegexpEmptyDefault `yaml:"metricNameRegexps"`
 	}{}
@@ -653,7 +653,7 @@ func (h expressionDoesNotUseMetrics) Validate(_ unmarshaler.RuleGroup, rule rule
 	return errs
 }
 
-func newExpressionIsWellFormatted(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionIsWellFormatted(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		SkipExpressionsWithComments bool `yaml:"skipExpressionsWithComments"`
 		ShowFormatted               bool `yaml:"showExpectedForm"`
@@ -695,7 +695,7 @@ func (h expressionIsWellFormatted) Validate(_ unmarshaler.RuleGroup, rule rulefm
 	return []error{errors.New(errorText)}
 }
 
-func newExpressionDoesNotUseExperimentalFunctions(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseExperimentalFunctions(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -729,7 +729,7 @@ func (h expressionDoesNotUseExperimentalFunctions) Validate(_ unmarshaler.RuleGr
 	return []error{}
 }
 
-func newExpressionUsesUnderscoresInLargeNumbers(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionUsesUnderscoresInLargeNumbers(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -767,7 +767,7 @@ func (h expressionUsesUnderscoresInLargeNumbers) Validate(_ unmarshaler.RuleGrou
 	return []error{}
 }
 
-func newExpressionDoesNotUseClassicHistogramBucketOperations(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionDoesNotUseClassicHistogramBucketOperations(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err

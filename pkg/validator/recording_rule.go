@@ -9,7 +9,7 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
-func newRecordedMetricNameMatchesRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newRecordedMetricNameMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}
@@ -37,7 +37,7 @@ func (h recordedMetricNameMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule 
 	return errs
 }
 
-func newRecordedMetricNameDoesNotMatchRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newRecordedMetricNameDoesNotMatchRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Regexp RegexpForbidEmpty `yaml:"regexp"`
 	}{}

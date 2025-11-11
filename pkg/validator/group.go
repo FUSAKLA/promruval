@@ -12,7 +12,7 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
-func newHasAllowedSourceTenants(unmarshal func(interface{}) error) (Validator, error) {
+func newHasAllowedSourceTenants(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		AllowedSourceTenants []string `yaml:"allowedSourceTenants"`
 	}{}
@@ -43,7 +43,7 @@ func (h hasAllowedSourceTenants) Validate(group unmarshaler.RuleGroup, _ rulefmt
 	return []error{fmt.Errorf("group has invalid source_tenants: `%s`", strings.Join(invalidTenants, "`,`"))}
 }
 
-func newHasAllowedEvaluationInterval(unmarshal func(interface{}) error) (Validator, error) {
+func newHasAllowedEvaluationInterval(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Minimum   model.Duration `yaml:"minimum"`
 		Maximum   model.Duration `yaml:"maximum"`
@@ -96,7 +96,7 @@ func (h hasAllowedEvaluationInterval) Validate(group unmarshaler.RuleGroup, _ ru
 	return []error{}
 }
 
-func newHasValidPartialResponseStrategy(unmarshal func(interface{}) error) (Validator, error) {
+func newHasValidPartialResponseStrategy(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		MustBeSet bool `yaml:"mustBeSet"`
 	}{}
@@ -133,7 +133,7 @@ func (h hasValidPartialResponseStrategy) Validate(group unmarshaler.RuleGroup, _
 	return []error{}
 }
 
-func newMaxRulesPerGroup(unmarshal func(interface{}) error) (Validator, error) {
+func newMaxRulesPerGroup(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit int `yaml:"limit"`
 	}{}
@@ -158,7 +158,7 @@ func (h maxRulesPerGroup) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, 
 	return []error{}
 }
 
-func newHasAllowedLimit(unmarshal func(interface{}) error) (Validator, error) {
+func newHasAllowedLimit(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Limit int `yaml:"limit"`
 	}{}
@@ -186,7 +186,7 @@ func (h hasAllowedLimit) Validate(group unmarshaler.RuleGroup, _ rulefmt.Rule, _
 	return []error{}
 }
 
-func newHasAllowedQueryOffset(unmarshal func(interface{}) error) (Validator, error) {
+func newHasAllowedQueryOffset(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Minimum model.Duration `yaml:"minimum"`
 		Maximum model.Duration `yaml:"maximum"`
@@ -225,7 +225,7 @@ func (h hasAllowedQueryOffset) Validate(group unmarshaler.RuleGroup, _ rulefmt.R
 	return []error{}
 }
 
-func newGroupNameMatchesRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newGroupNameMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Regexp RegexpEmptyDefault `yaml:"regexp"`
 	}{}

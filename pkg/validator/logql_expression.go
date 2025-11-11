@@ -9,7 +9,7 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
-func newExpressionIsValidLogQL(unmarshal func(interface{}) error) (Validator, error) {
+func newExpressionIsValidLogQL(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (h expressionIsValidLogQL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.R
 	return []error{}
 }
 
-func newLogQLExpressionUsesRangeAggregation(unmarshal func(interface{}) error) (Validator, error) {
+func newLogQLExpressionUsesRangeAggregation(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (h logQLExpressionUsesRangeAggregation) Validate(_ unmarshaler.RuleGroup, r
 	return []error{fmt.Errorf("expression %s does not use any of the range aggregation which is required in rules, see https://grafana.com/docs/loki/latest/query/metric_queries/#log-range-aggregations", rule.Expr)}
 }
 
-func newlogQlExpressionUsesFiltersFirst(unmarshal func(interface{}) error) (Validator, error) {
+func newlogQlExpressionUsesFiltersFirst(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err

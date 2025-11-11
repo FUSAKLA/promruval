@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
-func newHasLabels(unmarshal func(interface{}) error) (Validator, error) {
+func newHasLabels(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Labels       []string `yaml:"labels"`
 		SearchInExpr bool     `yaml:"searchInExpr"`
@@ -64,7 +64,7 @@ func (h hasLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prome
 	return errs
 }
 
-func newDoesNotHaveLabels(unmarshal func(interface{}) error) (Validator, error) {
+func newDoesNotHaveLabels(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Labels       []string `yaml:"labels"`
 		SearchInExpr bool     `yaml:"searchInExpr"`
@@ -110,7 +110,7 @@ func (h doesNotHaveLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, 
 	return errs
 }
 
-func newHasAnyOfLabels(unmarshal func(interface{}) error) (Validator, error) {
+func newHasAnyOfLabels(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Labels []string `yaml:"labels"`
 	}{}
@@ -140,7 +140,7 @@ func (h hasAnyOfLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *
 	return []error{fmt.Errorf("missing any of these labels `%s`", strings.Join(h.labels, "`,`"))}
 }
 
-func newLabelHasAllowedValue(unmarshal func(interface{}) error) (Validator, error) {
+func newLabelHasAllowedValue(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Label                 string   `yaml:"label"`
 		AllowedValues         []string `yaml:"allowedValues"`
@@ -200,7 +200,7 @@ func (h labelHasAllowedValue) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 	return []error{fmt.Errorf("label `%s` value `%s` is not one of the allowed values: `%s`", h.label, ruleValue, strings.Join(h.allowedValues, "`,`"))}
 }
 
-func newLabelMatchesRegexp(unmarshal func(interface{}) error) (Validator, error) {
+func newLabelMatchesRegexp(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Label  string             `yaml:"label"`
 		Regexp RegexpEmptyDefault `yaml:"regexp"`
@@ -234,7 +234,7 @@ func (h labelMatchesRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule,
 	return []error{}
 }
 
-func newNonEmptyLabels(unmarshal func(interface{}) error) (Validator, error) {
+func newNonEmptyLabels(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct{}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -258,7 +258,7 @@ func (h nonEmptyLabels) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *
 	return errs
 }
 
-func newExclusiveLabels(unmarshal func(interface{}) error) (Validator, error) {
+func newExclusiveLabels(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		Label1      string `yaml:"firstLabel"`
 		Label1Value string `yaml:"firstLabelValue"`

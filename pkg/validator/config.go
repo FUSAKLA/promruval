@@ -10,7 +10,9 @@ import (
 	"github.com/prometheus/prometheus/model/rulefmt"
 )
 
-type validatorCreator func(unmarshal func(interface{}) error) (Validator, error)
+type unmarshalParamsFunc func(interface{}) error
+
+type validatorCreator func(unmarshal unmarshalParamsFunc) (Validator, error)
 
 var registeredUniversalRuleValidators = map[string]validatorCreator{
 	// Labels

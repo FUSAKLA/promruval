@@ -20,7 +20,7 @@ type SourceTenantMetrics struct {
 	Description    string                `yaml:"description"`
 }
 
-func newHasSourceTenantsForMetrics(unmarshal func(interface{}) error) (Validator, error) {
+func newHasSourceTenantsForMetrics(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		SourceTenants map[string][]SourceTenantMetrics `yaml:"sourceTenants"`
 		DefaultTenant string                           `yaml:"defaultTenant"`
@@ -100,7 +100,7 @@ func (h hasSourceTenantsForMetrics) Validate(group unmarshaler.RuleGroup, rule r
 	return errs
 }
 
-func newDoesNotContainTypos(unmarshal func(interface{}) error) (Validator, error) {
+func newDoesNotContainTypos(unmarshal unmarshalParamsFunc) (Validator, error) {
 	params := struct {
 		MaxLevenshteinDistance int      `yaml:"maxLevenshteinDistance"`
 		MaxDifferenceRatio     float64  `yaml:"maxDifferenceRatio"`
