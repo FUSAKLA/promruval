@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Changed: Validations are now executed in parallel to speed up the validation process.
-- Changed: Sort the output reports for predictable output.
+- Changed: Sort the reports fiels, groups, rules by names for a predictable output.
 
 ## [3.10.0] - 2025-11-11
  - :warning: Changed: `params` field of all validators from now on **does not allow unknown fields**, to avoid typos and mistakes.
