@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -92,6 +94,23 @@ func (r *ValidationReport) NewFileReport(name string) *FileReport {
 	r.FilesReports = append(r.FilesReports, &newReport)
 	r.mu.Unlock()
 	return &newReport
+}
+
+// Sort sorts all reports (files, groups, rules) for predictable output.
+func (r *ValidationReport) Sort() {
+	slices.SortFunc(r.FilesReports, func(a, b *FileReport) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+	for _, fileReport := range r.FilesReports {
+		slices.SortFunc(fileReport.GroupReports, func(a, b *GroupReport) int {
+			return strings.Compare(a.Name, b.Name)
+		})
+		for _, groupReport := range fileReport.GroupReports {
+			slices.SortFunc(groupReport.RuleReports, func(a, b *RuleReport) int {
+				return strings.Compare(a.Name, b.Name)
+			})
+		}
+	}
 }
 
 type FileReport struct {
@@ -204,6 +223,8 @@ func (r *RuleReport) AsText(output *IndentedOutput) {
 }
 
 func (r *ValidationReport) AsText(indentationStep int, color bool) (string, error) {
+	r.Sort()
+
 	output := NewIndentedOutput(indentationStep, color)
 	validationText, err := ValidationDocs(r.ValidationRules, "text")
 	if err != nil {
@@ -240,6 +261,8 @@ func renderStatistic(objectType string, total, excluded int) string {
 }
 
 func (r *ValidationReport) AsJSON() (string, error) {
+	r.Sort()
+
 	b, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
 		return "", err
@@ -249,6 +272,8 @@ func (r *ValidationReport) AsJSON() (string, error) {
 }
 
 func (r *ValidationReport) AsYaml() (string, error) {
+	r.Sort()
+
 	b, err := yaml.Marshal(r)
 	if err != nil {
 		return "", err
