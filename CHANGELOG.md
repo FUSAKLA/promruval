@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.0] - 2026-02-04
 - Changed: Validations are now executed in parallel to speed up the validation process.
 - Changed: Sort the reports fiels, groups, rules by names for a predictable output.
 
