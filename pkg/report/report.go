@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
@@ -76,6 +77,8 @@ type ValidationReport struct {
 	ValidationRules []ValidationRule `json:"validation_rules" yaml:"validation_rules"`
 
 	FilesReports []*FileReport `json:"files_reports" yaml:"files_reports"`
+
+	mu sync.Mutex `json:"-" yaml:"-"`
 }
 
 func (r *ValidationReport) NewFileReport(name string) *FileReport {
@@ -85,7 +88,9 @@ func (r *ValidationReport) NewFileReport(name string) *FileReport {
 		Errors:       []*Error{},
 		GroupReports: []*GroupReport{},
 	}
+	r.mu.Lock()
 	r.FilesReports = append(r.FilesReports, &newReport)
+	r.mu.Unlock()
 	return &newReport
 }
 
@@ -96,6 +101,8 @@ type FileReport struct {
 	Errors                  []*Error       `json:"errors" yaml:"errors"`
 	HasRuleValidationErrors bool           `json:"has_rule_validation_errors" yaml:"has_rule_validation_errors"`
 	GroupReports            []*GroupReport `json:"group_reports" yaml:"group_reports"`
+
+	mu sync.Mutex `json:"-" yaml:"-"`
 }
 
 func (r *FileReport) NewGroupReport(name string) *GroupReport {
@@ -105,7 +112,9 @@ func (r *FileReport) NewGroupReport(name string) *GroupReport {
 		RuleReports: []*RuleReport{},
 		Errors:      []*Error{},
 	}
+	r.mu.Lock()
 	r.GroupReports = append(r.GroupReports, &newReport)
+	r.mu.Unlock()
 	return &newReport
 }
 
@@ -129,6 +138,8 @@ type GroupReport struct {
 	Excluded    bool          `json:"excluded" yaml:"excluded"`
 	RuleReports []*RuleReport `json:"rule_reports" yaml:"rule_reports"`
 	Errors      []*Error      `json:"errors" yaml:"errors"`
+
+	mu sync.Mutex `json:"-" yaml:"-"`
 }
 
 func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope) *RuleReport {
@@ -138,7 +149,9 @@ func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope
 		RuleType: ruleType,
 		Errors:   []*Error{},
 	}
+	r.mu.Lock()
 	r.RuleReports = append(r.RuleReports, &newReport)
+	r.mu.Unlock()
 	return &newReport
 }
 
