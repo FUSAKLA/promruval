@@ -391,7 +391,7 @@ Fails if the expression does any binary operation between bucket metrics of a cl
 
 ### PromQL expression validators (using live Prometheus instance)
 
-All these validations require the ` prometheus` sectiong in the config to be set.
+All these validations require the `prometheus` sectiong in the config to be set.
 
 #### `expressionCanBeEvaluated`
 
