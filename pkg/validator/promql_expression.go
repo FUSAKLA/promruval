@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -149,11 +150,7 @@ func newExpressionUsesOnlyAllowedLabelsForMetricRegexp(unmarshal unmarshalParams
 }
 
 func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) String() string {
-	allowedLabelsSlice := []string{}
-	for l := range h.allowedLabels {
-		allowedLabelsSlice = append(allowedLabelsSlice, l)
-	}
-	return fmt.Sprintf("expression only uses allowed labels `%s` for metrics matching regexp %s", strings.Join(allowedLabelsSlice, "`,`"), h.metricNameRegexp)
+	return fmt.Sprintf("expression only uses allowed labels `%s` for metrics matching regexp %s", strings.Join(slices.Sorted(maps.Keys(h.allowedLabels)), "`,`"), h.metricNameRegexp)
 }
 
 func (h expressionUsesOnlyAllowedLabelsForMetricRegexp) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rule, _ *prometheus.Client) []error {

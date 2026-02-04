@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
@@ -38,153 +39,208 @@ func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshale
 	return errs
 }
 
+func validateFile(fileName string, fileIndex, fileCount int, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, jsonnetVM *jsonnet.VM, validationReport *report.ValidationReport) (groupsCount, rulesCount int, err error) {
+	log.WithFields(log.Fields{
+		"file":     fileName,
+		"progress": fmt.Sprintf("%d/%d", fileIndex+1, fileCount),
+	}).Info("processing file")
+
+	fileReport := validationReport.NewFileReport(fileName)
+	var yamlReader io.Reader
+	groupsCount = 0
+	rulesCount = 0
+
+	switch {
+	case strings.HasSuffix(fileName, ".jsonnet"):
+		log.Debugf("evaluating jsonnet file %s", fileName)
+		jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
+		if err != nil {
+			fileReport.Valid = false
+			fileReport.Errors = []*report.Error{report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err)}
+			return groupsCount, rulesCount, err
+		}
+		yamlReader = strings.NewReader(jsonnetOutput)
+	default:
+		var err error
+		yamlReader, err = os.Open(fileName)
+		if err != nil {
+			fileReport.Valid = false
+			fileReport.Errors = []*report.Error{report.NewErrorf("cannot read file %s: %w", fileName, err)}
+			return groupsCount, rulesCount, err
+		}
+	}
+	var rf unmarshaler.RulesFileWithComment
+	decoder := yaml.NewDecoder(yamlReader)
+	decoder.KnownFields(true)
+	err = decoder.Decode(&rf)
+	if err != nil {
+		if errors.Is(err, io.EOF) {
+			return groupsCount, rulesCount, nil
+		}
+		fileReport.Valid = false
+		fileReport.Errors = []*report.Error{report.NewErrorf("invalid file %s: %w", fileName, err)}
+		return groupsCount, rulesCount, err
+	}
+	fileDisabledValidators := rf.DisabledValidators(disableValidationsComment)
+	allGroupsDisabledValidators := rf.Groups.DisabledValidators(disableValidationsComment)
+	for _, group := range rf.Groups.Groups {
+		groupsCount++
+		groupReport := fileReport.NewGroupReport(group.Name)
+		groupDisabledValidators := group.DisabledValidators(disableValidationsComment)
+		if err := validator.KnownValidators(config.AllScope, groupDisabledValidators); err != nil {
+			groupReport.Errors = append(groupReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
+		}
+		groupDisabledValidators = slices.Concat(groupDisabledValidators, fileDisabledValidators, allGroupsDisabledValidators)
+
+		var groupErrorsMutex sync.Mutex
+		var groupWg sync.WaitGroup
+	groupValidationLoop:
+		for _, rule := range validationRules {
+			if rule.Scope() != config.GroupScope {
+				continue
+			}
+			for _, v := range rule.OnlyIf() {
+				if validator.Scope(v.Name()) != config.GroupScope {
+					continue
+				}
+				if errs := validateWithDetails(v, group.RuleGroup, rulefmt.Rule{}, prometheusClient); len(errs) > 0 {
+					log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+					continue groupValidationLoop
+				}
+			}
+			for _, v := range rule.Validators() {
+				if slices.Contains(groupDisabledValidators, v.Name()) {
+					continue
+				}
+				groupWg.Add(1)
+				go func(validator validationrule.ValidatorWithDetails) {
+					defer groupWg.Done()
+					errs := validateWithDetails(validator, group.RuleGroup, rulefmt.Rule{}, prometheusClient)
+					if len(errs) > 0 {
+						groupErrorsMutex.Lock()
+						groupReport.Errors = append(groupReport.Errors, errs...)
+						groupErrorsMutex.Unlock()
+					}
+				}(v)
+			}
+		}
+		groupWg.Wait()
+		if len(groupReport.Errors) > 0 {
+			fileReport.Valid = false
+			groupReport.Valid = false
+		}
+		for _, ruleNode := range group.Rules {
+			rulesCount++
+			originalRule := ruleNode.OriginalRule()
+			var ruleReport *report.RuleReport
+			switch ruleNode.Scope() {
+			case config.AlertScope:
+				ruleReport = groupReport.NewRuleReport(originalRule.Alert, config.AlertScope)
+			case config.RecordingRuleScope:
+				ruleReport = groupReport.NewRuleReport(originalRule.Record, config.RecordingRuleScope)
+			}
+			var excludedRules []string
+			excludedRulesText, ok := originalRule.Annotations[excludeAnnotationName]
+			if ok {
+				excludedRules = generateExcludedRules(excludedRulesText)
+			}
+			disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
+			if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
+				ruleReport.Errors = append(ruleReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
+			}
+			disabledValidators = append(disabledValidators, groupDisabledValidators...)
+
+			var ruleErrorsMutex sync.Mutex
+			var ruleWg sync.WaitGroup
+		ruleValidationLoop:
+			for _, rule := range validationRules {
+				if rule.Scope() == config.GroupScope {
+					continue
+				}
+				if (rule.Scope() != ruleReport.RuleType) && (rule.Scope() != config.AllRulesScope) {
+					continue
+				}
+				for _, excludedRuleName := range excludedRules {
+					if excludedRuleName == rule.Name() {
+						continue ruleValidationLoop
+					}
+				}
+				for _, v := range rule.OnlyIf() {
+					if validator.MatchesScope(originalRule, ruleNode.Scope()) {
+						if errs := validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient); len(errs) > 0 {
+							log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+							continue ruleValidationLoop
+						}
+					} else {
+						log.Debugf("skipping onlyIf validation of file %s group %s because it is not applicable: validator scrope: `%s`, rule scope: `%s`", fileName, group.Name, validator.Scope(v.Name()), ruleNode.Scope())
+					}
+				}
+				for _, v := range rule.Validators() {
+					validatorName := v.Name()
+					if slices.Contains(disabledValidators, validatorName) {
+						continue
+					}
+					ruleWg.Add(1)
+					go func(validator validationrule.ValidatorWithDetails, grp unmarshaler.RuleGroup, rule rulefmt.Rule, vName string) {
+						defer ruleWg.Done()
+						validationStart := time.Now()
+						errs := validateWithDetails(validator, grp, rule, prometheusClient)
+						if len(errs) > 0 {
+							ruleErrorsMutex.Lock()
+							ruleReport.Errors = append(ruleReport.Errors, errs...)
+							ruleErrorsMutex.Unlock()
+						}
+						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, vName, time.Since(validationStart))
+					}(v, group.RuleGroup, originalRule, validatorName)
+				}
+			}
+			ruleWg.Wait()
+			if len(ruleReport.Errors) > 0 {
+				fileReport.Valid = false
+				groupReport.Valid = false
+				ruleReport.Valid = false
+			}
+		}
+	}
+	return groupsCount, rulesCount, nil
+}
+
 func Files(fileNames []string, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client) *report.ValidationReport {
 	validationReport := report.NewValidationReport()
 	for _, r := range validationRules {
 		validationReport.ValidationRules = append(validationReport.ValidationRules, r)
 	}
-	jsonnetVM := jsonnet.MakeVM()
+
 	start := time.Now()
 	fileCount := len(fileNames)
+
+	var reportMutex sync.Mutex
+	var filesWg sync.WaitGroup
+
+	// Create a jsonnet VM for each goroutine to avoid race conditions
 	for i, fileName := range fileNames {
-		log.WithFields(log.Fields{
-			"file":     fileName,
-			"progress": fmt.Sprintf("%d/%d", i+1, fileCount),
-		}).Info("processing file")
-		validationReport.FilesCount++
-		fileReport := validationReport.NewFileReport(fileName)
-		var yamlReader io.Reader
-		switch {
-		case strings.HasSuffix(fileName, ".jsonnet"):
-			log.Debugf("evaluating jsonnet file %s", fileName)
-			jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
+		filesWg.Add(1)
+		go func(fileName string, fileIndex int) {
+			defer filesWg.Done()
+
+			jsonnetVM := jsonnet.MakeVM()
+			groupsCount, rulesCount, err := validateFile(fileName, fileIndex, fileCount, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport)
 			if err != nil {
+				log.WithError(err).Errorf("error validating file %s", fileName)
+			}
+
+			reportMutex.Lock()
+			validationReport.FilesCount++
+			validationReport.GroupsCount += groupsCount
+			validationReport.RulesCount += rulesCount
+			if len(validationReport.FilesReports) > 0 && !validationReport.FilesReports[len(validationReport.FilesReports)-1].Valid {
 				validationReport.Failed = true
-				fileReport.Valid = false
-				fileReport.Errors = []*report.Error{report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err)}
-				continue
 			}
-			yamlReader = strings.NewReader(jsonnetOutput)
-		default:
-			var err error
-			yamlReader, err = os.Open(fileName)
-			if err != nil {
-				validationReport.Failed = true
-				fileReport.Valid = false
-				fileReport.Errors = []*report.Error{report.NewErrorf("cannot read file %s: %w", fileName, err)}
-				continue
-			}
-		}
-		var rf unmarshaler.RulesFileWithComment
-		decoder := yaml.NewDecoder(yamlReader)
-		decoder.KnownFields(true)
-		err := decoder.Decode(&rf)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				continue
-			}
-			validationReport.Failed = true
-			fileReport.Valid = false
-			fileReport.Errors = []*report.Error{report.NewErrorf("invalid file %s: %w", fileName, err)}
-			continue
-		}
-		fileDisabledValidators := rf.DisabledValidators(disableValidationsComment)
-		allGroupsDisabledValidators := rf.Groups.DisabledValidators(disableValidationsComment)
-		for _, group := range rf.Groups.Groups {
-			validationReport.GroupsCount++
-			groupReport := fileReport.NewGroupReport(group.Name)
-			groupDisabledValidators := group.DisabledValidators(disableValidationsComment)
-			if err := validator.KnownValidators(config.AllScope, groupDisabledValidators); err != nil {
-				groupReport.Errors = append(groupReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
-			}
-			groupDisabledValidators = slices.Concat(groupDisabledValidators, fileDisabledValidators, allGroupsDisabledValidators)
-		groupValidationLoop:
-			for _, rule := range validationRules {
-				if rule.Scope() != config.GroupScope {
-					continue
-				}
-				for _, v := range rule.OnlyIf() {
-					if validator.Scope(v.Name()) != config.GroupScope {
-						continue
-					}
-					if errs := validateWithDetails(v, group.RuleGroup, rulefmt.Rule{}, prometheusClient); len(errs) > 0 {
-						log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
-						continue groupValidationLoop
-					}
-				}
-				for _, v := range rule.Validators() {
-					if slices.Contains(groupDisabledValidators, v.Name()) {
-						continue
-					}
-					groupReport.Errors = append(groupReport.Errors, validateWithDetails(v, group.RuleGroup, rulefmt.Rule{}, prometheusClient)...)
-				}
-			}
-			if len(groupReport.Errors) > 0 {
-				validationReport.Failed = true
-				fileReport.Valid = false
-				groupReport.Valid = false
-			}
-			for _, ruleNode := range group.Rules {
-				validationReport.RulesCount++
-				originalRule := ruleNode.OriginalRule()
-				var ruleReport *report.RuleReport
-				switch ruleNode.Scope() {
-				case config.AlertScope:
-					ruleReport = groupReport.NewRuleReport(originalRule.Alert, config.AlertScope)
-				case config.RecordingRuleScope:
-					ruleReport = groupReport.NewRuleReport(originalRule.Record, config.RecordingRuleScope)
-				}
-				var excludedRules []string
-				excludedRulesText, ok := originalRule.Annotations[excludeAnnotationName]
-				if ok {
-					excludedRules = generateExcludedRules(excludedRulesText)
-				}
-				disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
-				if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
-					ruleReport.Errors = append(ruleReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
-				}
-				disabledValidators = append(disabledValidators, groupDisabledValidators...)
-			ruleValidationLoop:
-				for _, rule := range validationRules {
-					if rule.Scope() == config.GroupScope {
-						continue
-					}
-					if (rule.Scope() != ruleReport.RuleType) && (rule.Scope() != config.AllRulesScope) {
-						continue
-					}
-					for _, excludedRuleName := range excludedRules {
-						if excludedRuleName == rule.Name() {
-							continue ruleValidationLoop
-						}
-					}
-					for _, v := range rule.OnlyIf() {
-						if validator.MatchesScope(originalRule, ruleNode.Scope()) {
-							if errs := validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient); len(errs) > 0 {
-								log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
-								continue ruleValidationLoop
-							}
-						} else {
-							log.Debugf("skipping onlyIf validation of file %s group %s because it is not applicable: validator scrope: `%s`, rule scope: `%s`", fileName, group.Name, validator.Scope(v.Name()), ruleNode.Scope())
-						}
-					}
-					for _, v := range rule.Validators() {
-						validatorName := v.Name()
-						if slices.Contains(disabledValidators, validatorName) {
-							continue
-						}
-						ruleReport.Errors = append(ruleReport.Errors, validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient)...)
-						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, v, time.Since(start))
-					}
-					if len(ruleReport.Errors) > 0 {
-						validationReport.Failed = true
-						fileReport.Valid = false
-						groupReport.Valid = false
-						ruleReport.Valid = false
-					}
-				}
-			}
-		}
+			reportMutex.Unlock()
+		}(fileName, i)
 	}
+
+	filesWg.Wait()
 	validationReport.Duration = time.Since(start)
 	return validationReport
 }

@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
@@ -76,6 +79,8 @@ type ValidationReport struct {
 	ValidationRules []ValidationRule `json:"validation_rules" yaml:"validation_rules"`
 
 	FilesReports []*FileReport `json:"files_reports" yaml:"files_reports"`
+
+	mu sync.Mutex `json:"-" yaml:"-"`
 }
 
 func (r *ValidationReport) NewFileReport(name string) *FileReport {
@@ -85,8 +90,27 @@ func (r *ValidationReport) NewFileReport(name string) *FileReport {
 		Errors:       []*Error{},
 		GroupReports: []*GroupReport{},
 	}
+	r.mu.Lock()
 	r.FilesReports = append(r.FilesReports, &newReport)
+	r.mu.Unlock()
 	return &newReport
+}
+
+// Sort sorts all reports (files, groups, rules) for predictable output.
+func (r *ValidationReport) Sort() {
+	slices.SortFunc(r.FilesReports, func(a, b *FileReport) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+	for _, fileReport := range r.FilesReports {
+		slices.SortFunc(fileReport.GroupReports, func(a, b *GroupReport) int {
+			return strings.Compare(a.Name, b.Name)
+		})
+		for _, groupReport := range fileReport.GroupReports {
+			slices.SortFunc(groupReport.RuleReports, func(a, b *RuleReport) int {
+				return strings.Compare(a.Name, b.Name)
+			})
+		}
+	}
 }
 
 type FileReport struct {
@@ -96,6 +120,8 @@ type FileReport struct {
 	Errors                  []*Error       `json:"errors" yaml:"errors"`
 	HasRuleValidationErrors bool           `json:"has_rule_validation_errors" yaml:"has_rule_validation_errors"`
 	GroupReports            []*GroupReport `json:"group_reports" yaml:"group_reports"`
+
+	mu sync.Mutex `json:"-" yaml:"-"`
 }
 
 func (r *FileReport) NewGroupReport(name string) *GroupReport {
@@ -105,7 +131,9 @@ func (r *FileReport) NewGroupReport(name string) *GroupReport {
 		RuleReports: []*RuleReport{},
 		Errors:      []*Error{},
 	}
+	r.mu.Lock()
 	r.GroupReports = append(r.GroupReports, &newReport)
+	r.mu.Unlock()
 	return &newReport
 }
 
@@ -129,6 +157,8 @@ type GroupReport struct {
 	Excluded    bool          `json:"excluded" yaml:"excluded"`
 	RuleReports []*RuleReport `json:"rule_reports" yaml:"rule_reports"`
 	Errors      []*Error      `json:"errors" yaml:"errors"`
+
+	mu sync.Mutex `json:"-" yaml:"-"`
 }
 
 func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope) *RuleReport {
@@ -138,7 +168,9 @@ func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope
 		RuleType: ruleType,
 		Errors:   []*Error{},
 	}
+	r.mu.Lock()
 	r.RuleReports = append(r.RuleReports, &newReport)
+	r.mu.Unlock()
 	return &newReport
 }
 
@@ -191,6 +223,8 @@ func (r *RuleReport) AsText(output *IndentedOutput) {
 }
 
 func (r *ValidationReport) AsText(indentationStep int, color bool) (string, error) {
+	r.Sort()
+
 	output := NewIndentedOutput(indentationStep, color)
 	validationText, err := ValidationDocs(r.ValidationRules, "text")
 	if err != nil {
@@ -227,6 +261,8 @@ func renderStatistic(objectType string, total, excluded int) string {
 }
 
 func (r *ValidationReport) AsJSON() (string, error) {
+	r.Sort()
+
 	b, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
 		return "", err
@@ -236,6 +272,8 @@ func (r *ValidationReport) AsJSON() (string, error) {
 }
 
 func (r *ValidationReport) AsYaml() (string, error) {
+	r.Sort()
+
 	b, err := yaml.Marshal(r)
 	if err != nil {
 		return "", err
