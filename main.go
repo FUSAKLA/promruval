@@ -3,17 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
-	doublestar "github.com/bmatcuk/doublestar/v4"
 	"github.com/fusakla/promruval/v3/pkg/config"
 	"github.com/fusakla/promruval/v3/pkg/extractvalidators"
-	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/report"
-	"github.com/fusakla/promruval/v3/pkg/unmarshaler"
 	"github.com/fusakla/promruval/v3/pkg/validate"
 	log "github.com/sirupsen/logrus"
 )
@@ -40,15 +35,11 @@ var (
 	supportLoki            = validateCmd.Flag("support-loki", "Support Loki rules format.").Bool()
 	supportMimir           = validateCmd.Flag("support-mimir", "Support Mimir rules format.").Bool()
 	supportThanos          = validateCmd.Flag("support-thanos", "Support Thanos rules format.").Bool()
+	disableParallelization = validateCmd.Flag("disable-parallelization", "Disable parallelization of validation checks.").Bool()
 
 	docsCmd          = app.Command("validation-docs", "Print human readable form of the validation rules from config file.")
 	docsOutputFormat = docsCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,markdown,html]").Default("text").Enum("text", "markdown", "html")
 )
-
-func loadConfigFile(configFilePath string) (*config.Config, error) {
-	configLoader := config.NewLoader(configFilePath)
-	return configLoader.Load()
-}
 
 func exitWithError(err error) {
 	log.Error(err)
@@ -67,27 +58,12 @@ func main() {
 		app.Fatalf("required flag --config-file not provided, try --help")
 	}
 
-	mainValidationConfig, err := loadConfigFile((*validateConfigFiles)[0])
+	validationConfig, err := config.LoadConfiguration(*validateConfigFiles)
 	if err != nil {
 		exitWithError(err)
 	}
-	for _, cf := range (*validateConfigFiles)[1:] {
-		validationConfig, err := loadConfigFile(cf)
-		if err != nil {
-			exitWithError(err)
-		}
-		if validationConfig.Prometheus.URL != "" {
-			mainValidationConfig.Prometheus = validationConfig.Prometheus
-		}
-		if validationConfig.CustomExcludeAnnotation != "" {
-			mainValidationConfig.CustomExcludeAnnotation = validationConfig.CustomExcludeAnnotation
-		}
-		if validationConfig.CustomDisableComment != "" {
-			mainValidationConfig.CustomDisableComment = validationConfig.CustomDisableComment
-		}
-		mainValidationConfig.ValidationRules = append(mainValidationConfig.ValidationRules, validationConfig.ValidationRules...)
-	}
-	validationRules, err := extractvalidators.ValidationRulesFromConfig(mainValidationConfig, *disabledRules, *enabledRules)
+
+	validationRules, err := extractvalidators.ValidationRulesFromConfig(validationConfig, *disabledRules, *enabledRules)
 	if err != nil {
 		exitWithError(err)
 	}
@@ -110,58 +86,10 @@ func main() {
 		if *debug {
 			log.SetLevel(log.DebugLevel)
 		}
-		var filesToBeValidated []string
-		for _, path := range *filePaths {
-			if strings.HasPrefix(path, "~/") {
-				home, err := os.UserHomeDir()
-				if err != nil {
-					exitWithError(fmt.Errorf("failed to get user home directory: %w", err))
-				}
-				path = filepath.Join(home, path[2:])
-			}
 
-			base, pattern := doublestar.SplitPattern(path)
-			paths, err := doublestar.Glob(os.DirFS(base), pattern, doublestar.WithFilesOnly(), doublestar.WithFailOnIOErrors(), doublestar.WithFailOnPatternNotExist())
-			if err != nil {
-				exitWithError(fmt.Errorf("failed expanding glob pattern `%s`: %w", path, err))
-			}
-			for _, p := range paths {
-				filesToBeValidated = append(filesToBeValidated, filepath.Join(base, p))
-			}
-		}
-
-		if *supportLoki {
-			unmarshaler.SupportLoki(true)
-		}
-
-		if *supportMimir {
-			unmarshaler.SupportMimir(true)
-		}
-
-		if *supportThanos {
-			unmarshaler.SupportThanos(true)
-		}
-
-		var prometheusClient *prometheus.Client
-		if mainValidationConfig.Prometheus.URL != "" {
-			prometheusClient, err = prometheus.NewClient(mainValidationConfig.Prometheus)
-			if err != nil {
-				exitWithError(fmt.Errorf("failed to initialize prometheus client: %w", err))
-			}
-		}
-
-		excludeAnnotation := "disabled_validation_rules"
-		if mainValidationConfig.CustomExcludeAnnotation != "" {
-			excludeAnnotation = mainValidationConfig.CustomExcludeAnnotation
-		}
-		disableValidatorsComment := "ignore_validations"
-		if mainValidationConfig.CustomDisableComment != "" {
-			disableValidatorsComment = mainValidationConfig.CustomDisableComment
-		}
-		validationReport := validate.Files(filesToBeValidated, validationRules, excludeAnnotation, disableValidatorsComment, prometheusClient)
-
-		if mainValidationConfig.Prometheus.URL != "" {
-			prometheusClient.DumpCache()
+		validationReport, err := validate.Cmd(*filePaths, validationConfig, validationRules, *supportLoki, *supportMimir, *supportThanos, *disableParallelization)
+		if err != nil {
+			exitWithError(err)
 		}
 
 		var output string

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/fusakla/promruval/v3/pkg/config"
 	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/report"
@@ -39,7 +41,7 @@ func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshale
 	return errs
 }
 
-func validateFile(fileName string, fileIndex, fileCount int, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, jsonnetVM *jsonnet.VM, validationReport *report.ValidationReport) (groupsCount, rulesCount int, err error) {
+func validateFile(fileName string, fileIndex, fileCount int, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, jsonnetVM *jsonnet.VM, validationReport *report.ValidationReport, disableParallelization bool) (groupsCount, rulesCount int, err error) {
 	log.WithFields(log.Fields{
 		"file":     fileName,
 		"progress": fmt.Sprintf("%d/%d", fileIndex+1, fileCount),
@@ -122,6 +124,9 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 						groupErrorsMutex.Unlock()
 					}
 				}(v)
+				if disableParallelization {
+					groupWg.Wait()
+				}
 			}
 		}
 		groupWg.Wait()
@@ -192,6 +197,9 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 						}
 						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, vName, time.Since(validationStart))
 					}(v, group.RuleGroup, originalRule, validatorName)
+					if disableParallelization {
+						ruleWg.Wait()
+					}
 				}
 			}
 			ruleWg.Wait()
@@ -205,7 +213,7 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 	return groupsCount, rulesCount, nil
 }
 
-func Files(fileNames []string, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client) *report.ValidationReport {
+func Files(fileNames []string, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, disableParallelization bool) *report.ValidationReport {
 	validationReport := report.NewValidationReport()
 	for _, r := range validationRules {
 		validationReport.ValidationRules = append(validationReport.ValidationRules, r)
@@ -222,9 +230,8 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 		filesWg.Add(1)
 		go func(fileName string, fileIndex int) {
 			defer filesWg.Done()
-
 			jsonnetVM := jsonnet.MakeVM()
-			groupsCount, rulesCount, err := validateFile(fileName, fileIndex, fileCount, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport)
+			groupsCount, rulesCount, err := validateFile(fileName, fileIndex, fileCount, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport, disableParallelization)
 			if err != nil {
 				log.WithError(err).Errorf("error validating file %s", fileName)
 			}
@@ -238,6 +245,9 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			}
 			reportMutex.Unlock()
 		}(fileName, i)
+		if disableParallelization {
+			filesWg.Wait()
+		}
 	}
 
 	filesWg.Wait()
@@ -255,4 +265,62 @@ func generateExcludedRules(excludedRulesText string) []string {
 	}
 	slices.Sort(excludedRules)
 	return slices.Compact(excludedRules)
+}
+
+func Cmd(filePaths []string, mainConfig *config.Config, validationRules []*validationrule.ValidationRule, supportLoki, supportMimir, supportThanos, disableParallelization bool) (*report.ValidationReport, error) {
+	var filesToBeValidated []string
+	for _, path := range filePaths {
+		if strings.HasPrefix(path, "~/") {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get user home directory: %w", err)
+			}
+			path = filepath.Join(home, path[2:])
+		}
+
+		base, pattern := doublestar.SplitPattern(path)
+		paths, err := doublestar.Glob(os.DirFS(base), pattern, doublestar.WithFilesOnly(), doublestar.WithFailOnIOErrors(), doublestar.WithFailOnPatternNotExist())
+		if err != nil {
+			return nil, fmt.Errorf("failed expanding glob pattern `%s`: %w", path, err)
+		}
+		for _, p := range paths {
+			filesToBeValidated = append(filesToBeValidated, filepath.Join(base, p))
+		}
+	}
+
+	if supportLoki {
+		unmarshaler.SupportLoki(true)
+	}
+
+	if supportMimir {
+		unmarshaler.SupportMimir(true)
+	}
+
+	if supportThanos {
+		unmarshaler.SupportThanos(true)
+	}
+
+	var err error
+	var prometheusClient *prometheus.Client
+	if mainConfig.Prometheus.URL != "" {
+		prometheusClient, err = prometheus.NewClient(mainConfig.Prometheus)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
+		}
+	}
+
+	excludeAnnotation := "disabled_validation_rules"
+	if mainConfig.CustomExcludeAnnotation != "" {
+		excludeAnnotation = mainConfig.CustomExcludeAnnotation
+	}
+	disableValidatorsComment := "ignore_validations"
+	if mainConfig.CustomDisableComment != "" {
+		disableValidatorsComment = mainConfig.CustomDisableComment
+	}
+	validationReport := Files(filesToBeValidated, validationRules, excludeAnnotation, disableValidatorsComment, prometheusClient, disableParallelization)
+
+	if mainConfig.Prometheus.URL != "" {
+		prometheusClient.DumpCache()
+	}
+	return validationReport, nil
 }
