@@ -34,7 +34,7 @@ E2E_TESTS_MIMIR_DIR := examples/mimir/
 E2E_TESTS_THANOS_DIR := examples/thanos/
 e2e-test: build
 	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) $(E2E_TESTS_RULES_FILES)
-	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) -o json $(E2E_TESTS_RULES_FILES)
+	$(PROMRUVAL_BIN) validate --disable-parallelization --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) -o json $(E2E_TESTS_RULES_FILES)
 	$(PROMRUVAL_BIN) validate --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) -o yaml $(E2E_TESTS_RULES_FILES)
 	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) --output=text > $(E2E_TESTS_DOCS_FILE_TEXT)
 	$(PROMRUVAL_BIN) validation-docs --config-file $(E2E_TESTS_VALIDATIONS_FILE) --config-file $(E2E_TESTS_ADDITIONAL_VALIDATIONS_FILE) --output=markdown > $(E2E_TESTS_DOCS_FILE_MD)
@@ -42,7 +42,7 @@ e2e-test: build
 
 	$(PROMRUVAL_BIN) validate --support-loki --config-file $(E2E_TESTS_LOKI_DIR)/validation.yaml $(E2E_TESTS_LOKI_DIR)/rules.yaml
 	$(PROMRUVAL_BIN) validate --support-thanos --config-file $(E2E_TESTS_THANOS_DIR)/validation.yaml $(E2E_TESTS_THANOS_DIR)/rules.yaml
-	$(PROMRUVAL_BIN) validate --support-mimir --config-file $(E2E_TESTS_MIMIR_DIR)/validation.yaml $(E2E_TESTS_MIMIR_DIR)/rules.yaml
+	$(PROMRUVAL_BIN) validate --disable-parallelization --support-mimir --config-file $(E2E_TESTS_MIMIR_DIR)/validation.yaml $(E2E_TESTS_MIMIR_DIR)/rules.yaml
 
 docker: build
 	docker build -t fusakla/promruval .

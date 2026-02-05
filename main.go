@@ -35,6 +35,7 @@ var (
 	supportLoki            = validateCmd.Flag("support-loki", "Support Loki rules format.").Bool()
 	supportMimir           = validateCmd.Flag("support-mimir", "Support Mimir rules format.").Bool()
 	supportThanos          = validateCmd.Flag("support-thanos", "Support Thanos rules format.").Bool()
+	disableParallelization = validateCmd.Flag("disable-parallelization", "Disable parallelization of validation checks.").Bool()
 
 	docsCmd          = app.Command("validation-docs", "Print human readable form of the validation rules from config file.")
 	docsOutputFormat = docsCmd.Flag("output", "Format of the output.").Short('o').PlaceHolder("[text,markdown,html]").Default("text").Enum("text", "markdown", "html")
@@ -86,7 +87,7 @@ func main() {
 			log.SetLevel(log.DebugLevel)
 		}
 
-		validationReport, err := validate.Cmd(*filePaths, validationConfig, validationRules, *supportLoki, *supportMimir, *supportThanos)
+		validationReport, err := validate.Cmd(*filePaths, validationConfig, validationRules, *supportLoki, *supportMimir, *supportThanos, *disableParallelization)
 		if err != nil {
 			exitWithError(err)
 		}
