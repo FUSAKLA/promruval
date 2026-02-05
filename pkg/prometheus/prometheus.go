@@ -171,8 +171,10 @@ func (s *Client) SelectorMatch(selector string, sourceTenants []string) ([]model
 }
 
 func (s *Client) SelectorMatchingSeries(selector string, sourceTenants []string) (int, error) {
+	var cache *cacheData
 	if s.cache != nil {
-		if count, found := s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector]; found {
+		cache = s.cache.SourceTenantsData(sourceTenants)
+		if count, found := cache.MatchingSeriesForSelector(selector); found {
 			return count, nil
 		}
 	}
@@ -181,13 +183,19 @@ func (s *Client) SelectorMatchingSeries(selector string, sourceTenants []string)
 		return 0, err
 	}
 	if s.cache != nil {
-		s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector] = len(series)
+		cache.SetSelectorMatchingSeries(selector, len(series))
 	}
 	return len(series), nil
 }
 
 func (s *Client) Labels(sourceTenants []string) ([]string, error) {
-	if s.cache == nil || len(s.cache.SourceTenantsData(sourceTenants).KnownLabels) == 0 {
+	var cachedLabels []string
+	var cache *cacheData
+	if s.cache != nil {
+		cache = s.cache.SourceTenantsData(sourceTenants)
+		cachedLabels = cache.GetKnownLabels()
+	}
+	if s.cache == nil || len(cachedLabels) == 0 {
 		ctx, cancel := s.newContext()
 		defer cancel()
 		s.SetSourceTenants(sourceTenants)
@@ -209,12 +217,12 @@ func (s *Client) Labels(sourceTenants []string) ([]string, error) {
 		if len(warnings) > 0 {
 			log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
 		}
-		if s.cache != nil {
-			s.cache.SourceTenantsData(sourceTenants).KnownLabels = result
+		if cache != nil {
+			cache.SetKnownLabels(result)
 		}
 		return result, nil
 	}
-	return s.cache.SourceTenantsData(sourceTenants).KnownLabels, nil
+	return cachedLabels, nil
 }
 
 func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, int, time.Duration, error) {
@@ -258,15 +266,17 @@ func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, i
 }
 
 func (s *Client) QueryStats(query string, sourceTenants []string) (int, time.Duration, error) {
+	var cache *cacheData
 	if s.cache != nil {
-		if stats, found := s.cache.SourceTenantsData(sourceTenants).QueriesStats[query]; found {
+		cache = s.cache.SourceTenantsData(sourceTenants)
+		if stats, found := cache.GetQueryStats(query); found {
 			return stats.Series, stats.Duration, stats.Error
 		}
 	}
 	_, series, duration, err := s.Query(query, sourceTenants)
-	if s.cache != nil {
+	if cache != nil {
 		stats := queryStats{Series: series, Duration: duration, Error: err}
-		s.cache.SourceTenantsData(sourceTenants).QueriesStats[query] = stats
+		cache.SetQueryStats(query, stats)
 	}
 	return series, duration, err
 }
