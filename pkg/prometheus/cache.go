@@ -20,12 +20,16 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 	if err != nil {
 		if os.IsNotExist(err) {
 			f, err = os.Create(file)
-			emptyCacheJson, err := json.Marshal(emptyCache)
 			if err != nil {
 				log.WithError(err).WithField("file", file).Warn("error creating cache file")
 				return &emptyCache
 			}
-			_, err = f.Write(emptyCacheJson)
+			emptyCacheJSON, err := json.Marshal(emptyCache)
+			if err != nil {
+				log.WithError(err).WithField("file", file).Warn("error creating cache file")
+				return &emptyCache
+			}
+			_, err = f.Write(emptyCacheJSON)
 			if err != nil {
 				log.WithError(err).WithField("file", file).Warn("error writing empty cache file")
 				return &emptyCache
