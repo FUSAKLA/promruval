@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
 	"sort"
 	"strings"
 	"sync"
@@ -33,13 +32,9 @@ func sourceTenantsToHeader(sourceTenants []string) string {
 func loadBearerToken(promConfig config.PrometheusConfig) (string, error) {
 	bearerToken := ""
 	if promConfig.BearerTokenFile != "" {
-		if path.IsAbs(promConfig.BearerTokenFile) {
-			return "", fmt.Errorf("`bearerTokenFile` must be a relative path to the config file")
-		}
-		p := path.Join(config.BaseDirPath(), promConfig.BearerTokenFile)
-		token, err := os.ReadFile(p)
+		token, err := os.ReadFile(promConfig.BearerTokenFile)
 		if err != nil {
-			return "", fmt.Errorf("failed to read file %s: %w", p, err)
+			return "", fmt.Errorf("failed to read file %s: %w", promConfig.BearerTokenFile, err)
 		}
 		bearerToken = string(token)
 	}

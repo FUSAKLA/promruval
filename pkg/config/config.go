@@ -104,10 +104,17 @@ func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	}
 
 	type plain PrometheusConfig
-	err = unmarshal((*plain)(c))
-	if err != nil {
+	if err := unmarshal((*plain)(c)); err != nil {
 		return err
 	}
+
+	if c.BearerTokenFile != "" {
+		if path.IsAbs(c.BearerTokenFile) {
+			return fmt.Errorf("`bearerTokenFile` must be a relative path to the config file")
+		}
+		c.BearerTokenFile = path.Join(configDir, c.BearerTokenFile)
+	}
+
 	return nil
 }
 
