@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
 	"sort"
 	"strings"
 	"sync"
@@ -33,13 +32,9 @@ func sourceTenantsToHeader(sourceTenants []string) string {
 func loadBearerToken(promConfig config.PrometheusConfig) (string, error) {
 	bearerToken := ""
 	if promConfig.BearerTokenFile != "" {
-		if path.IsAbs(promConfig.BearerTokenFile) {
-			return "", fmt.Errorf("`bearerTokenFile` must be a relative path to the config file")
-		}
-		p := path.Join(config.BaseDirPath(), promConfig.BearerTokenFile)
-		token, err := os.ReadFile(p)
+		token, err := os.ReadFile(promConfig.BearerTokenFile)
 		if err != nil {
-			return "", fmt.Errorf("failed to read file %s: %w", p, err)
+			return "", fmt.Errorf("failed to read file %s: %w", promConfig.BearerTokenFile, err)
 		}
 		bearerToken = string(token)
 	}
@@ -83,6 +78,12 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 		return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
 	}
 	v1cli := v1.NewAPI(cli)
+	var cacheInstance *cache
+	if promConfig.DisableCache {
+		cacheInstance = nil
+	} else {
+		cacheInstance = newCache(promConfig.CacheFile, promConfig.URL, promConfig.MaxCacheAge)
+	}
 	promClient := Client{
 		apiClient:             v1cli,
 		httpHeaders:           &headers,
@@ -92,7 +93,7 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 		timeout:               promConfig.Timeout,
 		queryOffset:           promConfig.QueryOffset,
 		queryLookback:         promConfig.QueryLookback,
-		cache:                 newCache(promConfig.CacheFile, promConfig.URL, promConfig.MaxCacheAge),
+		cache:                 cacheInstance,
 	}
 	return &promClient, nil
 }
@@ -129,6 +130,9 @@ func (s *Client) queryTimeRange() (start, end time.Time) {
 }
 
 func (s *Client) DumpCache() {
+	if s.cache == nil {
+		return
+	}
 	start := time.Now()
 	s.cache.Dump()
 	log.WithField("duration", time.Since(start)).Info("cache dumped")
@@ -167,19 +171,23 @@ func (s *Client) SelectorMatch(selector string, sourceTenants []string) ([]model
 }
 
 func (s *Client) SelectorMatchingSeries(selector string, sourceTenants []string) (int, error) {
-	if count, found := s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector]; found {
-		return count, nil
+	if s.cache != nil {
+		if count, found := s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector]; found {
+			return count, nil
+		}
 	}
 	series, err := s.SelectorMatch(selector, sourceTenants)
 	if err != nil {
 		return 0, err
 	}
-	s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector] = len(series)
+	if s.cache != nil {
+		s.cache.SourceTenantsData(sourceTenants).SelectorMatchingSeries[selector] = len(series)
+	}
 	return len(series), nil
 }
 
 func (s *Client) Labels(sourceTenants []string) ([]string, error) {
-	if len(s.cache.SourceTenantsData(sourceTenants).KnownLabels) == 0 {
+	if s.cache == nil || len(s.cache.SourceTenantsData(sourceTenants).KnownLabels) == 0 {
 		ctx, cancel := s.newContext()
 		defer cancel()
 		s.SetSourceTenants(sourceTenants)
@@ -201,7 +209,10 @@ func (s *Client) Labels(sourceTenants []string) ([]string, error) {
 		if len(warnings) > 0 {
 			log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
 		}
-		s.cache.SourceTenantsData(sourceTenants).KnownLabels = result
+		if s.cache != nil {
+			s.cache.SourceTenantsData(sourceTenants).KnownLabels = result
+		}
+		return result, nil
 	}
 	return s.cache.SourceTenantsData(sourceTenants).KnownLabels, nil
 }
@@ -247,11 +258,15 @@ func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, i
 }
 
 func (s *Client) QueryStats(query string, sourceTenants []string) (int, time.Duration, error) {
-	if stats, found := s.cache.SourceTenantsData(sourceTenants).QueriesStats[query]; found {
-		return stats.Series, stats.Duration, stats.Error
+	if s.cache != nil {
+		if stats, found := s.cache.SourceTenantsData(sourceTenants).QueriesStats[query]; found {
+			return stats.Series, stats.Duration, stats.Error
+		}
 	}
 	_, series, duration, err := s.Query(query, sourceTenants)
-	stats := queryStats{Series: series, Duration: duration, Error: err}
-	s.cache.SourceTenantsData(sourceTenants).QueriesStats[query] = stats
-	return stats.Series, stats.Duration, stats.Error
+	if s.cache != nil {
+		stats := queryStats{Series: series, Duration: duration, Error: err}
+		s.cache.SourceTenantsData(sourceTenants).QueriesStats[query] = stats
+	}
+	return series, duration, err
 }

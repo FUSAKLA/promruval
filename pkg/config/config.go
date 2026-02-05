@@ -89,6 +89,7 @@ type PrometheusConfig struct {
 	URL                   string            `yaml:"url"`
 	Timeout               time.Duration     `yaml:"timeout" default:"30s"`
 	InsecureSkipTLSVerify bool              `yaml:"insecureSkipTlsVerify"`
+	DisableCache          bool              `yaml:"disableCache"`
 	CacheFile             string            `yaml:"cacheFile,omitempty" default:".promruval_cache.json"`
 	MaxCacheAge           time.Duration     `yaml:"maxCacheAge,omitempty" default:"1h"`
 	BearerTokenFile       string            `yaml:"bearerTokenFile,omitempty"`
@@ -104,10 +105,17 @@ func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) erro
 	}
 
 	type plain PrometheusConfig
-	err = unmarshal((*plain)(c))
-	if err != nil {
+	if err := unmarshal((*plain)(c)); err != nil {
 		return err
 	}
+
+	if c.BearerTokenFile != "" {
+		if path.IsAbs(c.BearerTokenFile) {
+			return fmt.Errorf("`bearerTokenFile` must be a relative path to the config file")
+		}
+		c.BearerTokenFile = path.Join(configDir, c.BearerTokenFile)
+	}
+
 	return nil
 }
 

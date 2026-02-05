@@ -2,8 +2,8 @@
 # customDisableComment: my_disable_comment
 
 prometheus:
-  url: https://demo.promlabs.com # https://prometheus.demo.prometheus.io is down for a long time
-  timeout: 0.5s
+  url: https://prometheus.demo.prometheus.io
+  timeout: 5s
   bearerTokenFile: ./bearer.token
 
 validationRules:
