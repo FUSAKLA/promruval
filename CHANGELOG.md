@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.13.0] - 2026-02-06
+ - Fixed: Initial Empty cache file handling (formerly reported invalid warning in logs)
+ - Fixed: Bearer token file loading from config file path when multiple validation config files were used.
+ - Added: New config option `prometheus.disableCache` to disable usage of Prometheus query cache.
+
 ## [3.12.0] - 2026-02-05
  - Added: New flag `--disable-parallelization` to disable parallel execution of validations.
 
