@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/fusakla/promruval/v3/pkg/config"
 	"github.com/fusakla/promruval/v3/pkg/prometheus"
 	"github.com/fusakla/promruval/v3/pkg/report"
@@ -255,4 +257,62 @@ func generateExcludedRules(excludedRulesText string) []string {
 	}
 	slices.Sort(excludedRules)
 	return slices.Compact(excludedRules)
+}
+
+func Cmd(filePaths []string, mainConfig *config.Config, validationRules []*validationrule.ValidationRule, supportLoki, supportMimir, supportThanos bool) (*report.ValidationReport, error) {
+	var filesToBeValidated []string
+	for _, path := range filePaths {
+		if strings.HasPrefix(path, "~/") {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get user home directory: %w", err)
+			}
+			path = filepath.Join(home, path[2:])
+		}
+
+		base, pattern := doublestar.SplitPattern(path)
+		paths, err := doublestar.Glob(os.DirFS(base), pattern, doublestar.WithFilesOnly(), doublestar.WithFailOnIOErrors(), doublestar.WithFailOnPatternNotExist())
+		if err != nil {
+			return nil, fmt.Errorf("failed expanding glob pattern `%s`: %w", path, err)
+		}
+		for _, p := range paths {
+			filesToBeValidated = append(filesToBeValidated, filepath.Join(base, p))
+		}
+	}
+
+	if supportLoki {
+		unmarshaler.SupportLoki(true)
+	}
+
+	if supportMimir {
+		unmarshaler.SupportMimir(true)
+	}
+
+	if supportThanos {
+		unmarshaler.SupportThanos(true)
+	}
+
+	var err error
+	var prometheusClient *prometheus.Client
+	if mainConfig.Prometheus.URL != "" {
+		prometheusClient, err = prometheus.NewClient(mainConfig.Prometheus)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
+		}
+	}
+
+	excludeAnnotation := "disabled_validation_rules"
+	if mainConfig.CustomExcludeAnnotation != "" {
+		excludeAnnotation = mainConfig.CustomExcludeAnnotation
+	}
+	disableValidatorsComment := "ignore_validations"
+	if mainConfig.CustomDisableComment != "" {
+		disableValidatorsComment = mainConfig.CustomDisableComment
+	}
+	validationReport := Files(filesToBeValidated, validationRules, excludeAnnotation, disableValidatorsComment, prometheusClient)
+
+	if mainConfig.Prometheus.URL != "" {
+		prometheusClient.DumpCache()
+	}
+	return validationReport, nil
 }

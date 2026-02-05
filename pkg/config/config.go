@@ -166,3 +166,36 @@ func (t *ValidationScope) UnmarshalYAML(unmarshal func(interface{}) error) error
 	}
 	return fmt.Errorf("invalid validation scope `%s`", ruleType)
 }
+
+func LoadConfigFile(configFilePath string) (*Config, error) {
+	configLoader := NewLoader(configFilePath)
+	return configLoader.Load()
+}
+
+func LoadConfiguration(configFilePaths []string) (*Config, error) {
+	if len(configFilePaths) == 0 {
+		return nil, fmt.Errorf("required flag --config-file not provided, try --help")
+	}
+	mainConfig, err := LoadConfigFile(configFilePaths[0])
+	if err != nil {
+		return nil, fmt.Errorf("error loading config file %s: %w", configFilePaths[0], err)
+	}
+	for _, cf := range configFilePaths[1:] {
+		validationConfig, err := LoadConfigFile(cf)
+		if err != nil {
+			return nil, fmt.Errorf("error loading config file %s: %w", cf, err)
+		}
+		if validationConfig.Prometheus.URL != "" {
+			mainConfig.Prometheus = validationConfig.Prometheus
+		}
+		if validationConfig.CustomExcludeAnnotation != "" {
+			mainConfig.CustomExcludeAnnotation = validationConfig.CustomExcludeAnnotation
+		}
+		if validationConfig.CustomDisableComment != "" {
+			mainConfig.CustomDisableComment = validationConfig.CustomDisableComment
+		}
+		mainConfig.ValidationRules = append(mainConfig.ValidationRules, validationConfig.ValidationRules...)
+	}
+
+	return mainConfig, nil
+}
