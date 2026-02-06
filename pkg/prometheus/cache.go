@@ -3,6 +3,7 @@ package prometheus
 import (
 	"encoding/json"
 	"os"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -14,8 +15,9 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 		PrometheusURL: prometheusURL,
 		Created:       time.Now(),
 		SourceTenants: make(map[string]*cacheData),
+		mtx:           sync.RWMutex{},
 	}
-	previousCache := emptyCache
+	previousCache := &emptyCache
 	f, err := os.Open(file)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -24,7 +26,7 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 				log.WithError(err).WithField("file", file).Warn("error creating cache file")
 				return &emptyCache
 			}
-			emptyCacheJSON, err := json.Marshal(emptyCache)
+			emptyCacheJSON, err := json.Marshal(&emptyCache)
 			if err != nil {
 				log.WithError(err).WithField("file", file).Warn("error creating cache file")
 				return &emptyCache
@@ -66,7 +68,7 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 		log.WithField("file", file).Warn("Pruning cache file")
 		return &emptyCache
 	}
-	return &previousCache
+	return previousCache
 }
 
 type queryStats struct {
@@ -79,25 +81,73 @@ type cacheData struct {
 	QueriesStats           map[string]queryStats `json:"queries_stats"`
 	KnownLabels            []string              `json:"known_labels"`
 	SelectorMatchingSeries map[string]int        `json:"selector_matching_series"`
+	mtx                    sync.RWMutex          `json:"-"`
 }
+
+func (c *cacheData) MatchingSeriesForSelector(selector string) (int, bool) {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+	count, found := c.SelectorMatchingSeries[selector]
+	return count, found
+}
+
+func (c *cacheData) SetSelectorMatchingSeries(selector string, count int) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.SelectorMatchingSeries[selector] = count
+}
+
+func (c *cacheData) GetKnownLabels() []string {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+	return c.KnownLabels
+}
+
+func (c *cacheData) SetKnownLabels(labels []string) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.KnownLabels = labels
+}
+
+func (c *cacheData) GetQueryStats(query string) (queryStats, bool) {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
+	stats, found := c.QueriesStats[query]
+	return stats, found
+}
+
+func (c *cacheData) SetQueryStats(query string, stats queryStats) {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.QueriesStats[query] = stats
+}
+
 type cache struct {
 	file          string
 	PrometheusURL string                `json:"prometheus_url"`
 	Created       time.Time             `json:"created"`
 	SourceTenants map[string]*cacheData `json:"source_tenants"`
+	mtx           sync.RWMutex          `json:"-"`
 }
 
 func (c *cache) SourceTenantsData(sourceTenants []string) *cacheData {
+	c.mtx.RLock()
 	key := sourceTenantsToHeader(sourceTenants)
 	data, found := c.SourceTenants[key]
-	if !found {
-		data = &cacheData{
-			QueriesStats:           make(map[string]queryStats),
-			SelectorMatchingSeries: make(map[string]int),
-			KnownLabels:            []string{},
-		}
-		c.SourceTenants[key] = data
+	if found {
+		c.mtx.RUnlock()
+		return data
 	}
+	c.mtx.RUnlock()
+	data = &cacheData{
+		QueriesStats:           make(map[string]queryStats),
+		SelectorMatchingSeries: make(map[string]int),
+		KnownLabels:            []string{},
+		mtx:                    sync.RWMutex{},
+	}
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+	c.SourceTenants[key] = data
 	return data
 }
 
@@ -112,6 +162,8 @@ func (c *cache) Dump() {
 	}(f)
 	e := json.NewEncoder(f)
 	e.SetIndent("", "")
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	err = e.Encode(c)
 	if err != nil {
 		log.WithError(err).Warn("failed to write cache data")
