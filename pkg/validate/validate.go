@@ -41,12 +41,7 @@ func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshale
 	return errs
 }
 
-func validateFile(fileName string, fileIndex, fileCount int, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, jsonnetVM *jsonnet.VM, validationReport *report.ValidationReport, disableParallelization bool) (groupsCount, rulesCount int, err error) {
-	log.WithFields(log.Fields{
-		"file":     fileName,
-		"progress": fmt.Sprintf("%d/%d", fileIndex+1, fileCount),
-	}).Info("processing file")
-
+func validateFile(fileName string, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, jsonnetVM *jsonnet.VM, validationReport *report.ValidationReport, disableParallelization bool) (groupsCount, rulesCount int, err error) {
 	fileReport := validationReport.NewFileReport(fileName)
 	var yamlReader io.Reader
 	groupsCount = 0
@@ -227,11 +222,11 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 
 	// Create a jsonnet VM for each goroutine to avoid race conditions
 	for i, fileName := range fileNames {
-		filesWg.Add(1)
-		go func(fileName string, fileIndex int) {
+		filesWg.Go(func() {
 			defer filesWg.Done()
+			fileStart := time.Now()
 			jsonnetVM := jsonnet.MakeVM()
-			groupsCount, rulesCount, err := validateFile(fileName, fileIndex, fileCount, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport, disableParallelization)
+			groupsCount, rulesCount, err := validateFile(fileName, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport, disableParallelization)
 			if err != nil {
 				log.WithError(err).Errorf("error validating file %s", fileName)
 			}
@@ -244,12 +239,19 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				validationReport.Failed = true
 			}
 			reportMutex.Unlock()
-		}(fileName, i)
+			logFields := log.Fields{
+				"file":     fileName,
+				"duration": time.Since(fileStart),
+			}
+			if disableParallelization {
+				logFields["progress"] = fmt.Sprintf("%d/%d", i+1, fileCount)
+			}
+			log.WithFields(logFields).Info("finished processing file")
+		})
 		if disableParallelization {
 			filesWg.Wait()
 		}
 	}
-
 	filesWg.Wait()
 	validationReport.Duration = time.Since(start)
 	return validationReport
