@@ -3,6 +3,7 @@ package prometheus
 import (
 	"encoding/json"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -100,13 +101,13 @@ func (c *cacheData) SetSelectorMatchingSeries(selector string, count int) {
 func (c *cacheData) GetKnownLabels() []string {
 	c.mtx.RLock()
 	defer c.mtx.RUnlock()
-	return c.KnownLabels
+	return slices.Clone(c.KnownLabels)
 }
 
 func (c *cacheData) SetKnownLabels(labels []string) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
-	c.KnownLabels = labels
+	c.KnownLabels = slices.Clone(labels)
 }
 
 func (c *cacheData) GetQueryStats(query string) (queryStats, bool) {
