@@ -52,7 +52,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 		log.Debugf("evaluating jsonnet file %s", fileName)
 		jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
 		if err != nil {
-			fileReport.Valid = false
+			fileReport.Valid.Store(false)
 			fileReport.AddError(report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err))
 			return groupsCount, rulesCount, err
 		}
@@ -61,7 +61,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 		var err error
 		yamlReader, err = os.Open(fileName)
 		if err != nil {
-			fileReport.Valid = false
+			fileReport.Valid.Store(false)
 			fileReport.AddError(report.NewErrorf("cannot read file %s: %w", fileName, err))
 			return groupsCount, rulesCount, err
 		}
@@ -74,7 +74,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 		if errors.Is(err, io.EOF) {
 			return groupsCount, rulesCount, nil
 		}
-		fileReport.Valid = false
+		fileReport.Valid.Store(false)
 		fileReport.AddError(report.NewErrorf("invalid file %s: %w", fileName, err))
 		return groupsCount, rulesCount, err
 	}
@@ -123,8 +123,8 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 		}
 		groupWg.Wait()
 		if len(groupReport.Errors) > 0 {
-			fileReport.Valid = false
-			groupReport.Valid = false
+			fileReport.Valid.Store(false)
+			groupReport.Valid.Store(false)
 		}
 		for _, ruleNode := range group.Rules {
 			rulesCount++
@@ -193,9 +193,9 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 			}
 			ruleWg.Wait()
 			if len(ruleReport.Errors) > 0 {
-				fileReport.Valid = false
-				groupReport.Valid = false
-				ruleReport.Valid = false
+				fileReport.Valid.Store(false)
+				groupReport.Valid.Store(false)
+				ruleReport.Valid.Store(false)
 			}
 		}
 	}
@@ -216,7 +216,8 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 
 	// Create a jsonnet VM for each goroutine to avoid race conditions
 	for i, fileName := range fileNames {
-		filesWg.Go(func() {
+		filesWg.Add(1)
+		go func(fileName string, i int) {
 			defer filesWg.Done()
 			fileStart := time.Now()
 			jsonnetVM := jsonnet.MakeVM()
@@ -226,11 +227,11 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			}
 
 			reportMutex.Lock()
-			validationReport.FilesCount++
-			validationReport.GroupsCount += groupsCount
-			validationReport.RulesCount += rulesCount
-			if len(validationReport.FilesReports) > 0 && !validationReport.FilesReports[len(validationReport.FilesReports)-1].Valid {
-				validationReport.Failed = true
+			validationReport.FilesCount.Inc()
+			validationReport.GroupsCount.Add(int32(groupsCount))
+			validationReport.RulesCount.Add(int32(rulesCount))
+			if len(validationReport.FilesReports) > 0 && !validationReport.FilesReports[len(validationReport.FilesReports)-1].Valid.Load() {
+				validationReport.Failed.Store(true)
 			}
 			reportMutex.Unlock()
 			logFields := log.Fields{
@@ -241,13 +242,13 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				logFields["progress"] = fmt.Sprintf("%d/%d", i+1, fileCount)
 			}
 			log.WithFields(logFields).Info("finished processing file")
-		})
+		}(fileName, i)
 		if disableParallelization {
 			filesWg.Wait()
 		}
 	}
 	filesWg.Wait()
-	validationReport.Duration = time.Since(start)
+	validationReport.Duration.Store(time.Since(start))
 	return validationReport
 }
 

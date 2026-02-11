@@ -105,7 +105,7 @@ func main() {
 			exitWithError(err)
 		}
 		fmt.Println(output)
-		if validationReport.Failed {
+		if validationReport.Failed.Load() {
 			os.Exit(1)
 		}
 	}
