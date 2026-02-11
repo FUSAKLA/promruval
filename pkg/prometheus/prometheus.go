@@ -18,6 +18,7 @@ import (
 	prom_config "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 	log "github.com/sirupsen/logrus"
+	"github.com/ybbus/httpretry"
 )
 
 const (
@@ -71,8 +72,29 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 		headers.Headers[k] = prom_config.Header{Values: []string{v}}
 	}
 	cli, err := api.NewClient(api.Config{
-		Address:      promConfig.URL,
-		RoundTripper: prom_config.NewHeadersRoundTripper(&headers, tripper),
+		Address: promConfig.URL,
+		RoundTripper: http.RoundTripper(&httpretry.RetryRoundtripper{
+			Next:          prom_config.NewHeadersRoundTripper(&headers, tripper),
+			MaxRetryCount: promConfig.MaxRetries,
+			ShouldRetry: func(statusCode int, err error) bool {
+				switch statusCode {
+				case // status codes that should be retried
+					http.StatusRequestTimeout,
+					http.StatusConflict,
+					http.StatusLocked,
+					http.StatusTooManyRequests,
+					http.StatusInternalServerError,
+					http.StatusBadGateway,
+					http.StatusServiceUnavailable,
+					http.StatusGatewayTimeout:
+					return true
+				case 0: // means we did not get a response. we need to retry
+					return true
+				}
+				return false
+			},
+			CalculateBackoff: httpretry.ExponentialBackoff(1*time.Second, promConfig.MaxRetryWait, 200*time.Millisecond),
+		}),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)

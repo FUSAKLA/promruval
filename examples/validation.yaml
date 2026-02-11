@@ -5,6 +5,8 @@ prometheus:
   url: https://prometheus.demo.prometheus.io
   timeout: 5s
   bearerTokenFile: ./bearer.token
+  maxRetries: 3
+  maxRetryWait: 30s
 
 validationRules:
   - name: check-severity-label

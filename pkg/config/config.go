@@ -96,6 +96,8 @@ type PrometheusConfig struct {
 	QueryOffset           time.Duration     `yaml:"queryOffset,omitempty" default:"1m"`
 	QueryLookback         time.Duration     `yaml:"queryLookback,omitempty" default:"20m"`
 	HTTPHeaders           map[string]string `yaml:"httpHeaders,omitempty"`
+	MaxRetries            int               `yaml:"maxRetries,omitempty" default:"0"`
+	MaxRetryWait          time.Duration     `yaml:"maxRetryWait,omitempty" default:"30s"`
 }
 
 func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
