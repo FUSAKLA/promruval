@@ -137,6 +137,23 @@ func (r *FileReport) NewGroupReport(name string) *GroupReport {
 	return &newReport
 }
 
+// AddError safely adds an error to the file report.
+func (r *FileReport) AddError(err *Error) {
+	r.mu.Lock()
+	r.Errors = append(r.Errors, err)
+	r.mu.Unlock()
+}
+
+// AddErrors safely adds multiple errors to the file report.
+func (r *FileReport) AddErrors(errs []*Error) {
+	if len(errs) == 0 {
+		return
+	}
+	r.mu.Lock()
+	r.Errors = append(r.Errors, errs...)
+	r.mu.Unlock()
+}
+
 func (r *FileReport) AsText(output *IndentedOutput) {
 	if r.Valid {
 		return
@@ -174,6 +191,23 @@ func (r *GroupReport) NewRuleReport(name string, ruleType config.ValidationScope
 	return &newReport
 }
 
+// AddError safely adds an error to the group report.
+func (r *GroupReport) AddError(err *Error) {
+	r.mu.Lock()
+	r.Errors = append(r.Errors, err)
+	r.mu.Unlock()
+}
+
+// AddErrors safely adds multiple errors to the group report.
+func (r *GroupReport) AddErrors(errs []*Error) {
+	if len(errs) == 0 {
+		return
+	}
+	r.mu.Lock()
+	r.Errors = append(r.Errors, errs...)
+	r.mu.Unlock()
+}
+
 func (r *GroupReport) AsText(output *IndentedOutput) {
 	if r.Valid {
 		return
@@ -206,6 +240,8 @@ type RuleReport struct {
 	Name     string                 `json:"name" yaml:"name"`
 	Excluded bool                   `json:"excluded" yaml:"excluded"`
 	Errors   []*Error               `json:"errors" yaml:"errors"`
+
+	mu sync.Mutex `json:"-" yaml:"-"`
 }
 
 func (r *RuleReport) AsText(output *IndentedOutput) {
@@ -220,6 +256,23 @@ func (r *RuleReport) AsText(output *IndentedOutput) {
 		return
 	}
 	output.WriteErrors(r.Errors)
+}
+
+// AddError safely adds an error to the rule report.
+func (r *RuleReport) AddError(err *Error) {
+	r.mu.Lock()
+	r.Errors = append(r.Errors, err)
+	r.mu.Unlock()
+}
+
+// AddErrors safely adds multiple errors to the rule report.
+func (r *RuleReport) AddErrors(errs []*Error) {
+	if len(errs) == 0 {
+		return
+	}
+	r.mu.Lock()
+	r.Errors = append(r.Errors, errs...)
+	r.mu.Unlock()
 }
 
 func (r *ValidationReport) AsText(indentationStep int, color bool) (string, error) {

@@ -53,7 +53,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 		jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
 		if err != nil {
 			fileReport.Valid = false
-			fileReport.Errors = []*report.Error{report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err)}
+			fileReport.AddError(report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err))
 			return groupsCount, rulesCount, err
 		}
 		yamlReader = strings.NewReader(jsonnetOutput)
@@ -62,7 +62,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 		yamlReader, err = os.Open(fileName)
 		if err != nil {
 			fileReport.Valid = false
-			fileReport.Errors = []*report.Error{report.NewErrorf("cannot read file %s: %w", fileName, err)}
+			fileReport.AddError(report.NewErrorf("cannot read file %s: %w", fileName, err))
 			return groupsCount, rulesCount, err
 		}
 	}
@@ -75,7 +75,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 			return groupsCount, rulesCount, nil
 		}
 		fileReport.Valid = false
-		fileReport.Errors = []*report.Error{report.NewErrorf("invalid file %s: %w", fileName, err)}
+		fileReport.AddError(report.NewErrorf("invalid file %s: %w", fileName, err))
 		return groupsCount, rulesCount, err
 	}
 	fileDisabledValidators := rf.DisabledValidators(disableValidationsComment)
@@ -85,11 +85,10 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 		groupReport := fileReport.NewGroupReport(group.Name)
 		groupDisabledValidators := group.DisabledValidators(disableValidationsComment)
 		if err := validator.KnownValidators(config.AllScope, groupDisabledValidators); err != nil {
-			groupReport.Errors = append(groupReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
+			groupReport.AddError(report.NewErrorf("invalid disabled validators: %w", err))
 		}
 		groupDisabledValidators = slices.Concat(groupDisabledValidators, fileDisabledValidators, allGroupsDisabledValidators)
 
-		var groupErrorsMutex sync.Mutex
 		var groupWg sync.WaitGroup
 	groupValidationLoop:
 		for _, rule := range validationRules {
@@ -114,9 +113,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 					defer groupWg.Done()
 					errs := validateWithDetails(validator, group.RuleGroup, rulefmt.Rule{}, prometheusClient)
 					if len(errs) > 0 {
-						groupErrorsMutex.Lock()
-						groupReport.Errors = append(groupReport.Errors, errs...)
-						groupErrorsMutex.Unlock()
+						groupReport.AddErrors(errs)
 					}
 				}(v)
 				if disableParallelization {
@@ -146,11 +143,10 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 			}
 			disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
 			if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
-				ruleReport.Errors = append(ruleReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
+				ruleReport.AddError(report.NewErrorf("invalid disabled validators: %w", err))
 			}
 			disabledValidators = append(disabledValidators, groupDisabledValidators...)
 
-			var ruleErrorsMutex sync.Mutex
 			var ruleWg sync.WaitGroup
 		ruleValidationLoop:
 			for _, rule := range validationRules {
@@ -186,9 +182,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 						validationStart := time.Now()
 						errs := validateWithDetails(validator, grp, rule, prometheusClient)
 						if len(errs) > 0 {
-							ruleErrorsMutex.Lock()
-							ruleReport.Errors = append(ruleReport.Errors, errs...)
-							ruleErrorsMutex.Unlock()
+							ruleReport.AddErrors(errs)
 						}
 						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, vName, time.Since(validationStart))
 					}(v, group.RuleGroup, originalRule, validatorName)
