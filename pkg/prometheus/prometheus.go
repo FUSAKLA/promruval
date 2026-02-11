@@ -102,10 +102,23 @@ func (s *Client) newClient(additionalHTTPHeaders map[string]string) (api.Client,
 	if s.bearerToken != "" {
 		tripper = prom_config.NewAuthorizationCredentialsRoundTripper("Bearer", prom_config.NewInlineSecret(s.bearerToken), tripper)
 	}
-	for k, v := range additionalHTTPHeaders {
-		s.httpHeaders.Headers[k] = prom_config.Header{Values: []string{v}}
+
+	// Create a copy of headers to avoid concurrent map writes
+	headers := prom_config.Headers{
+		Headers: make(map[string]prom_config.Header),
 	}
-	tripper = prom_config.NewHeadersRoundTripper(s.httpHeaders, tripper)
+
+	// Copy original headers
+	for k, v := range s.httpHeaders.Headers {
+		headers.Headers[k] = v
+	}
+
+	// Add additional headers to the copy
+	for k, v := range additionalHTTPHeaders {
+		headers.Headers[k] = prom_config.Header{Values: []string{v}}
+	}
+
+	tripper = prom_config.NewHeadersRoundTripper(&headers, tripper)
 	if s.maxRetries > 0 {
 		tripper = http.RoundTripper(&httpretry.RetryRoundtripper{
 			Next:          tripper,

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	prom_config "github.com/prometheus/common/config"
 	"gotest.tools/assert"
 )
 
@@ -535,4 +536,63 @@ func TestSourceTenantsDataRaceCondition(t *testing.T) {
 	cache.mtx.RUnlock()
 
 	assert.Equal(t, 1, cacheSize, "Cache should contain exactly one tenant entry")
+}
+
+func TestClient_NewClientConcurrency(t *testing.T) {
+	// Test that newClient method doesn't have race conditions when called concurrently
+
+	// Create a client instance
+	tmpFile, err := os.CreateTemp("", "client_test_*.json")
+	assert.NilError(t, err)
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Close()
+
+	cache := newCache(tmpFile.Name(), "http://localhost:9090", time.Hour)
+
+	client := &Client{
+		httpHeaders: &prom_config.Headers{
+			Headers: map[string]prom_config.Header{
+				"User-Agent": {Values: []string{"promruval"}},
+			},
+		},
+		prometheusURL:         "http://localhost:9090",
+		timeout:               30 * time.Second,
+		cache:                 cache,
+		maxRetries:            3,
+		insecureSkipTLSVerify: true,
+	}
+
+	const numGoroutines = 100
+	const numOperations = 10
+	var wg sync.WaitGroup
+
+	// All goroutines call newClient with different additional headers
+	for i := 0; i < numGoroutines; i++ {
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			for j := 0; j < numOperations; j++ {
+				headers := map[string]string{
+					fmt.Sprintf("X-Test-Header-%d", id): fmt.Sprintf("value-%d-%d", id, j),
+					fmt.Sprintf("X-Goroutine-%d", id):   fmt.Sprintf("routine-%d", id),
+					fmt.Sprintf("X-Iteration-%d", j):    fmt.Sprintf("iter-%d", j),
+				}
+
+				// This should not cause concurrent map writes
+				_, err := client.newClient(headers)
+				if err != nil {
+					// We expect this to fail since we don't have a real Prometheus server,
+					// but it should fail gracefully, not with a race condition panic
+					_ = err // Ignore the error, we just want to test for race conditions
+				}
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	// If we reach here without panicking, the race condition is fixed
+	// Verify that original headers are unchanged
+	assert.Equal(t, 1, len(client.httpHeaders.Headers), "Original headers should be unchanged")
+	assert.Equal(t, "promruval", client.httpHeaders.Headers["User-Agent"].Values[0], "Original User-Agent should be unchanged")
 }
