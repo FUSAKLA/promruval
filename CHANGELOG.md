@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.14.0] - 2026-02-07
+ - Fixed: Concurrency issues in the validation execution introduces in 3.11.0
+ - Added: Retrying for Prometheus queries, can be configured with `prometheus.maxRetries` and `prometheus.retryDelay` config options.
+
 ## [3.13.0] - 2026-02-06
  - Fixed: Initial Empty cache file handling (formerly reported invalid warning in logs)
  - Fixed: Bearer token file loading from config file path when multiple validation config files were used.
