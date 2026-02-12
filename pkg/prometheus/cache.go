@@ -22,6 +22,7 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 	f, err := os.Open(file)
 	if err != nil {
 		if os.IsNotExist(err) {
+			// Create new cache file with empty cache data
 			f, err = os.Create(file)
 			if err != nil {
 				log.WithError(err).WithField("file", file).Warn("error creating cache file")
@@ -30,19 +31,30 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 			emptyCacheJSON, err := json.Marshal(&emptyCache)
 			if err != nil {
 				log.WithError(err).WithField("file", file).Warn("error creating cache file")
+				f.Close()
 				return &emptyCache
 			}
 			_, err = f.Write(emptyCacheJSON)
 			if err != nil {
 				log.WithError(err).WithField("file", file).Warn("error writing empty cache file")
+				f.Close()
 				return &emptyCache
 			}
 			f.Close()
+
+			// Now reopen the file for reading
+			f, err = os.Open(file)
+			if err != nil {
+				log.WithError(err).WithField("file", file).Warn("error reopening cache file")
+				return &emptyCache
+			}
 		} else {
 			log.WithError(err).WithField("file", file).Warn("error opening cache file, skipping")
 			return &emptyCache
 		}
 	}
+	defer f.Close()
+
 	if err := json.NewDecoder(f).Decode(&previousCache); err != nil {
 		log.WithError(err).WithField("file", file).Warn("invalid cache file format")
 		return &emptyCache
