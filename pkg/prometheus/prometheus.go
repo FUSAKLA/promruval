@@ -8,12 +8,15 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	prom_config "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
 	"github.com/ybbus/httpretry"
@@ -23,6 +26,36 @@ const (
 	bearerTokenEnvVar = "PROMETHEUS_BEARER_TOKEN"
 	userAgent         = "promruval"
 )
+
+var prometheusRequestDuration = promauto.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "promruval_prometheus_request_duration_seconds",
+		Help:    "Duration of HTTP requests to Prometheus API in seconds.",
+		Buckets: prometheus.ExponentialBucketsRange(0.01, 180, 10),
+	},
+	[]string{"method", "status_code"},
+)
+
+// instrumentedRoundTripper wraps an http.RoundTripper and records metrics.
+type instrumentedRoundTripper struct {
+	next http.RoundTripper
+}
+
+func (irt *instrumentedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	start := time.Now()
+	resp, err := irt.next.RoundTrip(req)
+	duration := time.Since(start).Seconds()
+
+	statusCode := "error"
+	if resp != nil {
+		statusCode = strconv.Itoa(resp.StatusCode)
+	}
+
+	method := req.Method
+	prometheusRequestDuration.WithLabelValues(method, statusCode).Observe(duration)
+
+	return resp, err
+}
 
 func sourceTenantsToHeader(sourceTenants []string) string {
 	return strings.Join(sort.StringSlice(sourceTenants), "|")
@@ -152,6 +185,10 @@ func (s *Client) newClient(additionalHTTPHeaders map[string]string) (api.Client,
 		})
 	}
 	tripper = prom_config.NewHeadersRoundTripper(&headers, tripper)
+
+	// Wrap with instrumentation to track metrics (outermost layer to measure complete requests including retries)
+	tripper = &instrumentedRoundTripper{next: tripper}
+
 	cli, err := api.NewClient(api.Config{
 		Address:      s.prometheusURL,
 		RoundTripper: tripper,
