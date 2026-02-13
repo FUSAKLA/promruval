@@ -79,10 +79,10 @@ func (l *Loader) Load() (*Config, error) {
 }
 
 type Config struct {
-	CustomExcludeAnnotation string           `yaml:"customExcludeAnnotation"`
-	CustomDisableComment    string           `yaml:"customDisableComment"`
-	ValidationRules         []ValidationRule `yaml:"validationRules"`
-	Prometheus              PrometheusConfig `yaml:"prometheus"`
+	CustomExcludeAnnotation string            `yaml:"customExcludeAnnotation"`
+	CustomDisableComment    string            `yaml:"customDisableComment"`
+	ValidationRules         []ValidationRule  `yaml:"validationRules"`
+	Prometheus              *PrometheusConfig `yaml:"prometheus,omitempty"`
 }
 
 type PrometheusConfig struct {
@@ -252,8 +252,15 @@ func LoadConfiguration(configFilePaths []string) (*Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error loading config file %s: %w", cf, err)
 		}
-		if err := mainConfig.Prometheus.PatchNonDefault(validationConfig.Prometheus); err != nil {
-			return nil, fmt.Errorf("error merging prometheus config from file %s: %w", cf, err)
+		// Only merge prometheus config if it was specified in the additional config file
+		if validationConfig.Prometheus != nil {
+			if mainConfig.Prometheus == nil {
+				mainConfig.Prometheus = validationConfig.Prometheus
+			} else {
+				if err := mainConfig.Prometheus.PatchNonDefault(*validationConfig.Prometheus); err != nil {
+					return nil, fmt.Errorf("error merging prometheus config from file %s: %w", cf, err)
+				}
+			}
 		}
 		if validationConfig.CustomExcludeAnnotation != "" {
 			mainConfig.CustomExcludeAnnotation = validationConfig.CustomExcludeAnnotation
