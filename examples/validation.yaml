@@ -58,6 +58,8 @@ validationRules:
         params:
           annotation: "link"
           resolveUrl: true
+          asTemplate: true
+          urlPrefix: "https://example.com"
 
   - name: check-alert-title
     scope: Alert

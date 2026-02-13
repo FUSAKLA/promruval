@@ -299,8 +299,8 @@ func Cmd(filePaths []string, mainConfig *config.Config, validationRules []*valid
 
 	var err error
 	var prometheusClient *prometheus.Client
-	if mainConfig.Prometheus.URL != "" {
-		prometheusClient, err = prometheus.NewClient(mainConfig.Prometheus)
+	if mainConfig.Prometheus != nil && mainConfig.Prometheus.URL != "" {
+		prometheusClient, err = prometheus.NewClient(*mainConfig.Prometheus)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
 		}
@@ -316,7 +316,7 @@ func Cmd(filePaths []string, mainConfig *config.Config, validationRules []*valid
 	}
 	validationReport := Files(filesToBeValidated, validationRules, excludeAnnotation, disableValidatorsComment, prometheusClient, disableParallelization)
 
-	if mainConfig.Prometheus.URL != "" {
+	if mainConfig.Prometheus != nil && mainConfig.Prometheus.URL != "" {
 		prometheusClient.DumpCache()
 	}
 	return validationReport, nil

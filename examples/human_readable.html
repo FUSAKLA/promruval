@@ -25,7 +25,7 @@
 	  <h4>Following conditions MUST be met:</h4>
 	  <ul>
 		<li>Alert has any of these annotations: <code>playbook</code>,<code>link</code></li>
-		<li>Alert Annotation <code>link</code> is a valid URL and does not return HTTP status 404</li>
+		<li>Alert Annotation <code>link</code> is a valid URL (with prefix <code>https://example.com</code>) (when parsed as a Go text template) and does not return HTTP status 404</li>
 	  </ul>
   <br/>
   <h2><a href="#check-alert-title">check-alert-title</a></h2>
