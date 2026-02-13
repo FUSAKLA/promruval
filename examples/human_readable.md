@@ -20,7 +20,7 @@
 ## check-playbook-annotation
 #### Following conditions MUST be met:
   - Alert has any of these annotations: `playbook`,`link`
-  - Alert Annotation `link` is a valid URL and does not return HTTP status 404
+  - Alert Annotation `link` is a valid URL (with prefix `https://example.com`) (when parsed as a Go text template) and does not return HTTP status 404
 
 ## check-alert-title
 #### Following conditions MUST be met:

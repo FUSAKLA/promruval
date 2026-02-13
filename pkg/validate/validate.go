@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	log "log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -20,7 +21,6 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/validator"
 	"github.com/google/go-jsonnet"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -41,12 +41,7 @@ func validateWithDetails(v validationrule.ValidatorWithDetails, group unmarshale
 	return errs
 }
 
-func validateFile(fileName string, fileIndex, fileCount int, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, jsonnetVM *jsonnet.VM, validationReport *report.ValidationReport, disableParallelization bool) (groupsCount, rulesCount int, err error) {
-	log.WithFields(log.Fields{
-		"file":     fileName,
-		"progress": fmt.Sprintf("%d/%d", fileIndex+1, fileCount),
-	}).Info("processing file")
-
+func validateFile(fileName string, validationRules []*validationrule.ValidationRule, excludeAnnotationName, disableValidationsComment string, prometheusClient *prometheus.Client, jsonnetVM *jsonnet.VM, validationReport *report.ValidationReport, disableParallelization bool) (groupsCount, rulesCount int, err error) {
 	fileReport := validationReport.NewFileReport(fileName)
 	var yamlReader io.Reader
 	groupsCount = 0
@@ -54,11 +49,11 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 
 	switch {
 	case strings.HasSuffix(fileName, ".jsonnet"):
-		log.Debugf("evaluating jsonnet file %s", fileName)
+		log.Debug("evaluating jsonnet file", "file", fileName)
 		jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
 		if err != nil {
-			fileReport.Valid = false
-			fileReport.Errors = []*report.Error{report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err)}
+			fileReport.Valid.Store(false)
+			fileReport.AddError(report.NewErrorf("cannot evaluate jsonnet file %s: %w", fileName, err))
 			return groupsCount, rulesCount, err
 		}
 		yamlReader = strings.NewReader(jsonnetOutput)
@@ -66,8 +61,8 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 		var err error
 		yamlReader, err = os.Open(fileName)
 		if err != nil {
-			fileReport.Valid = false
-			fileReport.Errors = []*report.Error{report.NewErrorf("cannot read file %s: %w", fileName, err)}
+			fileReport.Valid.Store(false)
+			fileReport.AddError(report.NewErrorf("cannot read file %s: %w", fileName, err))
 			return groupsCount, rulesCount, err
 		}
 	}
@@ -79,8 +74,8 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 		if errors.Is(err, io.EOF) {
 			return groupsCount, rulesCount, nil
 		}
-		fileReport.Valid = false
-		fileReport.Errors = []*report.Error{report.NewErrorf("invalid file %s: %w", fileName, err)}
+		fileReport.Valid.Store(false)
+		fileReport.AddError(report.NewErrorf("invalid file %s: %w", fileName, err))
 		return groupsCount, rulesCount, err
 	}
 	fileDisabledValidators := rf.DisabledValidators(disableValidationsComment)
@@ -90,11 +85,10 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 		groupReport := fileReport.NewGroupReport(group.Name)
 		groupDisabledValidators := group.DisabledValidators(disableValidationsComment)
 		if err := validator.KnownValidators(config.AllScope, groupDisabledValidators); err != nil {
-			groupReport.Errors = append(groupReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
+			groupReport.AddError(report.NewErrorf("invalid disabled validators: %w", err))
 		}
 		groupDisabledValidators = slices.Concat(groupDisabledValidators, fileDisabledValidators, allGroupsDisabledValidators)
 
-		var groupErrorsMutex sync.Mutex
 		var groupWg sync.WaitGroup
 	groupValidationLoop:
 		for _, rule := range validationRules {
@@ -106,7 +100,7 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 					continue
 				}
 				if errs := validateWithDetails(v, group.RuleGroup, rulefmt.Rule{}, prometheusClient); len(errs) > 0 {
-					log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+					log.Debug("skipping validation because onlyIf results with errors", "file", fileName, "group", group.Name, "validator", v, "errors", errs)
 					continue groupValidationLoop
 				}
 			}
@@ -119,9 +113,7 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 					defer groupWg.Done()
 					errs := validateWithDetails(validator, group.RuleGroup, rulefmt.Rule{}, prometheusClient)
 					if len(errs) > 0 {
-						groupErrorsMutex.Lock()
-						groupReport.Errors = append(groupReport.Errors, errs...)
-						groupErrorsMutex.Unlock()
+						groupReport.AddErrors(errs)
 					}
 				}(v)
 				if disableParallelization {
@@ -131,8 +123,8 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 		}
 		groupWg.Wait()
 		if len(groupReport.Errors) > 0 {
-			fileReport.Valid = false
-			groupReport.Valid = false
+			fileReport.Valid.Store(false)
+			groupReport.Valid.Store(false)
 		}
 		for _, ruleNode := range group.Rules {
 			rulesCount++
@@ -151,11 +143,10 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 			}
 			disabledValidators := ruleNode.DisabledValidators(disableValidationsComment)
 			if err := validator.KnownValidators(config.AllScope, disabledValidators); err != nil {
-				ruleReport.Errors = append(ruleReport.Errors, report.NewErrorf("invalid disabled validators: %w", err))
+				ruleReport.AddError(report.NewErrorf("invalid disabled validators: %w", err))
 			}
 			disabledValidators = append(disabledValidators, groupDisabledValidators...)
 
-			var ruleErrorsMutex sync.Mutex
 			var ruleWg sync.WaitGroup
 		ruleValidationLoop:
 			for _, rule := range validationRules {
@@ -173,11 +164,11 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 				for _, v := range rule.OnlyIf() {
 					if validator.MatchesScope(originalRule, ruleNode.Scope()) {
 						if errs := validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient); len(errs) > 0 {
-							log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+							log.Debug("skipping validation because onlyIf results with errors", "file", fileName, "group", group.Name, "validator", v, "errors", errs)
 							continue ruleValidationLoop
 						}
 					} else {
-						log.Debugf("skipping onlyIf validation of file %s group %s because it is not applicable: validator scrope: `%s`, rule scope: `%s`", fileName, group.Name, validator.Scope(v.Name()), ruleNode.Scope())
+						log.Debug("skipping onlyIf validation because it is not applicable", "file", fileName, "group", group.Name, "validator_scope", validator.Scope(v.Name()), "rule_scope", ruleNode.Scope())
 					}
 				}
 				for _, v := range rule.Validators() {
@@ -191,11 +182,9 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 						validationStart := time.Now()
 						errs := validateWithDetails(validator, grp, rule, prometheusClient)
 						if len(errs) > 0 {
-							ruleErrorsMutex.Lock()
-							ruleReport.Errors = append(ruleReport.Errors, errs...)
-							ruleErrorsMutex.Unlock()
+							ruleReport.AddErrors(errs)
 						}
-						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, vName, time.Since(validationStart))
+						log.Debug("validation completed", "file", fileName, "group", group.Name, "validator", vName, "duration", time.Since(validationStart))
 					}(v, group.RuleGroup, originalRule, validatorName)
 					if disableParallelization {
 						ruleWg.Wait()
@@ -204,9 +193,9 @@ func validateFile(fileName string, fileIndex, fileCount int, validationRules []*
 			}
 			ruleWg.Wait()
 			if len(ruleReport.Errors) > 0 {
-				fileReport.Valid = false
-				groupReport.Valid = false
-				ruleReport.Valid = false
+				fileReport.Valid.Store(false)
+				groupReport.Valid.Store(false)
+				ruleReport.Valid.Store(false)
 			}
 		}
 	}
@@ -228,30 +217,35 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 	// Create a jsonnet VM for each goroutine to avoid race conditions
 	for i, fileName := range fileNames {
 		filesWg.Add(1)
-		go func(fileName string, fileIndex int) {
+		go func(fileName string, i int) {
 			defer filesWg.Done()
+			fileStart := time.Now()
 			jsonnetVM := jsonnet.MakeVM()
-			groupsCount, rulesCount, err := validateFile(fileName, fileIndex, fileCount, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport, disableParallelization)
+			groupsCount, rulesCount, err := validateFile(fileName, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport, disableParallelization)
 			if err != nil {
-				log.WithError(err).Errorf("error validating file %s", fileName)
+				log.Error("error validating file", "file", fileName, "error", err)
 			}
 
 			reportMutex.Lock()
-			validationReport.FilesCount++
-			validationReport.GroupsCount += groupsCount
-			validationReport.RulesCount += rulesCount
-			if len(validationReport.FilesReports) > 0 && !validationReport.FilesReports[len(validationReport.FilesReports)-1].Valid {
-				validationReport.Failed = true
+			validationReport.FilesCount.Inc()
+			validationReport.GroupsCount.Add(int32(groupsCount))
+			validationReport.RulesCount.Add(int32(rulesCount))
+			if len(validationReport.FilesReports) > 0 && !validationReport.FilesReports[len(validationReport.FilesReports)-1].Valid.Load() {
+				validationReport.Failed.Store(true)
 			}
 			reportMutex.Unlock()
+			if disableParallelization {
+				log.Info("finished processing file", "file", fileName, "duration", time.Since(fileStart), "progress", fmt.Sprintf("%d/%d", i+1, fileCount))
+			} else {
+				log.Info("finished processing file", "file", fileName, "duration", time.Since(fileStart))
+			}
 		}(fileName, i)
 		if disableParallelization {
 			filesWg.Wait()
 		}
 	}
-
 	filesWg.Wait()
-	validationReport.Duration = time.Since(start)
+	validationReport.Duration.Store(time.Since(start))
 	return validationReport
 }
 
@@ -302,8 +296,8 @@ func Cmd(filePaths []string, mainConfig *config.Config, validationRules []*valid
 
 	var err error
 	var prometheusClient *prometheus.Client
-	if mainConfig.Prometheus.URL != "" {
-		prometheusClient, err = prometheus.NewClient(mainConfig.Prometheus)
+	if mainConfig.Prometheus != nil && mainConfig.Prometheus.URL != "" {
+		prometheusClient, err = prometheus.NewClient(*mainConfig.Prometheus)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
 		}
@@ -319,7 +313,7 @@ func Cmd(filePaths []string, mainConfig *config.Config, validationRules []*valid
 	}
 	validationReport := Files(filesToBeValidated, validationRules, excludeAnnotation, disableValidatorsComment, prometheusClient, disableParallelization)
 
-	if mainConfig.Prometheus.URL != "" {
+	if mainConfig.Prometheus != nil && mainConfig.Prometheus.URL != "" {
 		prometheusClient.DumpCache()
 	}
 	return validationReport, nil

@@ -2,9 +2,9 @@
   validationRules:
     [
       {
-        name: "another-checks",
-        scope: "All rules",
-        validations: [{ type: "nonEmptyLabels" }],
+        name: 'another-checks',
+        scope: 'All rules',
+        validations: [{ type: 'nonEmptyLabels' }],
       },
     ],
 }

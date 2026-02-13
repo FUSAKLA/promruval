@@ -97,6 +97,9 @@ var testCases = []struct {
 	{name: "ruleHasAnnotationWithInvalidTemplateURL", validator: annotationIsValidURL{annotation: "foo", asTemplate: true}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "https://foo.bar/{{ if }}"}}, expectedErrors: 1},
 	{name: "ruleHasAnnotationWithValidTemplateURLButTemplatesAreOff", validator: annotationIsValidURL{annotation: "foo"}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "{{ $x := .Labels.foo }}{{ if match `^foo` .ExternalLabels.bar }}{{ $x = `z` }}{{ end }}https://foo.bar/{{ $x }}"}}, expectedErrors: 1},
 	{name: "ruleHasAnnotationWithValidTemplateURL", validator: annotationIsValidURL{annotation: "foo", asTemplate: true}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "{{ $x := .Labels.foo }}{{ if match `^foo` .ExternalLabels.bar }}{{ $x = `z` }}{{ end }}https://foo.bar/{{ $x }}"}}, expectedErrors: 0},
+	{name: "ruleHasAnnotationWithRelativePathAndUrlPrefix", validator: annotationIsValidURL{annotation: "foo", resolveURL: false, urlPrefix: "https://example.com"}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "/path/to/page"}}, expectedErrors: 0},
+	{name: "ruleHasAnnotationWithRelativePathWithoutUrlPrefix", validator: annotationIsValidURL{annotation: "foo", resolveURL: false}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "/path/to/page"}}, expectedErrors: 1},
+	{name: "ruleHasAnnotationWithUrlPrefixAndFullUrl", validator: annotationIsValidURL{annotation: "foo", resolveURL: false, urlPrefix: "https://example.com"}, rule: rulefmt.Rule{Annotations: map[string]string{"foo": "https://other.com/page"}}, expectedErrors: 0},
 
 	// expressionDoesNotUseLabels
 	{name: "ruleExprDoesNotUseLabels", validator: expressionDoesNotUseLabels{labels: []string{"foo"}}, rule: rulefmt.Rule{Expr: "up{xxx='yyy'}"}, expectedErrors: 0},

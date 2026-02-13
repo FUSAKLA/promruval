@@ -554,6 +554,14 @@ URL and fails if the request does not succeed or returns 404 HTTP status code.
 > It's common practice to link a playbook with guide how to solve the alert in the alert itself.
 > This way you can verify it's a working URL and possibly if it really exists.
 
+If `urlPrefix` is specified, its value is prepended to the annotation value before validation. This is useful when
+annotations contain relative paths that need to be combined with a base URL for validation. The prefix is only applied
+if the annotation value doesn't already start with `http://` or `https://`, allowing both relative and absolute URLs
+to be used with the same validator configuration.
+> For example, if the annotation contains `/path/to/page` and `urlPrefix` is set to `https://example.com`,
+> the validator will check `https://example.com/path/to/page`. If the annotation already contains a full URL
+> like `https://other.com/page`, the prefix will not be applied.
+
 If `asTemplate` is enabled, the annotation is parsed as a [Go text template](
 https://pkg.go.dev/text/template) and executed with empty/zero data. If the
 parsing or execution fails, the validation fails. Otherwise the result of the
@@ -564,13 +572,15 @@ execution must be a valid URL for the validation to pass.
 > empty values.
 
 If `asTemplate` and `resolveUrl` are both enabled, the template is executed
-first and the HTTP request is performed on the result.
+first and the HTTP request is performed on the result. If `urlPrefix` is also set,
+the prefix is applied after template expansion.
 
 ```yaml
 params:
   annotation: "playbook"
-  resolveUrl: true
-  asTemplate: false
+  resolveUrl: true  # If true, makes an HTTP request to the URL and expects a successful response
+  asTemplate: false  # If value should be evaluated as template first
+  urlPrefix: "https://example.com"  # optional, prepends to annotation value
 ```
 
 #### `annotationIsValidPromQL`

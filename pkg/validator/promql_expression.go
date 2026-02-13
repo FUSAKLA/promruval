@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 	"fmt"
+	log "log/slog"
 	"maps"
 	"regexp"
 	"slices"
@@ -15,7 +16,6 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/model/rulefmt"
 	"github.com/prometheus/prometheus/promql/parser"
-	log "github.com/sirupsen/logrus"
 )
 
 func newExpressionIsValidPromQL(unmarshal unmarshalParamsFunc) (Validator, error) {

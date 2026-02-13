@@ -79,10 +79,10 @@ func (l *Loader) Load() (*Config, error) {
 }
 
 type Config struct {
-	CustomExcludeAnnotation string           `yaml:"customExcludeAnnotation"`
-	CustomDisableComment    string           `yaml:"customDisableComment"`
-	ValidationRules         []ValidationRule `yaml:"validationRules"`
-	Prometheus              PrometheusConfig `yaml:"prometheus"`
+	CustomExcludeAnnotation string            `yaml:"customExcludeAnnotation"`
+	CustomDisableComment    string            `yaml:"customDisableComment"`
+	ValidationRules         []ValidationRule  `yaml:"validationRules"`
+	Prometheus              *PrometheusConfig `yaml:"prometheus,omitempty"`
 }
 
 type PrometheusConfig struct {
@@ -96,6 +96,65 @@ type PrometheusConfig struct {
 	QueryOffset           time.Duration     `yaml:"queryOffset,omitempty" default:"1m"`
 	QueryLookback         time.Duration     `yaml:"queryLookback,omitempty" default:"20m"`
 	HTTPHeaders           map[string]string `yaml:"httpHeaders,omitempty"`
+	MaxRetries            int               `yaml:"maxRetries,omitempty" default:"0"`
+	MaxRetryWait          time.Duration     `yaml:"maxRetryWait,omitempty" default:"30s"`
+}
+
+func defaultPrometheusConfig() (PrometheusConfig, error) {
+	def := PrometheusConfig{}
+	if err := defaults.Set(&def); err != nil {
+		return def, err
+	}
+	return def, nil
+}
+
+func (c *PrometheusConfig) PatchNonDefault(other PrometheusConfig) error {
+	def, err := defaultPrometheusConfig()
+	if err != nil {
+		return err
+	}
+	if other.URL != def.URL {
+		c.URL = other.URL
+	}
+	if other.Timeout != def.Timeout {
+		c.Timeout = other.Timeout
+	}
+	if other.InsecureSkipTLSVerify != def.InsecureSkipTLSVerify {
+		c.InsecureSkipTLSVerify = other.InsecureSkipTLSVerify
+	}
+	if other.DisableCache != def.DisableCache {
+		c.DisableCache = other.DisableCache
+	}
+	if other.CacheFile != def.CacheFile {
+		c.CacheFile = other.CacheFile
+	}
+	if other.MaxCacheAge != def.MaxCacheAge {
+		c.MaxCacheAge = other.MaxCacheAge
+	}
+	if other.BearerTokenFile != def.BearerTokenFile {
+		c.BearerTokenFile = other.BearerTokenFile
+	}
+	if other.QueryOffset != def.QueryOffset {
+		c.QueryOffset = other.QueryOffset
+	}
+	if other.QueryLookback != def.QueryLookback {
+		c.QueryLookback = other.QueryLookback
+	}
+	if len(other.HTTPHeaders) > 0 {
+		if c.HTTPHeaders == nil {
+			c.HTTPHeaders = map[string]string{}
+		}
+		for k, v := range other.HTTPHeaders {
+			c.HTTPHeaders[k] = v
+		}
+	}
+	if other.MaxRetries != def.MaxRetries {
+		c.MaxRetries = other.MaxRetries
+	}
+	if other.MaxRetryWait != def.MaxRetryWait {
+		c.MaxRetryWait = other.MaxRetryWait
+	}
+	return nil
 }
 
 func (c *PrometheusConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -193,8 +252,15 @@ func LoadConfiguration(configFilePaths []string) (*Config, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error loading config file %s: %w", cf, err)
 		}
-		if validationConfig.Prometheus.URL != "" {
-			mainConfig.Prometheus = validationConfig.Prometheus
+		// Only merge prometheus config if it was specified in the additional config file
+		if validationConfig.Prometheus != nil {
+			if mainConfig.Prometheus == nil {
+				mainConfig.Prometheus = validationConfig.Prometheus
+			} else {
+				if err := mainConfig.Prometheus.PatchNonDefault(*validationConfig.Prometheus); err != nil {
+					return nil, fmt.Errorf("error merging prometheus config from file %s: %w", cf, err)
+				}
+			}
 		}
 		if validationConfig.CustomExcludeAnnotation != "" {
 			mainConfig.CustomExcludeAnnotation = validationConfig.CustomExcludeAnnotation

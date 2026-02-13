@@ -204,6 +204,7 @@ func newAnnotationIsValidURL(unmarshal unmarshalParamsFunc) (Validator, error) {
 		Annotation string `yaml:"annotation"`
 		ResolveURL bool   `yaml:"resolveUrl"`
 		AsTemplate bool   `yaml:"asTemplate"`
+		URLPrefix  string `yaml:"urlPrefix"`
 	}{}
 	if err := unmarshal(&params); err != nil {
 		return nil, err
@@ -211,17 +212,21 @@ func newAnnotationIsValidURL(unmarshal unmarshalParamsFunc) (Validator, error) {
 	if params.Annotation == "" {
 		return nil, fmt.Errorf("missing annotation name")
 	}
-	return &annotationIsValidURL{annotation: params.Annotation, resolveURL: params.ResolveURL, asTemplate: params.AsTemplate}, nil
+	return &annotationIsValidURL{annotation: params.Annotation, resolveURL: params.ResolveURL, asTemplate: params.AsTemplate, urlPrefix: params.URLPrefix}, nil
 }
 
 type annotationIsValidURL struct {
 	annotation string
 	resolveURL bool
 	asTemplate bool
+	urlPrefix  string
 }
 
 func (h annotationIsValidURL) String() string {
 	text := fmt.Sprintf("Annotation `%s` is a valid URL", h.annotation)
+	if h.urlPrefix != "" {
+		text += fmt.Sprintf(" (with prefix `%s`)", h.urlPrefix)
+	}
 	if h.asTemplate {
 		text += " (when parsed as a Go text template)"
 	}
@@ -241,6 +246,14 @@ func (h annotationIsValidURL) Validate(_ unmarshaler.RuleGroup, rule rulefmt.Rul
 		value, err = newTemplateExpander(value).Expand()
 		if err != nil {
 			return []error{fmt.Errorf("template expansion of annotation `%s` failed: %w", h.annotation, err)}
+		}
+	}
+	// Prepend the URL prefix if specified and the value is not already a full URL
+	if h.urlPrefix != "" && !strings.HasPrefix(value, "http://") && !strings.HasPrefix(value, "https://") {
+		var err error
+		value, err = url.JoinPath(h.urlPrefix, value)
+		if err != nil {
+			return []error{fmt.Errorf("failed to join URL prefix `%s` with annotation value `%s`: %w", h.urlPrefix, value, err)}
 		}
 	}
 	if !govalidator.IsURL(value) {

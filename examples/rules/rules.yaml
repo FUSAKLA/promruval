@@ -81,7 +81,7 @@ groups:
           severity: "critical"
         annotations:
           title: test alert
-          playbook: http://foo.bar/nonexisting/playbook
+          playbook: nonexisting/playbook?q={{ $labels.xxx }}
 
   # ignore_validations: labelHasAllowedValue,expressionUsesExistingLabels,expressionSelectorsMatchesAnything,hasAnyOfAnnotations,hasAnnotations,hasLabels,expressionIsWellFormatted
   - name: testUTF8

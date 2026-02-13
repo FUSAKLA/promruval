@@ -4,20 +4,22 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	log "log/slog"
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/fusakla/promruval/v3/pkg/config"
-	"github.com/grafana/dskit/user"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	prom_config "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
-	log "github.com/sirupsen/logrus"
+	"github.com/ybbus/httpretry"
 )
 
 const (
@@ -25,8 +27,47 @@ const (
 	userAgent         = "promruval"
 )
 
+var prometheusRequestDuration = promauto.NewHistogramVec(
+	prometheus.HistogramOpts{
+		Name:    "promruval_prometheus_request_duration_seconds",
+		Help:    "Duration of HTTP requests to Prometheus API in seconds.",
+		Buckets: prometheus.ExponentialBucketsRange(0.01, 180, 10),
+	},
+	[]string{"method", "status_code"},
+)
+
+// instrumentedRoundTripper wraps an http.RoundTripper and records metrics.
+type instrumentedRoundTripper struct {
+	next http.RoundTripper
+}
+
+func (irt *instrumentedRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	start := time.Now()
+	resp, err := irt.next.RoundTrip(req)
+	duration := time.Since(start).Seconds()
+
+	statusCode := "error"
+	if resp != nil {
+		statusCode = strconv.Itoa(resp.StatusCode)
+	}
+
+	method := req.Method
+	prometheusRequestDuration.WithLabelValues(method, statusCode).Observe(duration)
+
+	return resp, err
+}
+
 func sourceTenantsToHeader(sourceTenants []string) string {
 	return strings.Join(sort.StringSlice(sourceTenants), "|")
+}
+
+func sourceTenantsToHeaders(sourceTenants []string) map[string]string {
+	if len(sourceTenants) == 0 {
+		return nil
+	}
+	return map[string]string{
+		"X-Scope-OrgID": sourceTenantsToHeader(sourceTenants),
+	}
 }
 
 func loadBearerToken(promConfig config.PrometheusConfig) (string, error) {
@@ -46,15 +87,7 @@ func loadBearerToken(promConfig config.PrometheusConfig) (string, error) {
 }
 
 func NewClient(promConfig config.PrometheusConfig) (*Client, error) {
-	var tripper http.RoundTripper = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: promConfig.InsecureSkipTLSVerify}}
-	bearerToken, err := loadBearerToken(promConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load bearer token: %w", err)
-	}
-	if bearerToken != "" {
-		tripper = prom_config.NewAuthorizationCredentialsRoundTripper("Bearer", prom_config.NewInlineSecret(bearerToken), tripper)
-	}
-	return NewClientWithRoundTripper(promConfig, tripper)
+	return NewClientWithRoundTripper(promConfig, nil)
 }
 
 func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.RoundTripper) (*Client, error) {
@@ -63,64 +96,107 @@ func NewClientWithRoundTripper(promConfig config.PrometheusConfig, tripper http.
 			"User-Agent": {Values: []string{userAgent}},
 		},
 	}
-	originalSourceTenants := []string{}
 	for k, v := range promConfig.HTTPHeaders {
-		if k == user.OrgIDHeaderName {
-			originalSourceTenants = []string{v}
-		}
 		headers.Headers[k] = prom_config.Header{Values: []string{v}}
 	}
-	cli, err := api.NewClient(api.Config{
-		Address:      promConfig.URL,
-		RoundTripper: prom_config.NewHeadersRoundTripper(&headers, tripper),
-	})
+	bearerToken, err := loadBearerToken(promConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
+		return nil, fmt.Errorf("failed to load bearer token: %w", err)
 	}
-	v1cli := v1.NewAPI(cli)
+	if bearerToken != "" {
+		headers.Headers["Authorization"] = prom_config.Header{Values: []string{"Bearer " + bearerToken}}
+	}
 	var cacheInstance *cache
 	if promConfig.DisableCache {
 		cacheInstance = nil
 	} else {
 		cacheInstance = newCache(promConfig.CacheFile, promConfig.URL, promConfig.MaxCacheAge)
 	}
-	promClient := Client{
-		apiClient:             v1cli,
+	return &Client{
 		httpHeaders:           &headers,
-		originalSourceTenants: originalSourceTenants,
-		httpHeadersMtx:        sync.Mutex{},
-		url:                   promConfig.URL,
+		prometheusURL:         promConfig.URL,
 		timeout:               promConfig.Timeout,
 		queryOffset:           promConfig.QueryOffset,
 		queryLookback:         promConfig.QueryLookback,
 		cache:                 cacheInstance,
-	}
-	return &promClient, nil
+		maxRetries:            promConfig.MaxRetries,
+		maxRetryWait:          promConfig.MaxRetryWait,
+		insecureSkipTLSVerify: promConfig.InsecureSkipTLSVerify,
+		tripper:               tripper,
+	}, nil
 }
 
 type Client struct {
-	apiClient             v1.API
 	httpHeaders           *prom_config.Headers
-	originalSourceTenants []string
-	httpHeadersMtx        sync.Mutex
-	url                   string
+	prometheusURL         string
 	timeout               time.Duration
 	queryOffset           time.Duration
 	queryLookback         time.Duration
 	cache                 *cache
+	maxRetries            int
+	maxRetryWait          time.Duration
+	insecureSkipTLSVerify bool
+	tripper               http.RoundTripper
 }
 
-func (s *Client) SetSourceTenants(sourceTenants []string) {
-	s.httpHeadersMtx.Lock()
-	if len(sourceTenants) == 0 {
-		return
+func (s *Client) newClient(additionalHTTPHeaders map[string]string) (api.Client, error) {
+	var tripper http.RoundTripper
+	if s.tripper != nil {
+		tripper = s.tripper
+	} else {
+		tripper = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: s.insecureSkipTLSVerify}}
 	}
-	s.httpHeaders.Headers[user.OrgIDHeaderName] = prom_config.Header{Values: []string{sourceTenantsToHeader(sourceTenants)}}
-}
 
-func (s *Client) ClearSourceTenants() {
-	s.httpHeaders.Headers[user.OrgIDHeaderName] = prom_config.Header{Values: s.originalSourceTenants}
-	s.httpHeadersMtx.Unlock()
+	// Create a copy of headers to avoid concurrent map writes
+	headers := prom_config.Headers{
+		Headers: make(map[string]prom_config.Header),
+	}
+	// Copy original headers
+	for k, v := range s.httpHeaders.Headers {
+		headers.Headers[k] = v
+	}
+	// Add additional headers to the copy
+	for k, v := range additionalHTTPHeaders {
+		headers.Headers[k] = prom_config.Header{Values: []string{v}}
+	}
+
+	if s.maxRetries > 0 {
+		tripper = http.RoundTripper(&httpretry.RetryRoundtripper{
+			Next:          tripper,
+			MaxRetryCount: s.maxRetries,
+			ShouldRetry: func(statusCode int, _ error) bool {
+				switch statusCode {
+				case // status codes that should be retried
+					http.StatusRequestTimeout,
+					http.StatusConflict,
+					http.StatusLocked,
+					http.StatusTooManyRequests,
+					http.StatusInternalServerError,
+					http.StatusBadGateway,
+					http.StatusServiceUnavailable,
+					http.StatusGatewayTimeout:
+					return true
+				case 0: // means we did not get a response. we need to retry
+					return true
+				}
+				return false
+			},
+			CalculateBackoff: httpretry.ExponentialBackoff(1*time.Second, s.maxRetryWait, 200*time.Millisecond),
+		})
+	}
+	tripper = prom_config.NewHeadersRoundTripper(&headers, tripper)
+
+	// Wrap with instrumentation to track metrics (outermost layer to measure complete requests including retries)
+	tripper = &instrumentedRoundTripper{next: tripper}
+
+	cli, err := api.NewClient(api.Config{
+		Address:      s.prometheusURL,
+		RoundTripper: tripper,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
+	}
+	return cli, nil
 }
 
 func (s *Client) queryTimeRange() (start, end time.Time) {
@@ -135,7 +211,7 @@ func (s *Client) DumpCache() {
 	}
 	start := time.Now()
 	s.cache.Dump()
-	log.WithField("duration", time.Since(start)).Info("cache dumped")
+	log.Info("cache dumped", "duration", time.Since(start))
 }
 
 func (s *Client) newContext() (context.Context, context.CancelFunc) {
@@ -149,23 +225,19 @@ func (s *Client) newContext() (context.Context, context.CancelFunc) {
 func (s *Client) SelectorMatch(selector string, sourceTenants []string) ([]model.LabelSet, error) {
 	ctx, cancel := s.newContext()
 	defer cancel()
-	s.SetSourceTenants(sourceTenants)
-	defer s.ClearSourceTenants()
+	cli, err := s.newClient(sourceTenantsToHeaders(sourceTenants))
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
+	}
 	start := time.Now()
 	queryStart, queryEnd := s.queryTimeRange()
-	result, warnings, err := s.apiClient.Series(ctx, []string{selector}, queryStart, queryEnd)
+	result, warnings, err := v1.NewAPI(cli).Series(ctx, []string{selector}, queryStart, queryEnd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query series: %w", err)
 	}
-	log.WithFields(log.Fields{
-		"selector":       selector,
-		"url":            s.url,
-		"sourceTenants":  sourceTenants,
-		"duration":       time.Since(start),
-		"matchingSeries": len(result),
-	}).Debug("queried prometheus for series matching selector")
+	log.Debug("queried prometheus for series matching selector", "selector", selector, "url", s.prometheusURL, "sourceTenants", sourceTenants, "duration", time.Since(start), "matchingSeries", len(result))
 	if len(warnings) > 0 {
-		log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
+		log.Warn("Prometheus query returned warnings", "warnings", warnings)
 	}
 	return result, nil
 }
@@ -198,24 +270,19 @@ func (s *Client) Labels(sourceTenants []string) ([]string, error) {
 	if s.cache == nil || len(cachedLabels) == 0 {
 		ctx, cancel := s.newContext()
 		defer cancel()
-		s.SetSourceTenants(sourceTenants)
-		defer s.ClearSourceTenants()
+		cli, err := s.newClient(sourceTenantsToHeaders(sourceTenants))
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize prometheus client: %w", err)
+		}
 		start := time.Now()
 		queryStart, queryEnd := s.queryTimeRange()
-		result, warnings, err := s.apiClient.LabelNames(ctx, []string{}, queryStart, queryEnd)
+		result, warnings, err := v1.NewAPI(cli).LabelNames(ctx, []string{}, queryStart, queryEnd)
 		if err != nil {
 			return nil, err
 		}
-		log.WithFields(log.Fields{
-			"url":           s.url,
-			"sourceTenants": sourceTenants,
-			"duration":      time.Since(start),
-			"labels":        len(result),
-			"queryStart":    queryStart,
-			"queryEnd":      queryEnd,
-		}).Debug("loaded all prometheus label names")
+		log.Debug("loaded all prometheus label names", "url", s.prometheusURL, "sourceTenants", sourceTenants, "duration", time.Since(start), "labels", len(result), "queryStart", queryStart, "queryEnd", queryEnd)
 		if len(warnings) > 0 {
-			log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
+			log.Warn("Prometheus query returned warnings", "warnings", warnings)
 		}
 		if cache != nil {
 			cache.SetKnownLabels(result)
@@ -228,25 +295,20 @@ func (s *Client) Labels(sourceTenants []string) ([]string, error) {
 func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, int, time.Duration, error) {
 	ctx, cancel := s.newContext()
 	defer cancel()
-	s.SetSourceTenants(sourceTenants)
-	defer s.ClearSourceTenants()
+	cli, err := s.newClient(sourceTenantsToHeaders(sourceTenants))
+	if err != nil {
+		return nil, 0, 0, fmt.Errorf("failed to initialize prometheus client: %w", err)
+	}
 	start := time.Now()
 	_, queryEnd := s.queryTimeRange()
-	result, warnings, err := s.apiClient.Query(ctx, query, queryEnd)
+	result, warnings, err := v1.NewAPI(cli).Query(ctx, query, queryEnd)
 	duration := time.Since(start)
 	if err != nil {
 		return nil, 0, 0, fmt.Errorf("error querying prometheus: %w", err)
 	}
-	log.WithFields(log.Fields{
-		"url":           s.url,
-		"query":         query,
-		"at":            queryEnd,
-		"sourceTenants": sourceTenants,
-		"duration":      time.Since(start),
-		"resultType":    result.Type().String(),
-	}).Debug("query prometheus")
+	log.Debug("query prometheus", "url", s.prometheusURL, "query", query, "at", queryEnd, "sourceTenants", sourceTenants, "duration", time.Since(start), "resultType", result.Type().String())
 	if len(warnings) > 0 {
-		log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
+		log.Warn("Prometheus query returned warnings", "warnings", warnings)
 	}
 	switch result.Type() {
 	case model.ValVector:
