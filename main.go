@@ -11,8 +11,6 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/extractvalidators"
 	"github.com/fusakla/promruval/v3/pkg/report"
 	"github.com/fusakla/promruval/v3/pkg/validate"
-	"github.com/lmittmann/tint"
-	"github.com/mattn/go-isatty"
 )
 
 var (

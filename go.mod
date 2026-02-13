@@ -10,7 +10,6 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-jsonnet v0.20.0
 	github.com/grafana/loki/v3 v3.5.1
-	github.com/lmittmann/tint v1.1.3
 	github.com/prometheus/client_golang v1.22.0
 	github.com/prometheus/common v0.64.0
 	github.com/prometheus/prometheus v0.303.1
@@ -84,7 +83,7 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.20
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mdlayher/socket v0.5.1 // indirect
 	github.com/mdlayher/vsock v1.2.1 // indirect
 	github.com/miekg/dns v1.1.65 // indirect
