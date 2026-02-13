@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	log "log/slog"
 	"net/http"
 	"os"
 	"sort"
@@ -15,7 +16,6 @@ import (
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	prom_config "github.com/prometheus/common/config"
 	"github.com/prometheus/common/model"
-	log "github.com/sirupsen/logrus"
 	"github.com/ybbus/httpretry"
 )
 
@@ -174,7 +174,7 @@ func (s *Client) DumpCache() {
 	}
 	start := time.Now()
 	s.cache.Dump()
-	log.WithField("duration", time.Since(start)).Info("cache dumped")
+	log.Info("cache dumped", "duration", time.Since(start))
 }
 
 func (s *Client) newContext() (context.Context, context.CancelFunc) {
@@ -198,15 +198,9 @@ func (s *Client) SelectorMatch(selector string, sourceTenants []string) ([]model
 	if err != nil {
 		return nil, fmt.Errorf("failed to query series: %w", err)
 	}
-	log.WithFields(log.Fields{
-		"selector":       selector,
-		"url":            s.prometheusURL,
-		"sourceTenants":  sourceTenants,
-		"duration":       time.Since(start),
-		"matchingSeries": len(result),
-	}).Debug("queried prometheus for series matching selector")
+	log.Debug("queried prometheus for series matching selector", "selector", selector, "url", s.prometheusURL, "sourceTenants", sourceTenants, "duration", time.Since(start), "matchingSeries", len(result))
 	if len(warnings) > 0 {
-		log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
+		log.Warn("Prometheus query returned warnings", "warnings", warnings)
 	}
 	return result, nil
 }
@@ -249,16 +243,9 @@ func (s *Client) Labels(sourceTenants []string) ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		log.WithFields(log.Fields{
-			"url":           s.prometheusURL,
-			"sourceTenants": sourceTenants,
-			"duration":      time.Since(start),
-			"labels":        len(result),
-			"queryStart":    queryStart,
-			"queryEnd":      queryEnd,
-		}).Debug("loaded all prometheus label names")
+		log.Debug("loaded all prometheus label names", "url", s.prometheusURL, "sourceTenants", sourceTenants, "duration", time.Since(start), "labels", len(result), "queryStart", queryStart, "queryEnd", queryEnd)
 		if len(warnings) > 0 {
-			log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
+			log.Warn("Prometheus query returned warnings", "warnings", warnings)
 		}
 		if cache != nil {
 			cache.SetKnownLabels(result)
@@ -282,16 +269,9 @@ func (s *Client) Query(query string, sourceTenants []string) ([]*model.Sample, i
 	if err != nil {
 		return nil, 0, 0, fmt.Errorf("error querying prometheus: %w", err)
 	}
-	log.WithFields(log.Fields{
-		"url":           s.prometheusURL,
-		"query":         query,
-		"at":            queryEnd,
-		"sourceTenants": sourceTenants,
-		"duration":      time.Since(start),
-		"resultType":    result.Type().String(),
-	}).Debug("query prometheus")
+	log.Debug("query prometheus", "url", s.prometheusURL, "query", query, "at", queryEnd, "sourceTenants", sourceTenants, "duration", time.Since(start), "resultType", result.Type().String())
 	if len(warnings) > 0 {
-		log.WithField("warnings", warnings).Warn("Prometheus query returned warnings")
+		log.Warn("Prometheus query returned warnings", "warnings", warnings)
 	}
 	switch result.Type() {
 	case model.ValVector:

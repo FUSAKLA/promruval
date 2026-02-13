@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	log "log/slog"
 	"os"
 	"path/filepath"
 	"slices"
@@ -20,7 +21,6 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/validator"
 	"github.com/google/go-jsonnet"
 	"github.com/prometheus/prometheus/model/rulefmt"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -49,7 +49,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 
 	switch {
 	case strings.HasSuffix(fileName, ".jsonnet"):
-		log.Debugf("evaluating jsonnet file %s", fileName)
+		log.Debug("evaluating jsonnet file", "file", fileName)
 		jsonnetOutput, err := jsonnetVM.EvaluateFile(fileName)
 		if err != nil {
 			fileReport.Valid.Store(false)
@@ -100,7 +100,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 					continue
 				}
 				if errs := validateWithDetails(v, group.RuleGroup, rulefmt.Rule{}, prometheusClient); len(errs) > 0 {
-					log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+					log.Debug("skipping validation because onlyIf results with errors", "file", fileName, "group", group.Name, "validator", v, "errors", errs)
 					continue groupValidationLoop
 				}
 			}
@@ -164,11 +164,11 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 				for _, v := range rule.OnlyIf() {
 					if validator.MatchesScope(originalRule, ruleNode.Scope()) {
 						if errs := validateWithDetails(v, group.RuleGroup, originalRule, prometheusClient); len(errs) > 0 {
-							log.Debugf("skipping validation of file %s group %s using \"%s\" because onlyIf results with errors: %v", fileName, group.Name, v, errs)
+							log.Debug("skipping validation because onlyIf results with errors", "file", fileName, "group", group.Name, "validator", v, "errors", errs)
 							continue ruleValidationLoop
 						}
 					} else {
-						log.Debugf("skipping onlyIf validation of file %s group %s because it is not applicable: validator scrope: `%s`, rule scope: `%s`", fileName, group.Name, validator.Scope(v.Name()), ruleNode.Scope())
+						log.Debug("skipping onlyIf validation because it is not applicable", "file", fileName, "group", group.Name, "validator_scope", validator.Scope(v.Name()), "rule_scope", ruleNode.Scope())
 					}
 				}
 				for _, v := range rule.Validators() {
@@ -184,7 +184,7 @@ func validateFile(fileName string, validationRules []*validationrule.ValidationR
 						if len(errs) > 0 {
 							ruleReport.AddErrors(errs)
 						}
-						log.Debugf("validation of file %s group %s using \"%s\" took %s", fileName, group.Name, vName, time.Since(validationStart))
+						log.Debug("validation completed", "file", fileName, "group", group.Name, "validator", vName, "duration", time.Since(validationStart))
 					}(v, group.RuleGroup, originalRule, validatorName)
 					if disableParallelization {
 						ruleWg.Wait()
@@ -223,7 +223,7 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 			jsonnetVM := jsonnet.MakeVM()
 			groupsCount, rulesCount, err := validateFile(fileName, validationRules, excludeAnnotationName, disableValidationsComment, prometheusClient, jsonnetVM, validationReport, disableParallelization)
 			if err != nil {
-				log.WithError(err).Errorf("error validating file %s", fileName)
+				log.Error("error validating file", "file", fileName, "error", err)
 			}
 
 			reportMutex.Lock()
@@ -234,14 +234,11 @@ func Files(fileNames []string, validationRules []*validationrule.ValidationRule,
 				validationReport.Failed.Store(true)
 			}
 			reportMutex.Unlock()
-			logFields := log.Fields{
-				"file":     fileName,
-				"duration": time.Since(fileStart),
-			}
 			if disableParallelization {
-				logFields["progress"] = fmt.Sprintf("%d/%d", i+1, fileCount)
+				log.Info("finished processing file", "file", fileName, "duration", time.Since(fileStart), "progress", fmt.Sprintf("%d/%d", i+1, fileCount))
+			} else {
+				log.Info("finished processing file", "file", fileName, "duration", time.Since(fileStart))
 			}
-			log.WithFields(logFields).Info("finished processing file")
 		}(fileName, i)
 		if disableParallelization {
 			filesWg.Wait()

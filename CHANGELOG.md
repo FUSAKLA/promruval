@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+ - Changed: Switched logging from logrus to standard library log/slog.
  - Added: New parameter `url_prefix` in the `annotationIsValidURL` validation to support relative URLs in annotations.
 
 ## [3.14.0] - 2026-02-07

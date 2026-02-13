@@ -2,12 +2,11 @@ package prometheus
 
 import (
 	"encoding/json"
+	log "log/slog"
 	"os"
 	"slices"
 	"sync"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
@@ -25,18 +24,18 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 			// Create new cache file with empty cache data
 			f, err = os.Create(file)
 			if err != nil {
-				log.WithError(err).WithField("file", file).Warn("error creating cache file")
+				log.Warn("error creating cache file", "error", err, "file", file)
 				return &emptyCache
 			}
 			emptyCacheJSON, err := json.Marshal(&emptyCache)
 			if err != nil {
-				log.WithError(err).WithField("file", file).Warn("error creating cache file")
+				log.Warn("error creating cache file", "error", err, "file", file)
 				f.Close()
 				return &emptyCache
 			}
 			_, err = f.Write(emptyCacheJSON)
 			if err != nil {
-				log.WithError(err).WithField("file", file).Warn("error writing empty cache file")
+				log.Warn("error writing empty cache file", "error", err, "file", file)
 				f.Close()
 				return &emptyCache
 			}
@@ -45,40 +44,32 @@ func newCache(file, prometheusURL string, maxAge time.Duration) *cache {
 			// Now reopen the file for reading
 			f, err = os.Open(file)
 			if err != nil {
-				log.WithError(err).WithField("file", file).Warn("error reopening cache file")
+				log.Warn("error reopening cache file", "error", err, "file", file)
 				return &emptyCache
 			}
 		} else {
-			log.WithError(err).WithField("file", file).Warn("error opening cache file, skipping")
+			log.Warn("error opening cache file, skipping", "error", err, "file", file)
 			return &emptyCache
 		}
 	}
 	defer f.Close()
 
 	if err := json.NewDecoder(f).Decode(&previousCache); err != nil {
-		log.WithError(err).WithField("file", file).Warn("invalid cache file format")
+		log.Warn("invalid cache file format", "error", err, "file", file)
 		return &emptyCache
 	}
 	pruneCache := false
 	cacheAge := time.Since(previousCache.Created)
 	if maxAge != 0 && cacheAge > maxAge {
-		log.WithFields(log.Fields{
-			"cacheAge":    cacheAge,
-			"maxCacheAge": maxAge,
-			"file_name":   file,
-		}).Info("cache is outdated")
+		log.Info("cache is outdated", "cacheAge", cacheAge, "maxCacheAge", maxAge, "file_name", file)
 		pruneCache = true
 	}
 	if previousCache.PrometheusURL != prometheusURL {
-		log.WithFields(log.Fields{
-			"previousPrometheusURL": previousCache.PrometheusURL,
-			"newPrometheusURL":      prometheusURL,
-			"file_name":             file,
-		}).Info("data in cache file are from different Prometheus, cannot be used")
+		log.Info("data in cache file are from different Prometheus, cannot be used", "previousPrometheusURL", previousCache.PrometheusURL, "newPrometheusURL", prometheusURL, "file_name", file)
 		pruneCache = true
 	}
 	if pruneCache {
-		log.WithField("file", file).Warn("Pruning cache file")
+		log.Warn("Pruning cache file", "file", file)
 		return &emptyCache
 	}
 	return previousCache
@@ -191,7 +182,7 @@ func (c *cache) SourceTenantsData(sourceTenants []string) *cacheData {
 func (c *cache) Dump() {
 	f, err := os.Create(c.file)
 	if err != nil {
-		log.WithError(err).WithField("file", c.file).Warn("failed to create cache file")
+		log.Warn("failed to create cache file", "error", err, "file", c.file)
 		return
 	}
 	defer func(f *os.File) {
@@ -211,7 +202,7 @@ func (c *cache) Dump() {
 	for key, data := range c.SourceTenants {
 		// Defensive nil check (shouldn't happen but good practice)
 		if data == nil {
-			log.WithField("key", key).Warn("Found nil cacheData in SourceTenants, skipping")
+			log.Warn("Found nil cacheData in SourceTenants, skipping", "key", key)
 			continue
 		}
 
@@ -239,8 +230,8 @@ func (c *cache) Dump() {
 	e.SetIndent("", "")
 	err = e.Encode(&snapshot)
 	if err != nil {
-		log.WithError(err).Warn("failed to write cache data")
+		log.Warn("failed to write cache data", "error", err)
 		return
 	}
-	log.WithField("file_name", c.file).Info("successfully dumped cache to file")
+	log.Info("successfully dumped cache to file", "file_name", c.file)
 }

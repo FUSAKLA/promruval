@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	log "log/slog"
 	"os"
 	"time"
 
@@ -10,7 +11,8 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/extractvalidators"
 	"github.com/fusakla/promruval/v3/pkg/report"
 	"github.com/fusakla/promruval/v3/pkg/validate"
-	log "github.com/sirupsen/logrus"
+	"github.com/lmittmann/tint"
+	"github.com/mattn/go-isatty"
 )
 
 var (
@@ -42,7 +44,7 @@ var (
 )
 
 func exitWithError(err error) {
-	log.Error(err)
+	log.Error(err.Error())
 	os.Exit(1)
 }
 
@@ -80,12 +82,14 @@ func main() {
 		}
 		fmt.Println(output)
 	case validateCmd.FullCommand():
-		log.SetLevel(log.InfoLevel)
-		log.SetOutput(os.Stderr)
-		log.SetFormatter(&log.TextFormatter{FullTimestamp: true, DisableLevelTruncation: true})
+		level := log.LevelInfo
 		if *debug {
-			log.SetLevel(log.DebugLevel)
+			level = log.LevelDebug
 		}
+		handler := log.NewTextHandler(os.Stderr, &log.HandlerOptions{
+			Level: level,
+		})
+		log.SetDefault(log.New(handler))
 
 		validationReport, err := validate.Cmd(*filePaths, validationConfig, validationRules, *supportLoki, *supportMimir, *supportThanos, *disableParallelization)
 		if err != nil {
