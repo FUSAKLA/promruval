@@ -51,7 +51,7 @@ func main() {
 	currentCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if currentCommand == versionCmd.FullCommand() {
-		if commit == "" && version == "dev" {
+		if commit == "" {
 			commit = prometheusVersion.GetRevision()
 		}
 		fmt.Printf("Version: %s\nBuild date: %s\nBuild commit: %s\nBuilt by: %s\n", version, date, commit, builtBy)
