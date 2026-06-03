@@ -10,13 +10,14 @@ import (
 	"github.com/fusakla/promruval/v3/pkg/extractvalidators"
 	"github.com/fusakla/promruval/v3/pkg/report"
 	"github.com/fusakla/promruval/v3/pkg/validate"
+	prometheusVersion "github.com/prometheus/common/version"
 	log "github.com/sirupsen/logrus"
 )
 
 var (
 	// Set using goreleaser ldflags during build, see https://goreleaser.com/environment/#using-the-mainversion
 	version = "dev"
-	commit  = "none"
+	commit  = ""
 	date    = time.Now().Format("2006-01-02")
 	builtBy = os.Getenv("USER")
 
@@ -50,6 +51,9 @@ func main() {
 	currentCommand := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	if currentCommand == versionCmd.FullCommand() {
+		if commit == "" {
+			commit = prometheusVersion.GetRevision()
+		}
 		fmt.Printf("Version: %s\nBuild date: %s\nBuild commit: %s\nBuilt by: %s\n", version, date, commit, builtBy)
 		return
 	}
